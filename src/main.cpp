@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
             "  jmnext4desktop --chapters <aid>     打开某作品章节列表并切到第 3 话（自检）\n"
             "  jmnext4desktop --zoom <aid>         验证缩放两种模式（自检）\n"
             "  jmnext4desktop --screenshot <png> [--list]   截图后退出（无显示环境可用）\n"
+            "  jmnext4desktop --version          打印版本（单一来源：src/core/Version.h）\n"
             "\n"
             "附带的独立工具：jmnext4net（真实网络自检）、jmnext4img（图片管线）、jmnext4cli（纯计算）\n"
             "依赖：Qt 6 与 qt6-image-formats-plugins（真实漫画图是 WebP，缺了图片打不开）\n");
