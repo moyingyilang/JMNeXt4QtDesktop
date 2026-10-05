@@ -87,6 +87,17 @@ void MainWindow::setupUi() {
         if (!path.isEmpty()) loadImage(path);
     });
     connect(unscrambleBtn, &QPushButton::clicked, this, [this] { unscrambleNow(); });
+
+    // 阅读器控制：上一页 / 下一页（真实数据）
+    auto* prevBtn = new QPushButton(QStringLiteral("上一页"));
+    auto* nextBtn = new QPushButton(QStringLiteral("下一页"));
+    auto* openChBtn = new QPushButton(QStringLiteral("载入真实章节（用上方 aid）"));
+    buttons->addWidget(openChBtn);
+    buttons->addWidget(prevBtn);
+    buttons->addWidget(nextBtn);
+    connect(openChBtn, &QPushButton::clicked, this, [this] { openChapter(aidEdit_->text(), 0); });
+    connect(prevBtn, &QPushButton::clicked, this, [this] { prevPage(); });
+    connect(nextBtn, &QPushButton::clicked, this, [this] { nextPage(); });
 }
 
 void MainWindow::applyCjkFont() {
@@ -175,5 +186,76 @@ void MainWindow::log(const QString& line) {
     std::printf("%s\n", line.toUtf8().constData());
     std::fflush(stdout);
 }
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+// 说明：JmClient 的方法是同步的（走真实网络）。骨架阶段直接在界面线程调用，
+// 会有短暂卡顿；异步化（后台线程 + 信号）留到下一步。
+bool MainWindow::openChapter(const QString& aid, int pageIndex) {
+    if (!clientReady_) {
+        log(QStringLiteral("正在发现主机…"));
+        if (!client_.bootstrap()) {
+            log(QStringLiteral("主机发现失败：%1").arg(QString::fromStdString(client_.lastError())));
+            return false;
+        }
+        clientReady_ = true;
+        log(QStringLiteral("主机：%1").arg(QString::fromStdString(client_.host())));
+    }
+    auto al = client_.album(aid.toStdString());
+    if (!al) {
+        log(QStringLiteral("详情失败：%1").arg(QString::fromStdString(client_.lastError())));
+        return false;
+    }
+    log(QStringLiteral("详情：%1（标签 %2 个，章节 %3 个）")
+            .arg(QString::fromStdString(al->name))
+            .arg(al->tags.size())
+            .arg(al->series.size()));
+    if (al->series.empty()) return false;
+
+    const std::string chapterId = al->series.front().id;
+    auto ch = client_.chapter(chapterId);
+    if (!ch) {
+        log(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client_.lastError())));
+        return false;
+    }
+    chapter_ = *ch;
+    chapterAid_ = aid.toStdString();
+    log(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
+            .arg(QString::fromStdString(chapter_.id))
+            .arg(chapter_.totalPage)
+            .arg(chapter_.scrambleId));
+    return showPage(pageIndex);
+}
+
+bool MainWindow::showPage(int index) {
+    if (chapter_.images.empty()) { log(QStringLiteral("章节没有图片")); return false; }
+    if (index < 0 || index >= static_cast<int>(chapter_.images.size())) {
+        log(QStringLiteral("页码越界：%1（共 %2 页）").arg(index).arg(chapter_.images.size()));
+        return false;
+    }
+    const auto& page = chapter_.images[static_cast<std::size_t>(index)];
+    auto img = client_.pageImage(page.url, std::atoi(chapterAid_.c_str()), chapter_.scrambleId);
+    if (!img) {
+        log(QStringLiteral("取图失败：%1").arg(QString::fromStdString(client_.lastError())));
+        return false;
+    }
+    pageIndex_ = index;
+    restoredView_->setPixmap(QPixmap::fromImage(*img).scaled(restoredView_->size(),
+                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    pageStatus_ = QStringLiteral("第 %1/%2 页 %3x%4")
+                      .arg(index + 1)
+                      .arg(chapter_.images.size())
+                      .arg(img->width())
+                      .arg(img->height());
+    log(pageStatus_ + QStringLiteral("（aid=%1 page=%2）")
+                           .arg(QString::fromStdString(chapterAid_))
+                           .arg(QString::fromStdString(page.url)));
+    return true;
+}
+
+bool MainWindow::nextPage() { return showPage(pageIndex_ + 1); }
+bool MainWindow::prevPage() { return showPage(pageIndex_ - 1); }
 
 }  // namespace jmnext::qt

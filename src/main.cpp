@@ -23,6 +23,18 @@ int main(int argc, char** argv) {
         return rc;
     }
 
+    if (argc >= 4 && std::string(argv[1]) == "--reader") {
+        jmnext::qt::MainWindow win;
+        const QString aid = QString::fromUtf8(argv[2]);
+        const int page = std::atoi(argv[3]);
+        if (!win.openChapter(aid, page)) { std::printf("阅读器自检失败\n"); return 1; }
+        std::printf("页状态：%s\n", win.pageStatus().toUtf8().constData());
+        if (!win.nextPage()) { std::printf("翻下一页失败\n"); return 1; }
+        std::printf("翻页后：%s\n", win.pageStatus().toUtf8().constData());
+        std::printf("阅读器自检：通过\n");
+        return 0;
+    }
+
     if (argc >= 2 && std::string(argv[1]) == "--live") {
         // 真实链路自检：主机发现 → 列表 → 详情 → 章节 → 下载一页并还原
         jmnext::qt::JmClient client;

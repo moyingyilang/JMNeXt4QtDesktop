@@ -1,4 +1,6 @@
 // 最小界面骨架：打开一张图 → 按 aid/page 还原 → 并排看"原始/还原"。
+#include "core/JmParse.h"
+#include "qt/JmClient.h"
 //
 // 现在刻意只做这一件事（对应目标里的"先跑通能看图"），列表、阅读器交互随后再加。
 // 无显示环境可用 --selftest 走同一条代码路径并打印结果（见 main.cpp），
@@ -25,6 +27,17 @@ public:
     /// 当前选中的界面字体族名（CJK 自检用）
     QString chosenFontFamily() const { return fontFamily_; }
 
+    bool showPage(int index);
+
+    /// 载入某作品的某章节，并跳到指定页（真实链路：详情 → 章节 → 下载 → 还原）
+    bool openChapter(const QString& aid, int pageIndex);
+    /// 翻到下一页（越界返回 false）
+    bool nextPage();
+    /// 翻到上一页
+    bool prevPage();
+    /// 当前页信息（自检用）
+    QString pageStatus() const { return pageStatus_; }
+
 private:
     void setupUi();
     void applyCjkFont();
@@ -34,6 +47,12 @@ private:
     QLineEdit* aidEdit_ = nullptr;
     QLineEdit* pageEdit_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;
+    jmnext::qt::JmClient client_;
+    bool clientReady_ = false;
+    jmnext::core::ChapterImages chapter_;
+    std::string chapterAid_;
+    int pageIndex_ = 0;
+    QString pageStatus_;
     QString fontFamily_;
     QString loadedPath_;
     int width_ = 0;
