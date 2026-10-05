@@ -149,11 +149,11 @@ void MainWindow::setupUi() {
     auto* outer = new QVBoxLayout(central);
 
     auto* views = new QHBoxLayout();
-    views->addWidget(coverLabel_);
     coverLabel_ = new QLabel(QStringLiteral("（封面）"));
     coverLabel_->setFixedSize(160, 213);          // 3:4
     coverLabel_->setAlignment(Qt::AlignCenter);
     coverLabel_->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
+    views->addWidget(coverLabel_);          // 必须在 coverLabel_ 创建之后加（此前插在前面，导致布局收到空指针）
     albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
     albumInfo_->setWordWrap(true);
     outer->addWidget(albumInfo_);
