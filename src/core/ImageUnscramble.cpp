@@ -1,5 +1,6 @@
 #include "core/ImageUnscramble.h"
 
+#include <vector>
 #include <algorithm>
 
 namespace jmnext::core {

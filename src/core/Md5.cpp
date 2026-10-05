@@ -1,5 +1,6 @@
 #include "core/Md5.h"
 
+#include <string>
 #include <array>
 #include <cstdint>
 #include <cstring>

@@ -1,5 +1,7 @@
 #include "core/Base64.h"
 
+#include <vector>
+#include <string>
 #include <array>
 
 namespace jmnext::core {

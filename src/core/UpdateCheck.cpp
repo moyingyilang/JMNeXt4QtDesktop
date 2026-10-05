@@ -1,5 +1,8 @@
 #include "core/UpdateCheck.h"
 
+#include <optional>
+#include <vector>
+#include <string>
 #include <algorithm>
 #include <cctype>
 #include <sstream>

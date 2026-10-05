@@ -4,6 +4,8 @@
 #include "core/Base64.h"
 #include "core/Md5.h"
 
+#include <optional>
+#include <string>
 #include <algorithm>
 #include <cctype>
 

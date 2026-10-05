@@ -1,5 +1,7 @@
 #include "core/AesEcb.h"
 
+#include <vector>
+#include <string>
 #include <cstring>
 
 namespace jmnext::core {

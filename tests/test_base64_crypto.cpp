@@ -3,6 +3,7 @@
 #include "core/JmCrypto.h"
 #include "core/Md5.h"
 
+#include <vector>
 #include <cstdio>
 #include <string>
 
