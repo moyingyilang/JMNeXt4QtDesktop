@@ -44,6 +44,8 @@ public:
     int requestCoversAndWait(int n, int timeoutMs = 120000);
     /// 异步打开章节并翻页（自检用）：返回收到的页数，-1 表示失败/超时
     int requestReaderAndWait(const QString& aid, int page, int steps, int timeoutMs = 180000);
+    /// 自检用：把屏蔽关键词交给 worker（正式路径由界面输入框触发）
+    void setBlockWordsForTest(const QStringList& words) { if (worker_) worker_->setBlockWords(words); }
     QString lastPageStatus() const { return pendingPageStatus_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
@@ -74,6 +76,7 @@ private:
     QLineEdit* pageEdit_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
+    QLineEdit* blockEdit_ = nullptr;
     int coverLoaded_ = 0;
     QThread* workerThread_ = nullptr;
     JmWorker* worker_ = nullptr;

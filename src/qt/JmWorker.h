@@ -12,7 +12,10 @@
 #include <QObject>
 #include <QStringList>
 
+#include <vector>
+
 #include "core/JmParse.h"
+#include "core/JmCore.h"
 #include "qt/JmClient.h"
 
 #include <memory>
@@ -28,6 +31,8 @@ public:
 public slots:
     /// 主机发现 + 拉首页列表：成功发 listReady（标题与 id 两个平行列表），失败发 failed
     void loadList();
+    /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数
+    void setBlockWords(const QStringList& words);
     /// 为列表前 n 项取封面：成功发 coverReady(index, image)
     void loadCovers(int n);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
@@ -52,6 +57,7 @@ private:
     QStringList pendingIds_;     // loadList 之后记住 id，供 loadCovers / openChapter 用
     jmnext::core::ChapterImages chapter_;
     bool started_ = false;
+    std::vector<std::string> blockWords_;   // 屏蔽关键词（本地规则）
     QString currentAid_;
     int pageIndex_ = -1;
 };

@@ -34,6 +34,11 @@ int main(int argc, char** argv) {
 
     if (argc >= 2 && std::string(argv[1]) == "--list") {
         jmnext::qt::MainWindow win;
+        QStringList words;
+        if (argc >= 3) {
+            for (const auto& w : QString::fromUtf8(argv[2]).split(',', Qt::SkipEmptyParts)) words << w.trimmed();
+            win.setBlockWordsForTest(words);
+        }
         const int n = win.requestListAndWait();
         if (n < 0) { std::printf("加载失败\n"); return 1; }
         std::printf("列表条数：%d\n", n);

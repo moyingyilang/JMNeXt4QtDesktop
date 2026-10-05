@@ -31,14 +31,23 @@ void JmWorker::loadList() {
         emit failed(QStringLiteral("列表失败：%1").arg(QString::fromStdString(client().lastError())));
         return;
     }
+    // 屏蔽过滤：关键词按**子串**匹配作品名/作者，分类按**精确**匹配（语义见 core/BlockRules）
+    core::BlockRules rules;
+    rules.words = blockWords_;
+
     QStringList titles, ids;
+    int hidden = 0;
     for (const auto& e : *list) {
+        const core::ListItem item{e.name, e.author, e.categoryTitle, e.categorySubTitle};
+        if (rules.hides(item)) { ++hidden; continue; }
         titles << QStringLiteral("%1\n   %2　[%3]")
                       .arg(QString::fromStdString(e.name))
                       .arg(QString::fromStdString(e.author))
                       .arg(QString::fromStdString(e.categoryTitle));
         ids << QString::fromStdString(e.id);
     }
+    if (hidden > 0)
+        emit status(QStringLiteral("已按屏蔽规则隐藏 %1 条（关键词 %2 个）").arg(hidden).arg(blockWords_.size()));
     pendingIds_ = ids;
     emit listReady(titles, ids);
 }
@@ -100,6 +109,19 @@ void JmWorker::showPageAt(int index) {
                               .arg(chapter_.images.size())
                               .arg(img->width())
                               .arg(img->height()));
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::setBlockWords(const QStringList& words) {
+    blockWords_.clear();
+    for (const auto& w : words) {
+        const std::string s = w.trimmed().toStdString();
+        if (!s.empty()) blockWords_.push_back(s);
+    }
+    emit status(QStringLiteral("屏蔽关键词已设为 %1 个").arg(blockWords_.size()));
 }
 
 }  // namespace jmnext::qt

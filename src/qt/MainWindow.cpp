@@ -92,6 +92,15 @@ MainWindow::MainWindow() {
         log(statusText);
     });
     workerThread_->start();
+    blockEdit_->setPlaceholderText(QStringLiteral("屏蔽关键词（逗号分隔），例如 NTR"));
+    connect(blockEdit_, &QLineEdit::editingFinished, this, [this] {
+        if (!worker_) return;
+        QStringList words;
+        const auto parts = blockEdit_->text().split(QLatin1Char(','), Qt::SkipEmptyParts);
+        for (const auto& w : parts) words << w.trimmed();
+        worker_->setBlockWords(words);
+        worker_->loadList();
+    });
 }
 
 void MainWindow::setupUi() {
@@ -114,6 +123,9 @@ void MainWindow::setupUi() {
     auto* listRow = new QHBoxLayout();
     listRow->addWidget(listView_);
     auto* loadListBtn = new QPushButton(QStringLiteral("加载真实首页列表"));
+    blockEdit_ = new QLineEdit();
+    listRow->addWidget(blockEdit_);
+    blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
     listRow->addWidget(loadListBtn);
     outer->addLayout(listRow);
     outer->addLayout(views);
