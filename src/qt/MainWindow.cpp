@@ -98,6 +98,9 @@ MainWindow::MainWindow() {
         pendingPageStatus_ = statusText;
         log(statusText);
     });
+    connect(chapterList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
+        if (worker_ && it) worker_->openChapterId(it->data(Qt::UserRole).toString(), 0);
+    });
     workerThread_->start();
     connect(worker_, &JmWorker::albumCoverReady, this, [this](const QImage& img) {
         lastCoverSize_ = img.size();
@@ -126,6 +129,12 @@ MainWindow::MainWindow() {
                 chapterBox_->clear();
                 for (int i = 0; i < names.size(); ++i)
                     chapterBox_->addItem(names[i], ids.value(i));
+                chapterList_->clear();
+                for (int i = 0; i < names.size(); ++i) {
+                    auto* item = new QListWidgetItem(QStringLiteral("%1. %2").arg(i + 1).arg(names[i]));
+                    item->setData(Qt::UserRole, ids.value(i));
+                    chapterList_->addItem(item);
+                }
                 log(QStringLiteral("章节列表：%1 个").arg(names.size()));
             });
     connect(chapterBox_, &QComboBox::currentIndexChanged, this, [this](int index) {
@@ -181,7 +190,10 @@ void MainWindow::setupUi() {
     connect(moreBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->loadMore(); });
     blockEdit_ = new QLineEdit();
     chapterBox_ = new QComboBox();
+    chapterList_ = new QListWidget();
+    chapterList_->setMinimumHeight(150);
     listRow->addWidget(chapterBox_);
+    outer->addWidget(chapterList_);
     listRow->addWidget(blockEdit_);
     blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
     listRow->addWidget(loadListBtn);
@@ -673,5 +685,11 @@ QSize MainWindow::repaintReaderAndSize() {
     if (!lastPageImage_.isNull()) applyReaderImage(lastPageImage_);
     return displayedSize_;
 }
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::chapterListCount() const { return chapterList_ ? chapterList_->count() : 0; }
 
 }  // namespace jmnext::qt

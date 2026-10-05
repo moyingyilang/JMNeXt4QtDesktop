@@ -79,7 +79,8 @@ int main(int argc, char** argv) {
         std::printf("详情标签：%s\n", win.albumText().toUtf8().constData());
         const QSize cs = win.coverSize();
         std::printf("封面尺寸：%dx%d\n", cs.width(), cs.height());
-        std::printf("章节数：%d；末页状态：%s\n", n, win.lastPageStatus().toUtf8().constData());
+        std::printf("章节数：%d；章节列表项数：%d；末页状态：%s\n", n, win.chapterListCount(),
+                    win.lastPageStatus().toUtf8().constData());
         std::printf("章节选择自检：通过\n");
         return 0;
     }
