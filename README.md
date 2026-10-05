@@ -68,3 +68,69 @@ QML 的动画/手势更顺，Widgets 的控件与文本更稳。
 请求头需要 Accept、列表是**顶层数组**、主机清单是**裸密文**、图片是 **WebP**。
 
 **尚未验证**：账号登录（Authorization: Bearer <jwt>）与需登录的接口；界面观感；Windows 端。
+
+## 怎么构建与运行
+
+### 依赖
+
+```sh
+# Debian 12（容器或本机）
+apt-get install -y cmake g++ qt6-base-dev qt6-image-formats-plugins
+```
+
+`qt6-image-formats-plugins` **不能省**：真实漫画图是 **WebP**，Debian 的 `qt6-base` 只带
+gif/ico/jpeg 三个图片插件，缺了它真实图片会全部解不开（已用真实数据验证过：安装前"解码失败"，
+安装后 852x1280 解码成功）。
+
+### 构建
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j2
+ctest --test-dir build          # 13 个测试，全部不依赖网络
+```
+
+### 运行
+
+```sh
+./run.sh                        # 起窗口；默认自动加载真实首页列表
+./run.sh --list                 # 显式加载列表
+./run.sh --chapters 209827      # 打开某作品并载入第一话
+```
+
+无显示环境（CI / 容器）也能验证渲染，用 Xvfb：
+
+```sh
+xvfb-run -a -s "-screen 0 1280x800x24" ./build/jmnext4desktop --screenshot /tmp/shot.png --list
+```
+
+### 附带的小工具
+
+| 工具 | 用途 |
+| --- | --- |
+| `jmnext4net` | 真实网络自检：`discover`（主机发现）/ `latest`（真实列表）/ `api <path> [query]`（通用接口探测）/ `get <url> --save 文件` |
+| `jmnext4img` | 真实图片 → 解码 → 切片还原 → 写出 PPM（用于验证图片管线） |
+| `jmnext4cli` | 纯计算链路：`decrypt <base64> <时间戳>` / `unscramble <raw> <w> <h> <aid> <page> <out.ppm>` |
+| `--live` / `--list` / `--reader` / `--reader-async` / `--chapters` / `--screenshot` | 主程序的自检模式，无显示环境可跑，且走的是与界面相同的代码路径 |
+
+## 现在能做什么（已用真实服务端验证）
+
+| 能力 | 状态 |
+| --- | --- |
+| 主机发现（两个入口 → 解密 → 解析 → 归一化） | 可用（真实网络） |
+| 首页列表（80 条真实数据 + 封面缩略图） | 可用 |
+| 作品详情（标签、章节表 159 个） | 可用（数据层；界面仅日志输出） |
+| 章节选择 | 可用（下拉切换） |
+| 阅读器（逐页下载 → 解码 → 切片还原 → 显示 → 翻页） | 可用 |
+| 图片缓存（内存 LRU + 磁盘原始字节，跨进程命中） | 可用 |
+| 屏蔽规则（关键词子串 / 标签与分类精确匹配） | 可用（已接进列表） |
+| 后台线程（列表、章节、翻页都不阻塞界面） | 可用 |
+| 账号登录与需登录的接口 | **未做** |
+| 详情页/搜索页等完整界面 | **未做** |
+
+## 尚未验证
+
+- **界面观感**（本项目的开发环境无显示设备，只能验证数据流与代码路径，看不到实际渲染效果）；
+- 账号登录与一切需要登录的接口；
+- **Windows 端**（尤其要确认 webp 插件随包分发，否则真实图片打不开）；
+- macOS / 其它发行版。
