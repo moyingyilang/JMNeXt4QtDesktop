@@ -77,7 +77,10 @@ if(Qt6_FOUND)
     find_package(Qt6 REQUIRED COMPONENTS Network Gui)
     add_executable(jmnext4img src/qt/main_img.cpp src/qt/ImageCodec.cpp)
     target_link_libraries(jmnext4img PRIVATE jmnext_core Qt6::Gui)
-    # QtHttpClient 是给上层用的实现（没有 main），做成静态库；真实网络请求尚未验证
+    # QtHttpClient 是给上层用的实现（没有 main），做成静态库
     add_library(jmnext_qtnet STATIC src/qt/QtHttpClient.cpp)
-    target_link_libraries(jmnext_qtnet PRIVATE jmnext_core Qt6::Network)
+    target_link_libraries(jmnext_qtnet PUBLIC jmnext_core Qt6::Network)
+    # 真实网络自检工具（给真机用）
+    add_executable(jmnext4net src/qt/main_net.cpp)
+    target_link_libraries(jmnext4net PRIVATE jmnext_qtnet Qt6::Core)
 endif()
