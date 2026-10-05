@@ -18,3 +18,4 @@
 #include "core/Md5.h"
 #include "core/UnscrambleApply.h"
 #include "core/UpdateCheck.h"
+#include "core/Version.h"

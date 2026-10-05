@@ -7,7 +7,8 @@
 #  - deb 的依赖名按 Debian 12 实测填写（用 dpkg -S 查出来的，不是猜的）。
 set -e
 DIR=$(cd "$(dirname "$0")" && pwd)
-VERSION=${VERSION:-0.1.0}
+# 版本从 src/core/Version.h 读（单一来源，避免脚本与代码对不上）；也可用 VERSION=... 覆盖
+VERSION=${VERSION:-$(sed -n 's/.*APP_VERSION\[\] = "\([^"]*\)".*/\1/p' "$DIR/src/core/Version.h" | head -1)}
 ARCH=$(dpkg --print-architecture)
 OUT="$DIR/dist"
 STAGE="$DIR/dist/stage"

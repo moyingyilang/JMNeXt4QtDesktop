@@ -25,6 +25,11 @@ int main(int argc, char** argv) {
         return rc;
     }
 
+    if (argc >= 2 && std::string(argv[1]) == "--version") {
+        std::printf("JMNeXt4QtDesktop %s\n", jmnext::core::APP_VERSION);
+        return 0;
+    }
+
     if (argc >= 2 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
         std::printf(
             "JMNeXt4QtDesktop（早期阶段）\n"
