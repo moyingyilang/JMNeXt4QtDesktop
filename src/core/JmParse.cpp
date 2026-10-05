@@ -203,6 +203,7 @@ std::optional<std::vector<ListEntry>> parseLatestList(const std::string& json) {
         if (const auto sp = valuePosAfterKey(obj, "category_sub"); sp != std::string::npos && obj[sp] == '{') {
             const auto se = matchingBracket(obj, sp);
             if (se != std::string::npos) e.categorySubTitle = stringField(obj.substr(sp, se - sp + 1), "title");
+        e.updateAt = scalarField(obj, "update_at");
         }
         if (!e.id.empty()) out.push_back(e);
     }

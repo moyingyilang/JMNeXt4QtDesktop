@@ -1,9 +1,6 @@
 #include "qt/JmClient.h"
 
-#include "core/HostDiscovery.h"
-#include "core/JmApi.h"
-#include "core/JmCrypto.h"
-#include "core/UnscrambleApply.h"
+#include "core/JmCore.h"
 #include "qt/ImageCache.h"
 #include "qt/ImageCodec.h"
 
@@ -110,6 +107,43 @@ std::optional<QImage> JmClient::pageImage(const std::string& url, int aid, int s
     }
     cache_.putImage(key, result);        // 3) 成品入内存缓存
     return result;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+std::optional<QImage> JmClient::cover(const core::ListEntry& entry) {
+    const std::string base = session_.imageBaseForCover();   // 图床缺省时用 API 主机（骨架阶段够用）
+    auto url = core::coverUrl(entry.id, entry.image, entry.updateAt, base);
+    if (!url) { lastError_ = "无法拼出封面地址"; return std::nullopt; }
+    // 封面不需要还原，所以 scrambleId 传 0 且 aid 传 0（needsUnscramble 会判为 false 之外的路径）
+    // —— 这里直接走"下载 + 解码"，不走页面图那条带还原的路径
+    const QString key = QString::fromStdString(*url) + QStringLiteral("#cover");
+    if (const QImage cached = cache_.image(key); !cached.isNull()) return cached;
+
+    const QString qurl = QString::fromStdString(*url);
+    QByteArray bytes;
+    if (cache_.hasRaw(qurl)) {
+        bytes = cache_.raw(qurl);
+    } else {
+        const auto resp = http_.get(*url, {});
+        if (!resp.ok()) { lastError_ = "封面下载失败：" + http_.lastError(); return std::nullopt; }
+        bytes = QByteArray(resp.body.data(), static_cast<int>(resp.body.size()));
+        cache_.putRaw(qurl, bytes);
+    }
+    const std::string tmp = cache_.cacheDir().toStdString() + "/cover.tmp";
+    {
+        FILE* f = std::fopen(tmp.c_str(), "wb");
+        if (!f) { lastError_ = "无法写临时文件"; return std::nullopt; }
+        std::fwrite(bytes.constData(), 1, static_cast<std::size_t>(bytes.size()), f);
+        std::fclose(f);
+    }
+    auto img = loadImage(tmp);
+    if (!img) { lastError_ = "封面解码失败"; return std::nullopt; }
+    const QImage qimg = toQImage(img->pixels, img->width, img->height);
+    cache_.putImage(key, qimg);
+    return qimg;
 }
 
 }  // namespace jmnext::qt

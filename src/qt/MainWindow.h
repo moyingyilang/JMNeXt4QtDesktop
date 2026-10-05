@@ -31,6 +31,9 @@ public:
     /// 拉取真实首页列表并填进左侧列表（返回条数；-1 表示失败）
     int loadRealList();
     /// 当前列表条数（自检用）
+    /// 为列表前 n 项加载封面缩略图（惰性，避免一次下 80 张），返回成功张数
+    int loadCoversFirst(int n);
+    int coverLoadedCount() const { return coverLoaded_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
     QString listItemText(int i) const;
@@ -60,6 +63,7 @@ private:
     QLineEdit* pageEdit_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
+    int coverLoaded_ = 0;
     jmnext::qt::JmClient client_;
     bool clientReady_ = false;
     jmnext::core::ChapterImages chapter_;

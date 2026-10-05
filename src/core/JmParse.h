@@ -22,6 +22,7 @@ struct ListEntry {
     std::string image;
     std::string categoryTitle;
     std::string categorySubTitle;
+    std::string updateAt;          // update_at：作为封面 URL 的版本号（让缓存失效）
 };
 
 struct SeriesEntry {          // 章节（album.series）

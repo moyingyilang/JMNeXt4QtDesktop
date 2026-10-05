@@ -315,3 +315,26 @@ QString MainWindow::listItemText(int i) const {
 }
 
 }  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::loadCoversFirst(int n) {
+    if (!clientReady_ || !listView_) return 0;
+    // 重新拉一次列表数据（这里只需要每条对应的封面地址参数；列表本身已在界面上）
+    auto list = client_.latest(0);
+    if (!list) return 0;
+    int loaded = 0;
+    const int limit = std::min<int>(n, static_cast<int>(list->size()));
+    for (int i = 0; i < limit; ++i) {
+        auto img = client_.cover((*list)[static_cast<std::size_t>(i)]);
+        if (!img) { log(QStringLiteral("第 %1 项封面失败：%2").arg(i + 1).arg(QString::fromStdString(client_.lastError()))); continue; }
+        QPixmap pm = QPixmap::fromImage(*img).scaled(72, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        listView_->item(i)->setIcon(QIcon(pm));
+        ++loaded;
+    }
+    coverLoaded_ = loaded;
+    log(QStringLiteral("已为前 %1 项加载封面：成功 %2 张").arg(limit).arg(loaded));
+    return loaded;
+}
+
+}  // namespace jmnext::qt

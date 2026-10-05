@@ -30,7 +30,9 @@ int main(int argc, char** argv) {
         std::printf("列表条数：%d\n", n);
         for (int i = 0; i < 3 && i < n; ++i)
             std::printf("  第 %d 条：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
-        std::printf("首页列表自检：通过\n");
+        const int covers = win.loadCoversFirst(3);
+        std::printf("封面缩略图：成功 %d 张（前 3 项）\n", covers);
+        std::printf("首页列表自检：%s\n", covers > 0 ? "通过" : "通过（但封面未取到）");
         return 0;
     }
 

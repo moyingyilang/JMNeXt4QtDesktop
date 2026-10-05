@@ -44,6 +44,8 @@ public:
 
     /// 拼业务接口 URL：base + path（去掉 path 开头的斜杠）
     std::optional<std::string> apiUrl(const std::string& path) const;
+    /// 封面用的图床基址：图床为空时回退 API 主机（骨架阶段与主项目一致的回退）
+    std::string imageBaseForCover() const { return imageHost_.empty() ? apiBaseUrl_ : imageHost_; }
     /// 拼图片 URL：imageHost（或 apiBaseUrl）+ "/" + path
     std::optional<std::string> imageUrl(const std::string& path) const;
 

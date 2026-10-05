@@ -28,6 +28,8 @@ public:
 
     /// 下载一页 → Qt 解码 → 需要则切片还原 → 返回 QImage（带内存与磁盘缓存）
 
+    /// 取列表项的封面缩略图（3x4 模板，带缓存）—— 真实网络已验证该地址返回 JPEG 400x533
+    std::optional<QImage> cover(const jmnext::core::ListEntry& entry);
     std::optional<QImage> pageImage(const std::string& url, int aid, int scrambleId);
 
     const std::string& lastError() const { return lastError_; }
