@@ -41,6 +41,19 @@ int main(int argc, char** argv) {
         return app.exec();
     }
 
+    if (argc >= 3 && std::string(argv[1]) == "--zoom") {
+        jmnext::qt::MainWindow win;
+        win.resize(1000, 700);
+        const int n = win.requestReaderAndWait(QString::fromUtf8(argv[2]), 0, 0);
+        if (n < 1) { std::printf("缩放自检失败（没能取到页）\n"); return 1; }
+        const QSize fit = win.repaintReaderAndSize();
+        win.setZoomFit(false);
+        const QSize full = win.repaintReaderAndSize();
+        std::printf("适应窗口：%dx%d；原始尺寸：%dx%d\n", fit.width(), fit.height(), full.width(), full.height());
+        std::printf("缩放自检：%s\n", (full.width() > fit.width()) ? "通过" : "可疑（原始尺寸没变大）");
+        return 0;
+    }
+
     if (argc >= 3 && std::string(argv[1]) == "--chapters") {
         jmnext::qt::MainWindow win;
         const int n = win.requestChapterPickAndWait(QString::fromUtf8(argv[2]), 2);

@@ -16,11 +16,16 @@ class QListWidget;
 class QThread;
 class QComboBox;
 class QKeyEvent;
+class QScrollArea;
 
 namespace jmnext::qt {
 
 class MainWindow : public QMainWindow {
 public:
+    void setZoomFit(bool fit);
+    bool zoomFit() const { return zoomFit_; }
+    void applyReaderImage(const QImage& image);
+    QSize repaintReaderAndSize();
     MainWindow();
     ~MainWindow() override;
 
@@ -84,8 +89,15 @@ private:
     bool eventFilter(QObject* watched, QEvent* event) override;
     void applyCjkFont();
 
+    /// 缩放模式：true = 适应窗口，false = 原始尺寸 100%
+    /// 当前显示的图片尺寸（自检用）
+    QSize displayedImageSize() const { return displayedSize_; }
     QLabel* originalView_ = nullptr;
     QLabel* restoredView_ = nullptr;
+    QScrollArea* restoredScroll_ = nullptr;
+    bool zoomFit_ = true;
+    QSize displayedSize_;
+    QImage lastPageImage_;
     QLineEdit* aidEdit_ = nullptr;
     QLineEdit* pageEdit_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;

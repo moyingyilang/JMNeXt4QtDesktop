@@ -32,6 +32,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QPlainTextEdit>
+#include <QScrollArea>
 #include <QStringList>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -91,8 +92,8 @@ MainWindow::MainWindow() {
         ++coverLoaded_;
     });
     connect(worker_, &JmWorker::pageReady, this, [this](const QImage& img, const QString& statusText) {
-        restoredView_->setPixmap(QPixmap::fromImage(img).scaled(restoredView_->size(),
-                                                                Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        lastPageImage_ = img;
+        applyReaderImage(img);
         pageStatus_ = statusText;
         pendingPageStatus_ = statusText;
         log(statusText);
@@ -148,9 +149,13 @@ void MainWindow::setupUi() {
     outer->addWidget(albumInfo_);
     originalView_ = new QLabel(QStringLiteral("（未加载图片）"));
     restoredView_ = new QLabel(QStringLiteral("（未还原）"));
-    for (QLabel* v : {originalView_, restoredView_}) {
+    restoredScroll_ = new QScrollArea();
+    restoredScroll_->setWidget(restoredView_);
+    restoredScroll_->setWidgetResizable(true);
+    originalView_->setAlignment(Qt::AlignCenter);
+    restoredView_->setAlignment(Qt::AlignCenter);
+    for (QWidget* v : {static_cast<QWidget*>(originalView_), static_cast<QWidget*>(restoredScroll_)}) {
         v->setMinimumSize(240, 320);
-        v->setAlignment(Qt::AlignCenter);
         v->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
         v->installEventFilter(this);          // 滚轮翻页（只作用于图片区）
         views->addWidget(v);
@@ -182,6 +187,8 @@ void MainWindow::setupUi() {
 
     auto* buttons = new QHBoxLayout();
     auto* openBtn = new QPushButton(QStringLiteral("打开图片…"));
+    auto* zoomBtn = new QPushButton(QStringLiteral("适应窗口 / 100%"));
+    buttons->addWidget(zoomBtn);
     auto* unscrambleBtn = new QPushButton(QStringLiteral("还原"));
     buttons->addWidget(openBtn);
     buttons->addWidget(unscrambleBtn);
@@ -220,6 +227,10 @@ void MainWindow::setupUi() {
         // 双击某条 → 用它的 id 当 aid 打开（骨架阶段常见做法：列表即作品）
         aidEdit_->setText(it->data(Qt::UserRole).toString());
         openChapter(it->data(Qt::UserRole).toString(), 0);
+    });
+    connect(zoomBtn, &QPushButton::clicked, this, [this] {
+        setZoomFit(!zoomFit_);
+        if (!lastPageImage_.isNull()) applyReaderImage(lastPageImage_);   // 立刻按新模式重排
     });
     connect(prevBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->step(-1); });
     connect(nextBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->step(1); });
@@ -367,8 +378,8 @@ bool MainWindow::showPage(int index) {
         return false;
     }
     pageIndex_ = index;
-    restoredView_->setPixmap(QPixmap::fromImage(*img).scaled(restoredView_->size(),
-                                                            Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    lastPageImage_ = *img;
+    applyReaderImage(*img);
     pageStatus_ = QStringLiteral("第 %1/%2 页 %3x%4")
                       .arg(index + 1)
                       .arg(chapter_.images.size())
@@ -621,6 +632,36 @@ int MainWindow::requestLoadMoreAndWait(int timeoutMs) {
     while (listView_ && listView_->count() == before && timer.remainingTime() > 0)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     return listView_ ? listView_->count() : -1;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void MainWindow::applyReaderImage(const QImage& image) {
+    if (image.isNull()) return;
+    QPixmap pm = QPixmap::fromImage(image);
+    if (zoomFit_) {
+        const QSize target = restoredScroll_->viewport()->size();
+        pm = pm.scaled(target, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    }
+    restoredView_->setPixmap(pm);
+    restoredView_->resize(pm.size());          // 100% 模式下让滚动区域能滚起来
+    displayedSize_ = pm.size();
+}
+
+void MainWindow::setZoomFit(bool fit) {
+    zoomFit_ = fit;
+    log(fit ? QStringLiteral("缩放：适应窗口") : QStringLiteral("缩放：原始尺寸 100%（可滚动）"));
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+QSize MainWindow::repaintReaderAndSize() {
+    if (!lastPageImage_.isNull()) applyReaderImage(lastPageImage_);
+    return displayedSize_;
 }
 
 }  // namespace jmnext::qt
