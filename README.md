@@ -36,3 +36,13 @@ QML 的动画/手势更顺，Widgets 的控件与文本更稳。
 
 **骨架阶段**：本仓库目前只有本文档、`docs/PORT-SPEC.md`（移植规格清单）与一个最小 Qt 程序骨架。
 尚未安装工具链（`cmake` + `qt6-base-dev`），**因此还没编译验证过** —— 这一步在装好依赖后进行。
+
+## 相关项目
+
+- **[JMNeXt](https://github.com/moyingyilang/JMNeXt)** —— 主项目：Kotlin + Compose Multiplatform 实现，
+  覆盖 **Android**（以此为准，移植路线）与**桌面**（JVM，稳定发布线）。
+  本仓库是它的**桌面原生重实现**（C++ / Qt），功能对齐的判据见 [docs/PORT-SPEC.md](docs/PORT-SPEC.md)；
+  在逐项对齐完成之前，桌面端请优先使用主项目的发布包。
+
+  共享的领域知识（接口怪癖、切片还原几何、屏蔽语义、版本与更新规则、打包踩坑）都在主仓库的
+  `docs/STATE.md` 与 `tools/buildkit/`（工具仓库）里 —— 本仓库实现时应以那些记录为准，不要凭印象重写。
