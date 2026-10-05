@@ -8,3 +8,6 @@ build-*/
 compile_commands.json
 dist/
 .work-shots/
+/.verify.sh
+/.health.sh
+/.shots*.sh
