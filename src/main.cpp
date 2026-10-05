@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         const QString out = QString::fromUtf8(argv[2]);
         const bool withList = (argc >= 4 && std::string(argv[3]) == "--list");
         QTimer::singleShot(300, &app, [&win, withList] { if (withList) win.requestListAsync(); });
-        QTimer::singleShot(argc >= 4 ? 25000 : 2000, &app, [&win, out] {   // 带子参数时要等网络（此前只认 --list，导致 --reader 的截图拍早了）
+        QTimer::singleShot(argc >= 4 ? 45000 : 2000, &app, [&win, out] {   // 45 秒（原 25 秒）：真实图片走 CDN 慢时 25 秒会抓空（已知 race，缓解非根治）   // 带子参数时要等网络（此前只认 --list，导致 --reader 的截图拍早了）
             const bool ok = win.grab().save(out);
             std::printf("截图%s：%s\n", ok ? "成功" : "失败", out.toUtf8().constData());
             QCoreApplication::quit();
