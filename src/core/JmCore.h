@@ -5,6 +5,7 @@
 #pragma once
 
 #include "core/AesEcb.h"
+#include "core/BlockRules.h"   // 新增核心模块时，记得同时加到这里
 #include "core/Base64.h"
 #include "core/HostDiscovery.h"
 #include "core/ImageUnscramble.h"
