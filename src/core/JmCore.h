@@ -14,6 +14,7 @@
 #include "core/JmPaths.h"
 #include "core/JmParse.h"
 #include "core/JmSession.h"
+#include "core/ReadProgress.h"
 #include "core/JmUrls.h"
 #include "core/Md5.h"
 #include "core/UnscrambleApply.h"
