@@ -57,11 +57,16 @@ int main(int argc, char** argv) {
         const QString out = QString::fromUtf8(argv[2]);
         const bool withList = (argc >= 4 && std::string(argv[3]) == "--list");
         QTimer::singleShot(300, &app, [&win, withList] { if (withList) win.requestListAsync(); });
-        QTimer::singleShot(withList ? 25000 : 2000, &app, [&win, out] {
+        QTimer::singleShot(argc >= 4 ? 25000 : 2000, &app, [&win, out] {   // 带子参数时要等网络（此前只认 --list，导致 --reader 的截图拍早了）
             const bool ok = win.grab().save(out);
             std::printf("截图%s：%s\n", ok ? "成功" : "失败", out.toUtf8().constData());
             QCoreApplication::quit();
         });
+        // 可选：把真实阅读页也载入（用于给用户看实际画面）。纯加法，不动上面的逻辑。
+        if (argc >= 5 && std::string(argv[3]) == "--reader") {
+            const QString readerAid = QString::fromUtf8(argv[4]);
+            QTimer::singleShot(21000, &app, [&win, readerAid] { win.openReaderAsync(readerAid, 2); });
+        }
         return app.exec();
     }
 
