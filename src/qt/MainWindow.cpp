@@ -126,9 +126,7 @@ MainWindow::MainWindow() {
             });
     connect(worker_, &JmWorker::chaptersReady, this,
             [this](const QStringList& names, const QStringList& ids) {
-                chapterBox_->clear();
                 for (int i = 0; i < names.size(); ++i)
-                    chapterBox_->addItem(names[i], ids.value(i));
                 chapterList_->clear();
                 for (int i = 0; i < names.size(); ++i) {
                     auto* item = new QListWidgetItem(QStringLiteral("%1. %2").arg(i + 1).arg(names[i]));
@@ -137,10 +135,6 @@ MainWindow::MainWindow() {
                 }
                 log(QStringLiteral("章节列表：%1 个").arg(names.size()));
             });
-    connect(chapterBox_, &QComboBox::currentIndexChanged, this, [this](int index) {
-        if (!worker_ || index < 0) return;
-        worker_->openChapterId(chapterBox_->itemData(index).toString(), 0);
-    });
     blockEdit_->setPlaceholderText(QStringLiteral("屏蔽关键词（逗号分隔），例如 NTR"));
     connect(blockEdit_, &QLineEdit::editingFinished, this, [this] {
         if (!worker_) return;
@@ -189,10 +183,8 @@ void MainWindow::setupUi() {
     listRow->addWidget(moreBtn);
     connect(moreBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->loadMore(); });
     blockEdit_ = new QLineEdit();
-    chapterBox_ = new QComboBox();
     chapterList_ = new QListWidget();
     chapterList_->setMinimumHeight(150);
-    listRow->addWidget(chapterBox_);
     outer->addWidget(chapterList_);
     listRow->addWidget(blockEdit_);
     blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
@@ -572,7 +564,8 @@ int MainWindow::requestChapterPickAndWait(const QString& aid, int index, int tim
     if (chapterCount == 0) { disconnect(c1); disconnect(c2); return -1; }
     if (index >= 0 && index < chapterCount) {
         const int before = pages;
-        worker_->openChapterId(chapterBox_->itemData(index).toString(), 0);
+        if (!chapterList_ || !chapterList_->item(index)) return -1;   // 列表未就绪：明确失败，别解引用空指针
+        worker_->openChapterId(chapterList_->item(index)->data(Qt::UserRole).toString(), 0);
         while (pages == before && timer.remainingTime() > 0)
             QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }

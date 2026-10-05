@@ -106,7 +106,6 @@ private:
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
     QLineEdit* blockEdit_ = nullptr;
-    QComboBox* chapterBox_ = nullptr;
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;
     QLabel* coverLabel_ = nullptr;
