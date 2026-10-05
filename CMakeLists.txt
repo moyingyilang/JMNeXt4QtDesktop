@@ -56,3 +56,13 @@ add_test(NAME session COMMAND test_session)
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)
 target_link_libraries(jmnext4cli PRIVATE jmnext_core)
+
+# ---- Qt 层：真机网络与图片读写（核心层仍然不依赖 Qt）----
+if(Qt6_FOUND)
+    find_package(Qt6 REQUIRED COMPONENTS Network Gui)
+    add_executable(jmnext4img src/qt/main_img.cpp src/qt/ImageCodec.cpp)
+    target_link_libraries(jmnext4img PRIVATE jmnext_core Qt6::Gui)
+    # QtHttpClient 是给上层用的实现（没有 main），做成静态库；真实网络请求尚未验证
+    add_library(jmnext_qtnet STATIC src/qt/QtHttpClient.cpp)
+    target_link_libraries(jmnext_qtnet PRIVATE jmnext_core Qt6::Network)
+endif()
