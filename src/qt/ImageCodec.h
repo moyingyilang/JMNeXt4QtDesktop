@@ -16,6 +16,8 @@ struct Image {
 };
 
 std::optional<Image> loadImage(const std::string& path);
+/// 供界面调用的同义入口（避免与 QWidget::loadImage 之类的名字混淆）
+std::optional<Image> loadImageFile(const std::string& path);
 bool savePpm(const std::string& path, const Image& image);
 
 }  // namespace jmnext::qt

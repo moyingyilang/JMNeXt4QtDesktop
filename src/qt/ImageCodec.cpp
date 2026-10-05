@@ -38,3 +38,7 @@ bool savePpm(const std::string& path, const Image& image) {
 }
 
 }  // namespace jmnext::qt
+
+namespace jmnext::qt {
+std::optional<Image> loadImageFile(const std::string& path) { return loadImage(path); }
+}  // namespace jmnext::qt

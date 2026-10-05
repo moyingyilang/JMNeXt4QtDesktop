@@ -25,8 +25,8 @@ find_package(Qt6 COMPONENTS Widgets)
 
 # 界面骨架（在没有 Qt 的环境里也能只编核心与测试）
 if(Qt6_FOUND)
-    add_executable(jmnext4desktop src/main.cpp)
-    target_link_libraries(jmnext4desktop PRIVATE Qt6::Widgets jmnext_core)
+    add_executable(jmnext4desktop src/main.cpp src/qt/MainWindow.cpp src/qt/ImageCodec.cpp)
+    target_link_libraries(jmnext4desktop PRIVATE jmnext_core Qt6::Widgets Qt6::Gui)
 else()
     message(STATUS "未找到 Qt6：跳过界面目标，只构建核心与测试")
 endif()
