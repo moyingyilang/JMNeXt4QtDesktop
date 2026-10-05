@@ -16,7 +16,17 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPixmap>
+#include <QCoreApplication>
+#include <QEventLoop>
+#include <QIcon>
+#include <QCoreApplication>
+#include <QEventLoop>
+#include <QIcon>
 #include <QListWidget>
+#include <QThread>
+#include <QTimer>
+#include <QThread>
+#include <QTimer>
 #include <QPlainTextEdit>
 #include <QStringList>
 #include <QPushButton>
@@ -41,9 +51,47 @@ QImage toQImage(const std::vector<uint32_t>& px, int w, int h) {
 
 }  // namespace
 
+MainWindow::~MainWindow() {
+    if (workerThread_) { workerThread_->quit(); workerThread_->wait(3000); }
+}
+
 MainWindow::MainWindow() {
     setupUi();
     applyCjkFont();
+
+    // 后台线程：JmClient 的方法都是同步的，放主线程会卡界面
+    workerThread_ = new QThread(this);
+    worker_ = new JmWorker();
+    worker_->moveToThread(workerThread_);
+    connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
+
+    connect(worker_, &JmWorker::status, this, [this](const QString& s) { log(s); });
+    connect(worker_, &JmWorker::failed, this, [this](const QString& s) { log(QStringLiteral("失败：") + s); });
+    connect(worker_, &JmWorker::listReady, this,
+            [this](const QStringList& titles, const QStringList& ids) {
+                listView_->clear();
+                for (int i = 0; i < titles.size(); ++i) {
+                    auto* item = new QListWidgetItem(titles[i]);
+                    item->setData(Qt::UserRole, ids.value(i));
+                    listView_->addItem(item);
+                }
+                log(QStringLiteral("列表已加载：%1 条").arg(titles.size()));
+                pendingListResult_ = static_cast<int>(titles.size());
+            });
+    connect(worker_, &JmWorker::coverReady, this, [this](int index, const QImage& img) {
+        if (!listView_ || index < 0 || index >= listView_->count()) return;
+        listView_->item(index)->setIcon(QIcon(QPixmap::fromImage(img).scaled(
+            72, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
+        ++coverLoaded_;
+    });
+    connect(worker_, &JmWorker::pageReady, this, [this](const QImage& img, const QString& statusText) {
+        restoredView_->setPixmap(QPixmap::fromImage(img).scaled(restoredView_->size(),
+                                                                Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        pageStatus_ = statusText;
+        pendingPageStatus_ = statusText;
+        log(statusText);
+    });
+    workerThread_->start();
 }
 
 void MainWindow::setupUi() {
@@ -105,7 +153,10 @@ void MainWindow::setupUi() {
     buttons->addWidget(prevBtn);
     buttons->addWidget(nextBtn);
     connect(openChBtn, &QPushButton::clicked, this, [this] { openChapter(aidEdit_->text(), 0); });
-    connect(loadListBtn, &QPushButton::clicked, this, [this] { loadRealList(); });
+    // 加载列表走**后台线程**（JmClient 的方法都是同步的，放主线程会卡界面）
+    connect(loadListBtn, &QPushButton::clicked, this, [this] {
+        if (worker_) worker_->loadList();      // 队列连接到工作线程
+    });
     connect(listView_, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* it) {
         // 双击某条 → 用它的 id 当 aid 打开（骨架阶段常见做法：列表即作品）
         aidEdit_->setText(it->data(Qt::UserRole).toString());
@@ -335,6 +386,54 @@ int MainWindow::loadCoversFirst(int n) {
     coverLoaded_ = loaded;
     log(QStringLiteral("已为前 %1 项加载封面：成功 %2 张").arg(limit).arg(loaded));
     return loaded;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+namespace {
+/// 跑事件循环直到条件满足或超时（自检用；不引入自定义类型）
+template <typename Predicate>
+bool pumpUntil(QEventLoop& loop, QTimer& timer, Predicate done) {
+    while (!done()) {
+        if (!loop.isRunning()) return false;
+        loop.processEvents(QEventLoop::AllEvents, 50);
+        if (timer.remainingTime() < 0) return false;
+    }
+    return true;
+}
+}  // namespace
+
+int MainWindow::requestListAndWait(int timeoutMs) {
+    if (!worker_) return -1;
+    QEventLoop loop;
+    QTimer timer;
+    timer.setSingleShot(true);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.start(timeoutMs);
+    pumpList_ = true;
+    pendingListResult_ = -1;
+    worker_->loadList();                      // 队列连接到工作线程
+    // 等到 listReady 或超时
+    while (pendingListResult_ < 0 && loop.isRunning()) {
+        loop.processEvents(QEventLoop::AllEvents, 100);
+        if (timer.remainingTime() < 0) break;
+    }
+    pumpList_ = false;
+    return pendingListResult_;
+}
+
+int MainWindow::requestCoversAndWait(int n, int timeoutMs) {
+    if (!worker_) return 0;
+    coverLoaded_ = 0;
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    worker_->loadCovers(n);
+    while (coverLoaded_ < n && timer.remainingTime() > 0) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+    return coverLoaded_;
 }
 
 }  // namespace jmnext::qt

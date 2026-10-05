@@ -25,12 +25,12 @@ int main(int argc, char** argv) {
 
     if (argc >= 2 && std::string(argv[1]) == "--list") {
         jmnext::qt::MainWindow win;
-        const int n = win.loadRealList();
+        const int n = win.requestListAndWait();
         if (n < 0) { std::printf("加载失败\n"); return 1; }
         std::printf("列表条数：%d\n", n);
         for (int i = 0; i < 3 && i < n; ++i)
             std::printf("  第 %d 条：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
-        const int covers = win.loadCoversFirst(3);
+        const int covers = win.requestCoversAndWait(3);
         std::printf("封面缩略图：成功 %d 张（前 3 项）\n", covers);
         std::printf("首页列表自检：%s\n", covers > 0 ? "通过" : "通过（但封面未取到）");
         return 0;

@@ -1,6 +1,7 @@
 // 最小界面骨架：打开一张图 → 按 aid/page 还原 → 并排看"原始/还原"。
 #include "core/JmParse.h"
 #include "qt/JmClient.h"
+#include "qt/JmWorker.h"
 //
 // 现在刻意只做这一件事（对应目标里的"先跑通能看图"），列表、阅读器交互随后再加。
 // 无显示环境可用 --selftest 走同一条代码路径并打印结果（见 main.cpp），
@@ -12,12 +13,14 @@ class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
 class QListWidget;
+class QThread;
 
 namespace jmnext::qt {
 
 class MainWindow : public QMainWindow {
 public:
     MainWindow();
+    ~MainWindow() override;
 
     /// 加载图片（原图与还原图都更新到界面上）
     bool loadImage(const QString& path);
@@ -34,6 +37,12 @@ public:
     /// 为列表前 n 项加载封面缩略图（惰性，避免一次下 80 张），返回成功张数
     int loadCoversFirst(int n);
     int coverLoadedCount() const { return coverLoaded_; }
+
+    /// 异步拉列表并等待结果（自检用；返回条数，-1 表示超时/失败）
+    int requestListAndWait(int timeoutMs = 60000);
+    /// 异步取前 n 张封面并等待（自检用）
+    int requestCoversAndWait(int n, int timeoutMs = 120000);
+    QString lastPageStatus() const { return pendingPageStatus_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
     QString listItemText(int i) const;
@@ -64,6 +73,11 @@ private:
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
     int coverLoaded_ = 0;
+    QThread* workerThread_ = nullptr;
+    JmWorker* worker_ = nullptr;
+    bool pumpList_ = false;
+    int pendingListResult_ = -1;
+    QString pendingPageStatus_;
     jmnext::qt::JmClient client_;
     bool clientReady_ = false;
     jmnext::core::ChapterImages chapter_;
