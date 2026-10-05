@@ -49,6 +49,10 @@ public slots:
     /// 确保主机已发现（各入口共用，避免详情失败：尚未初始化主机）
     bool ensureStarted();
     /// 预取第 index 页到缓存（失败静默，不影响当前页）
+    /// 进度文件路径（AppDataLocation 下 progress.txt）
+    /// 立刻写入当前进度（翻页成功后调用）
+    void saveProgressNow();
+    static std::string progressPath();
     void prefetch(int index);
     /// 上报缓存统计（跨线程不能返回值，所以用信号）
     void reportCacheStats();

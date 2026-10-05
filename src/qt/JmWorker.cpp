@@ -2,6 +2,9 @@
 
 #include "qt/JmClient.h"
 
+#include <QDir>
+#include <QStandardPaths>
+
 #include <cstdlib>
 
 namespace jmnext::qt {
@@ -94,6 +97,20 @@ void JmWorker::openChapter(const QString& aid, int page) {
         emit chaptersReady(names, ids);
     }
 
+    // 进度恢复：同一作品且请求第 0 页时，接着上次的位置读。
+    // 注意必须放在"发出章节列表"**之后** —— 否则会提前 return，界面的章节列表就空了（我第一版就犯了这个错）。
+    if (page == 0) {
+        if (auto saved = core::loadReadProgress(progressPath()); saved && saved->aid == aid.toStdString()) {
+            if (auto ch = client().chapter(saved->chapterId)) {
+                chapter_ = *ch;
+                pageIndex_ = -1;
+                emit status(QStringLiteral("恢复上次进度：第 %1 页（作品 %2）").arg(saved->page + 1).arg(aid));
+                showPageAt(saved->page);
+                return;
+            }
+        }
+    }
+
     auto ch = client().chapter(al->series.front().id);
     if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
     chapter_ = *ch;
@@ -128,6 +145,7 @@ void JmWorker::showPageAt(int index) {
                               .arg(chapter_.images.size())
                               .arg(img->width())
                               .arg(img->height()));
+    saveProgressNow();          // 记录进度（下次打开同一作品接着读）
     // 预取下一页与上一页：读漫画大部分时间在往后翻，回翻也是常见动作
     prefetch(index + 1);
     prefetch(index - 1);
@@ -232,6 +250,23 @@ void JmWorker::fetchAlbumCover(const QString& id) {
     if (!img) { emit status(QStringLiteral("封面未取到：%1").arg(QString::fromStdString(client().lastError()))); return; }
     emit albumCoverReady(*img);
     emit status(QStringLiteral("封面已加载 %1x%2").arg(img->width()).arg(img->height()));
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+std::string JmWorker::progressPath() {
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    return (dir + "/progress.txt").toStdString();
+}
+
+void JmWorker::saveProgressNow() {
+    if (pageIndex_ < 0 || chapter_.id.empty()) return;
+    const core::ReadProgress p{currentAid_.toStdString(), chapter_.id, pageIndex_};
+    if (core::saveReadProgress(progressPath(), p))
+        emit status(QStringLiteral("已记录进度：第 %1 页（作品 %2）").arg(pageIndex_ + 1).arg(currentAid_));
 }
 
 }  // namespace jmnext::qt
