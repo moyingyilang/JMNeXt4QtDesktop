@@ -55,6 +55,7 @@ public:
     /// 触发 worker 上报缓存统计并等它回来（自检用）
     void requestCacheStatsAndWait(int timeoutMs = 5000);
     QString lastPageStatus() const { return pendingPageStatus_; }
+    QString albumText() const { return last_album_text_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
     QString listItemText(int i) const;
@@ -89,12 +90,14 @@ private:
     QListWidget* listView_ = nullptr;
     QLineEdit* blockEdit_ = nullptr;
     QComboBox* chapterBox_ = nullptr;
+    QLabel* albumInfo_ = nullptr;
     int coverLoaded_ = 0;
     QThread* workerThread_ = nullptr;
     JmWorker* worker_ = nullptr;
     bool pumpList_ = false;
     int pendingListResult_ = -1;
     QString pendingPageStatus_;
+    QString last_album_text_;
     jmnext::qt::JmClient client_;
     bool clientReady_ = false;
     jmnext::core::ChapterImages chapter_;

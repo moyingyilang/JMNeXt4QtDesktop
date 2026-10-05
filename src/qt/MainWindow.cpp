@@ -98,6 +98,13 @@ MainWindow::MainWindow() {
         log(statusText);
     });
     workerThread_->start();
+    connect(worker_, &JmWorker::albumReady, this,
+            [this](const QString& name, const QString& author, const QStringList& tags) {
+                albumInfo_->setText(QStringLiteral("%1　——　%2\n标签：%3")
+                                        .arg(name, author, tags.isEmpty() ? QStringLiteral("（无）")
+                                                                          : tags.join(QStringLiteral("、"))));
+                last_album_text_ = albumInfo_->text();
+            });
     connect(worker_, &JmWorker::chaptersReady, this,
             [this](const QStringList& names, const QStringList& ids) {
                 chapterBox_->clear();
@@ -126,6 +133,9 @@ void MainWindow::setupUi() {
     auto* outer = new QVBoxLayout(central);
 
     auto* views = new QHBoxLayout();
+    albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
+    albumInfo_->setWordWrap(true);
+    outer->addWidget(albumInfo_);
     originalView_ = new QLabel(QStringLiteral("（未加载图片）"));
     restoredView_ = new QLabel(QStringLiteral("（未还原）"));
     for (QLabel* v : {originalView_, restoredView_}) {

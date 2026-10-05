@@ -75,6 +75,13 @@ void JmWorker::openChapter(const QString& aid, int page) {
                     .arg(al->series.size()));
     if (al->series.empty()) { emit failed(QStringLiteral("该作品没有章节")); return; }
 
+    // 详情信息交给界面（标题/作者/标签）
+    {
+        QStringList tags;
+        for (const auto& t : al->tags) tags << QString::fromStdString(t);
+        emit albumReady(QString::fromStdString(al->name), QString::fromStdString(al->author), tags);
+    }
+
     // 把章节列表交给界面（章节选择器）
     {
         QStringList names, ids;

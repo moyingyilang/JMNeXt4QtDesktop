@@ -8,6 +8,9 @@
 namespace jmnext::core {
 namespace {
 
+std::vector<std::string> stringArrayField(const std::string& obj, const std::string& key);
+std::string scalarField(const std::string& obj, const std::string& key);
+
 /// 跳过空白
 std::size_t skipWs(const std::string& s, std::size_t i) {
     while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i]))) ++i;
@@ -94,6 +97,20 @@ std::string stringField(const std::string& obj, const std::string& key) {
 
 /// 读标量字段：带引号的字符串与裸数字都吃（真实接口两种都有：
 /// comic_read 的 id 是 209827 裸数字，而 scramble_id 是 "220980" 字符串）
+/// 详情里的 author 可能是字符串，也可能是**字符串数组**（真实响应是数组，主项目的 hitsAuthor
+/// 正是遍历列表），这里统一拼成一个字符串。
+std::string authorField(const std::string& obj) {
+    const auto pos = valuePosAfterKey(obj, "author");
+    if (pos == std::string::npos) return {};
+    if (obj[pos] == '[') {
+        auto arr = stringArrayField(obj, "author");
+        std::string out;
+        for (const auto& a : arr) { if (!out.empty()) out += " / "; out += a; }
+        return out;
+    }
+    return scalarField(obj, "author");
+}
+
 std::string scalarField(const std::string& obj, const std::string& key) {
     const auto pos = valuePosAfterKey(obj, key);
     if (pos == std::string::npos) return {};
@@ -215,7 +232,7 @@ std::optional<AlbumInfo> parseAlbum(const std::string& json) {
     AlbumInfo a;
     a.id = scalarField(json, "id");
     a.name = stringField(json, "name");
-    a.author = stringField(json, "author");
+    a.author = authorField(json);      // 真实响应里 author 是数组，别按字符串读
     a.tags = stringArrayField(json, "tags");
     for (auto& obj : objectArrayField(json, "series")) {
         SeriesEntry se;

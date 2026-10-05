@@ -52,6 +52,7 @@ public slots:
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
     void chaptersReady(const QStringList& names, const QStringList& ids);
+    void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void coverReady(int index, const QImage& image);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
