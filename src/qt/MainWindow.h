@@ -15,6 +15,7 @@ class QPlainTextEdit;
 class QListWidget;
 class QThread;
 class QComboBox;
+class QKeyEvent;
 
 namespace jmnext::qt {
 
@@ -73,6 +74,8 @@ public:
 
 private:
     void setupUi();
+    /// 键盘翻页：← / PageUp 上一页，→ / PageDown / 空格 下一页
+    void keyPressEvent(QKeyEvent* event) override;
     void applyCjkFont();
 
     QLabel* originalView_ = nullptr;

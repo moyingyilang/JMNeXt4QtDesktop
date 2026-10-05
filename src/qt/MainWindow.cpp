@@ -17,6 +17,7 @@
 #include <QLineEdit>
 #include <QPixmap>
 #include <QComboBox>
+#include <QKeyEvent>
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QIcon>
@@ -157,6 +158,8 @@ void MainWindow::setupUi() {
     buttons->addWidget(openBtn);
     buttons->addWidget(unscrambleBtn);
     outer->addLayout(buttons);
+
+    log(QStringLiteral("快捷键：← / PageUp 上一页，→ / PageDown / 空格 下一页；章节用上方下拉框切换"));
 
     logView_ = new QPlainTextEdit();
     logView_->setReadOnly(true);
@@ -515,6 +518,31 @@ int MainWindow::requestChapterPickAndWait(const QString& aid, int index, int tim
     disconnect(c1);
     disconnect(c2);
     return pages > 0 ? chapterCount : -1;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void MainWindow::keyPressEvent(QKeyEvent* event) {
+    if (!worker_) { QMainWindow::keyPressEvent(event); return; }
+    switch (event->key()) {
+        case Qt::Key_Left:
+        case Qt::Key_PageUp:
+        case Qt::Key_Backspace:
+            worker_->step(-1);
+            return;
+        case Qt::Key_Right:
+        case Qt::Key_PageDown:
+        case Qt::Key_Space:
+        case Qt::Key_Return:
+        case Qt::Key_Enter:
+            worker_->step(1);
+            return;
+        default:
+            break;
+    }
+    QMainWindow::keyPressEvent(event);
 }
 
 }  // namespace jmnext::qt
