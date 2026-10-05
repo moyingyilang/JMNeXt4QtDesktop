@@ -7,7 +7,7 @@
 // 为什么要它：真实响应格式在容器里取不到（无账号、无法确认可达性）。
 // 这个工具让你在真机上一条命令把真响应导出来 —— 我拿到之后就能把 extractImages()
 // 里那处"待核对的字段名"换成真字段，其余链路已经全部有测试覆盖。
-#include "core/HostDiscovery.h"
+#include "core/JmCore.h"
 #include "core/JmApi.h"
 #include "core/JmSession.h"
 #include "qt/QtHttpClient.h"
@@ -17,6 +17,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 #include <fstream>
 #include <string>
 
@@ -32,7 +34,7 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         std::fprintf(stderr,
                      "用法:\n  jmnext4net get <url>\n  jmnext4net discover\n"
-                     "  jmnext4net latest [--save 文件]\n");
+                     "  jmnext4net latest [--save 文件]\n  jmnext4net update [本地版本] [仓库]\n");
         return 2;
     }
     jmnext::qt::QtHttpClient http;
@@ -55,6 +57,50 @@ int main(int argc, char** argv) {
             printHead(resp.body, 800);
         }
         return resp.ok() ? 0 : 1;
+    }
+
+    if (cmd == "update") {
+        // 更新检查：拉 GitHub 最新 release，按 core::UpdateCheck 的规则比较
+        // （fix(n) 规则也在 core 里，已有单测；这里只做"取 tag → 比较 → 给出该下哪个包"）
+        const std::string repo = (argc >= 4) ? argv[3] : "moyingyilang/JMNeXt4QtDesktop";
+        const std::string local = (argc >= 3) ? argv[2] : "0.1.0";
+        const std::string url = "https://api.github.com/repos/" + repo + "/releases/latest";
+        // 受限环境（本容器的 GitHub HTTPS 不通）可用 --from-file 喂罐装响应，
+        // 这样"取 tag → 比较 → 拼附件名"这段逻辑仍能被验证；在线那一步如实标注未验证。
+        jmnext::net::HttpResponse resp;
+        if (argc >= 6 && std::string(argv[4]) == "--from-file") {
+            std::ifstream in(argv[5], std::ios::binary);
+            std::stringstream ss; ss << in.rdbuf();
+            resp = jmnext::net::HttpResponse{200, ss.str()};
+            std::printf("（用本地文件代替网络：%s）\n", argv[5]);
+        } else {
+            resp = http.get(url, {"Accept: application/vnd.github+json"});
+        }
+        if (!resp.ok()) {
+            std::printf("失败：HTTP %d %s\n", resp.status, http.lastError().c_str());
+            return 1;
+        }
+        // 只取 tag_name（够用且不引入 JSON 依赖）
+        std::string tag;
+        if (const auto at = resp.body.find("\"tag_name\""); at != std::string::npos) {
+            if (const auto q1 = resp.body.find('"', resp.body.find(':', at)); q1 != std::string::npos) {
+                if (const auto q2 = resp.body.find('"', q1 + 1); q2 != std::string::npos)
+                    tag = resp.body.substr(q1 + 1, q2 - q1 - 1);
+            }
+        }
+        if (tag.empty()) { std::printf("失败：响应里没有 tag_name\n"); return 1; }
+        std::printf("远端最新：%s\n", tag.c_str());
+        if (jmnext::core::isNewer(tag, local)) {
+            std::printf("有新版本：%s（本地 %s）\n", tag.c_str(), local.c_str());
+            std::printf("桌面端附件名（统一包排第一）：");
+            for (const auto& n : jmnext::core::desktopAssetNames(tag, "Linux", "aarch64"))
+                std::printf(" %s", n.c_str());
+            std::printf("\n下载直链示例：%s\n",
+                        jmnext::core::assetUrl(tag, "JMNeXt4QtDesktop-0.1.0-linux-arm64.deb", repo).c_str());
+            return 0;
+        }
+        std::printf("已是最新（本地 %s 不旧于远端 %s）\n", local.c_str(), tag.c_str());
+        return 0;
     }
 
     if (cmd == "discover") {
