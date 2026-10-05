@@ -75,6 +75,16 @@ void JmWorker::openChapter(const QString& aid, int page) {
                     .arg(al->series.size()));
     if (al->series.empty()) { emit failed(QStringLiteral("该作品没有章节")); return; }
 
+    // 把章节列表交给界面（章节选择器）
+    {
+        QStringList names, ids;
+        for (const auto& se : al->series) {
+            names << (se.name.empty() ? QStringLiteral("(未命名)") : QString::fromStdString(se.name));
+            ids << QString::fromStdString(se.id);
+        }
+        emit chaptersReady(names, ids);
+    }
+
     auto ch = client().chapter(al->series.front().id);
     if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
     chapter_ = *ch;
@@ -122,6 +132,23 @@ void JmWorker::setBlockWords(const QStringList& words) {
         if (!s.empty()) blockWords_.push_back(s);
     }
     emit status(QStringLiteral("屏蔽关键词已设为 %1 个").arg(blockWords_.size()));
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::openChapterId(const QString& chapterId, int page) {
+    if (!ensureStarted()) return;
+    auto ch = client().chapter(chapterId.toStdString());
+    if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
+    chapter_ = *ch;
+    pageIndex_ = -1;
+    emit status(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
+                    .arg(QString::fromStdString(chapter_.id))
+                    .arg(chapter_.totalPage)
+                    .arg(chapter_.scrambleId));
+    showPageAt(page);
 }
 
 }  // namespace jmnext::qt

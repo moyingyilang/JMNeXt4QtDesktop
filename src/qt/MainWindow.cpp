@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPixmap>
+#include <QComboBox>
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QIcon>
@@ -92,6 +93,17 @@ MainWindow::MainWindow() {
         log(statusText);
     });
     workerThread_->start();
+    connect(worker_, &JmWorker::chaptersReady, this,
+            [this](const QStringList& names, const QStringList& ids) {
+                chapterBox_->clear();
+                for (int i = 0; i < names.size(); ++i)
+                    chapterBox_->addItem(names[i], ids.value(i));
+                log(QStringLiteral("章节列表：%1 个").arg(names.size()));
+            });
+    connect(chapterBox_, &QComboBox::currentIndexChanged, this, [this](int index) {
+        if (!worker_ || index < 0) return;
+        worker_->openChapterId(chapterBox_->itemData(index).toString(), 0);
+    });
     blockEdit_->setPlaceholderText(QStringLiteral("屏蔽关键词（逗号分隔），例如 NTR"));
     connect(blockEdit_, &QLineEdit::editingFinished, this, [this] {
         if (!worker_) return;
@@ -124,6 +136,8 @@ void MainWindow::setupUi() {
     listRow->addWidget(listView_);
     auto* loadListBtn = new QPushButton(QStringLiteral("加载真实首页列表"));
     blockEdit_ = new QLineEdit();
+    chapterBox_ = new QComboBox();
+    listRow->addWidget(chapterBox_);
     listRow->addWidget(blockEdit_);
     blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
     listRow->addWidget(loadListBtn);
@@ -472,6 +486,35 @@ int MainWindow::requestReaderAndWait(const QString& aid, int page, int steps, in
     }
     disconnect(conn);
     return pages;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::requestChapterPickAndWait(const QString& aid, int index, int timeoutMs) {
+    if (!worker_) return -1;
+    int chapterCount = 0, pages = 0;
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    auto c1 = connect(worker_, &JmWorker::chaptersReady, this,
+                      [&chapterCount](const QStringList& names, const QStringList&) { chapterCount = names.size(); });
+    auto c2 = connect(worker_, &JmWorker::pageReady, this,
+                      [&pages](const QImage&, const QString&) { ++pages; });
+    worker_->openChapter(aid, 0);
+    while (chapterCount == 0 && timer.remainingTime() > 0)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    if (chapterCount == 0) { disconnect(c1); disconnect(c2); return -1; }
+    if (index >= 0 && index < chapterCount) {
+        const int before = pages;
+        worker_->openChapterId(chapterBox_->itemData(index).toString(), 0);
+        while (pages == before && timer.remainingTime() > 0)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+    disconnect(c1);
+    disconnect(c2);
+    return pages > 0 ? chapterCount : -1;
 }
 
 }  // namespace jmnext::qt

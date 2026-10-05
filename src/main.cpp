@@ -8,6 +8,8 @@
 #include "qt/MainWindow.h"
 
 #include <QApplication>
+#include <QCoreApplication>
+#include <QTimer>
 #include <QTimer>
 
 #include <cstdio>
@@ -21,6 +23,31 @@ int main(int argc, char** argv) {
         if (!win.loadImage(QString::fromUtf8(argv[2]))) rc = 1;
         std::printf("自检结果：%s\n", rc == 0 ? "通过" : "失败");
         return rc;
+    }
+
+    if (argc >= 3 && std::string(argv[1]) == "--screenshot") {
+        // 起真实窗口 → 拉真实列表（后台线程）→ 等它上屏 → 截图 → 退出
+        jmnext::qt::MainWindow win;
+        win.resize(1280, 800);
+        win.show();
+        const QString out = QString::fromUtf8(argv[2]);
+        const bool withList = (argc >= 4 && std::string(argv[3]) == "--list");
+        QTimer::singleShot(300, &app, [&win, withList] { if (withList) win.requestListAsync(); });
+        QTimer::singleShot(withList ? 25000 : 2000, &app, [&win, out] {
+            const bool ok = win.grab().save(out);
+            std::printf("截图%s：%s\n", ok ? "成功" : "失败", out.toUtf8().constData());
+            QCoreApplication::quit();
+        });
+        return app.exec();
+    }
+
+    if (argc >= 3 && std::string(argv[1]) == "--chapters") {
+        jmnext::qt::MainWindow win;
+        const int n = win.requestChapterPickAndWait(QString::fromUtf8(argv[2]), 2);
+        if (n < 0) { std::printf("章节自检失败\n"); return 1; }
+        std::printf("章节数：%d；末页状态：%s\n", n, win.lastPageStatus().toUtf8().constData());
+        std::printf("章节选择自检：通过\n");
+        return 0;
     }
 
     if (argc >= 4 && std::string(argv[1]) == "--reader-async") {
@@ -96,7 +123,9 @@ int main(int argc, char** argv) {
     }
 
     jmnext::qt::MainWindow win;
-    win.resize(760, 620);
+    win.resize(1280, 800);
     win.show();
+    // 默认启动就拉一次真实列表：打开就能看到内容，不用再敲参数
+    QTimer::singleShot(300, &app, [&win] { win.requestListAsync(); });
     return app.exec();
 }

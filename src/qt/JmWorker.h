@@ -37,6 +37,8 @@ public slots:
     void loadCovers(int n);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
+    /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
+    void openChapterId(const QString& chapterId, int page);
     void step(int delta);
     /// 直接跳到第 index 页（0 起）；openChapter 与 step 都经由它
     void showPageAt(int index);
@@ -45,6 +47,7 @@ public slots:
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
+    void chaptersReady(const QStringList& names, const QStringList& ids);
     void coverReady(int index, const QImage& image);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
