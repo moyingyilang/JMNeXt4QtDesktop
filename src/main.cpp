@@ -23,6 +23,17 @@ int main(int argc, char** argv) {
         return rc;
     }
 
+    if (argc >= 2 && std::string(argv[1]) == "--list") {
+        jmnext::qt::MainWindow win;
+        const int n = win.loadRealList();
+        if (n < 0) { std::printf("加载失败\n"); return 1; }
+        std::printf("列表条数：%d\n", n);
+        for (int i = 0; i < 3 && i < n; ++i)
+            std::printf("  第 %d 条：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
+        std::printf("首页列表自检：通过\n");
+        return 0;
+    }
+
     if (argc >= 4 && std::string(argv[1]) == "--reader") {
         jmnext::qt::MainWindow win;
         const QString aid = QString::fromUtf8(argv[2]);

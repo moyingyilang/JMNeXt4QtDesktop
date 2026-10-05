@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPixmap>
+#include <QListWidget>
 #include <QPlainTextEdit>
 #include <QStringList>
 #include <QPushButton>
@@ -59,6 +60,14 @@ void MainWindow::setupUi() {
         v->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
         views->addWidget(v);
     }
+    // 左侧：真实首页列表（双击进入阅读器）
+    listView_ = new QListWidget();
+    listView_->setMinimumWidth(300);
+    auto* listRow = new QHBoxLayout();
+    listRow->addWidget(listView_);
+    auto* loadListBtn = new QPushButton(QStringLiteral("加载真实首页列表"));
+    listRow->addWidget(loadListBtn);
+    outer->addLayout(listRow);
     outer->addLayout(views);
 
     auto* form = new QFormLayout();
@@ -96,6 +105,12 @@ void MainWindow::setupUi() {
     buttons->addWidget(prevBtn);
     buttons->addWidget(nextBtn);
     connect(openChBtn, &QPushButton::clicked, this, [this] { openChapter(aidEdit_->text(), 0); });
+    connect(loadListBtn, &QPushButton::clicked, this, [this] { loadRealList(); });
+    connect(listView_, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem* it) {
+        // 双击某条 → 用它的 id 当 aid 打开（骨架阶段常见做法：列表即作品）
+        aidEdit_->setText(it->data(Qt::UserRole).toString());
+        openChapter(it->data(Qt::UserRole).toString(), 0);
+    });
     connect(prevBtn, &QPushButton::clicked, this, [this] { prevPage(); });
     connect(nextBtn, &QPushButton::clicked, this, [this] { nextPage(); });
 }
@@ -257,5 +272,46 @@ bool MainWindow::showPage(int index) {
 
 bool MainWindow::nextPage() { return showPage(pageIndex_ + 1); }
 bool MainWindow::prevPage() { return showPage(pageIndex_ - 1); }
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::loadRealList() {
+    if (!clientReady_) {
+        if (!client_.bootstrap()) {
+            log(QStringLiteral("主机发现失败：%1").arg(QString::fromStdString(client_.lastError())));
+            return -1;
+        }
+        clientReady_ = true;
+        log(QStringLiteral("主机：%1").arg(QString::fromStdString(client_.host())));
+    }
+    auto list = client_.latest(0);
+    if (!list) {
+        log(QStringLiteral("列表失败：%1").arg(QString::fromStdString(client_.lastError())));
+        return -1;
+    }
+    listView_->clear();
+    for (const auto& e : *list) {
+        const QString text = QStringLiteral("%1\n   %2　[%3]")
+                                 .arg(QString::fromStdString(e.name))
+                                 .arg(QString::fromStdString(e.author))
+                                 .arg(QString::fromStdString(e.categoryTitle));
+        auto* item = new QListWidgetItem(text);
+        item->setData(Qt::UserRole, QString::fromStdString(e.id));
+        listView_->addItem(item);
+    }
+    log(QStringLiteral("列表已加载：%1 条，第一条 id=%2")
+            .arg(list->size())
+            .arg(QString::fromStdString(list->front().id)));
+    return static_cast<int>(list->size());
+}
+
+int MainWindow::listCount() const { return listView_ ? listView_->count() : 0; }
+
+QString MainWindow::listItemText(int i) const {
+    if (!listView_ || i < 0 || i >= listView_->count()) return {};
+    return listView_->item(i)->text();
+}
 
 }  // namespace jmnext::qt

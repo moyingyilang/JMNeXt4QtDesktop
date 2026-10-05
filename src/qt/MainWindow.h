@@ -11,6 +11,7 @@
 class QLabel;
 class QLineEdit;
 class QPlainTextEdit;
+class QListWidget;
 
 namespace jmnext::qt {
 
@@ -27,6 +28,12 @@ public:
     /// 当前选中的界面字体族名（CJK 自检用）
     QString chosenFontFamily() const { return fontFamily_; }
 
+    /// 拉取真实首页列表并填进左侧列表（返回条数；-1 表示失败）
+    int loadRealList();
+    /// 当前列表条数（自检用）
+    int listCount() const;
+    /// 列表第 i 条的显示文本（自检用）
+    QString listItemText(int i) const;
     bool showPage(int index);
 
     /// 载入某作品的某章节，并跳到指定页（真实链路：详情 → 章节 → 下载 → 还原）
@@ -52,6 +59,7 @@ private:
     QLineEdit* aidEdit_ = nullptr;
     QLineEdit* pageEdit_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;
+    QListWidget* listView_ = nullptr;
     jmnext::qt::JmClient client_;
     bool clientReady_ = false;
     jmnext::core::ChapterImages chapter_;
