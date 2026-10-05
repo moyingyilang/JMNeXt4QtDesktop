@@ -147,8 +147,9 @@ MainWindow::MainWindow() {
 }
 
 void MainWindow::setupUi() {
-    setWindowTitle(QStringLiteral("JMNeXt4QtDesktop —— 能看图（早期骨架）"));
-    auto* central = new QWidget(this);
+    setWindowTitle(QStringLiteral("JMNeXt4QtDesktop %1 —— JMComic 桌面端（原生 C++/Qt，早期阶段）")
+                       .arg(jmnext::core::APP_VERSION));
+    auto* central = new QWidget(this);          // 上一轮我删标题行时误删了这行，这里补回
     auto* outer = new QVBoxLayout(central);
 
     auto* views = new QHBoxLayout();
