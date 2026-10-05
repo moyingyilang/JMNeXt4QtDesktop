@@ -95,8 +95,10 @@ int main(int argc, char** argv) {
             std::printf("桌面端附件名（统一包排第一）：");
             for (const auto& n : jmnext::core::desktopAssetNames(tag, "Linux", "aarch64"))
                 std::printf(" %s", n.c_str());
-            std::printf("\n下载直链示例：%s\n",
-                        jmnext::core::assetUrl(tag, "JMNeXt4QtDesktop-0.1.0-linux-arm64.deb", repo).c_str());
+            // 示例附件名按**当前 tag 的版本**拼，不写死（此前写死了 0.1.0，且我第一次"修"它时 perl 没生效）
+            const std::string example = "JMNeXt4QtDesktop-" +
+                                        jmnext::core::cleanVersion(tag) + "-linux-arm64.deb";
+            std::printf("\n下载直链示例：%s\n", jmnext::core::assetUrl(tag, example, repo).c_str());
             return 0;
         }
         std::printf("已是最新（本地 %s 不旧于远端 %s）\n", local.c_str(), tag.c_str());
