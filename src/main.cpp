@@ -31,6 +31,11 @@ int main(int argc, char** argv) {
         std::printf("页状态：%s\n", win.pageStatus().toUtf8().constData());
         if (!win.nextPage()) { std::printf("翻下一页失败\n"); return 1; }
         std::printf("翻页后：%s\n", win.pageStatus().toUtf8().constData());
+        win.prevPage();                                   // 回到第 1 页：应命中内存缓存
+        std::printf("回到首页：%s\n", win.pageStatus().toUtf8().constData());
+        std::printf("缓存：内存命中 %d 次 / 未命中 %d 次；磁盘命中 %d 次 / 未命中 %d 次\n",
+                    win.cacheStats().imageHits, win.cacheStats().imageMisses,
+                    win.cacheStats().rawHits, win.cacheStats().rawMisses);
         std::printf("阅读器自检：通过\n");
         return 0;
     }

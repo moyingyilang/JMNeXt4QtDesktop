@@ -37,6 +37,11 @@ public:
     bool prevPage();
     /// 当前页信息（自检用）
     QString pageStatus() const { return pageStatus_; }
+    struct CacheStats { int imageHits, imageMisses, rawHits, rawMisses; };
+    CacheStats cacheStats() const {
+        return {client_.cache().imageHits(), client_.cache().imageMisses(),
+                client_.cache().rawHits(), client_.cache().rawMisses()};
+    }
 
 private:
     void setupUi();
