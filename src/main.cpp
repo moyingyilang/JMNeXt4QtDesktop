@@ -54,7 +54,11 @@ int main(int argc, char** argv) {
         jmnext::qt::MainWindow win;
         const int pages = win.requestReaderAndWait(QString::fromUtf8(argv[2]), std::atoi(argv[3]), 2);
         if (pages < 1) { std::printf("异步阅读器自检失败\n"); return 1; }
+        win.requestCacheStatsAndWait();
+        const auto cs = win.cacheStats();
         std::printf("异步阅读器：收到 %d 页，末页状态：%s\n", pages, win.lastPageStatus().toUtf8().constData());
+        std::printf("缓存：内存命中 %d / 未命中 %d；磁盘命中 %d / 未命中 %d\n",
+                    cs.imageHits, cs.imageMisses, cs.rawHits, cs.rawMisses);
         std::printf("异步阅读器自检：通过\n");
         return 0;
     }

@@ -52,6 +52,8 @@ public:
     void setBlockWordsForTest(const QStringList& words) { if (worker_) worker_->setBlockWords(words); }
     /// 触发一次异步拉列表（截图自检用；不等待结果）
     void requestListAsync() { if (worker_) worker_->loadList(); }
+    /// 触发 worker 上报缓存统计并等它回来（自检用）
+    void requestCacheStatsAndWait(int timeoutMs = 5000);
     QString lastPageStatus() const { return pendingPageStatus_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
@@ -67,10 +69,9 @@ public:
     /// 当前页信息（自检用）
     QString pageStatus() const { return pageStatus_; }
     struct CacheStats { int imageHits, imageMisses, rawHits, rawMisses; };
-    CacheStats cacheStats() const {
-        return {client_.cache().imageHits(), client_.cache().imageMisses(),
-                client_.cache().rawHits(), client_.cache().rawMisses()};
-    }
+    /// 注意：统计来自**工作线程**里那个 JmClient（干活的是它），由 cacheStats 信号上报
+    CacheStats cacheStats() const { return lastCacheStats_; }
+    CacheStats lastCacheStats_{0, 0, 0, 0};
 
 private:
     void setupUi();

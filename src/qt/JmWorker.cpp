@@ -119,6 +119,9 @@ void JmWorker::showPageAt(int index) {
                               .arg(chapter_.images.size())
                               .arg(img->width())
                               .arg(img->height()));
+    // 预取下一页与上一页：读漫画大部分时间在往后翻，回翻也是常见动作
+    prefetch(index + 1);
+    prefetch(index - 1);
 }
 
 }  // namespace jmnext::qt
@@ -149,6 +152,28 @@ void JmWorker::openChapterId(const QString& chapterId, int page) {
                     .arg(chapter_.totalPage)
                     .arg(chapter_.scrambleId));
     showPageAt(page);
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::prefetch(int index) {
+    if (chapter_.images.empty()) return;
+    if (index < 0 || index >= static_cast<int>(chapter_.images.size())) return;
+    const auto& p = chapter_.images[static_cast<std::size_t>(index)];
+    // 复用与正式取图完全相同的路径：命中缓存就直接返回，未命中才下载并解码
+    auto img = client().pageImage(p.url, std::atoi(chapter_.id.c_str()), chapter_.scrambleId);
+    if (img) emit status(QStringLiteral("已预取第 %1 页（翻页时应当无需等待）").arg(index + 1));
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::reportCacheStats() {
+    const auto& c = client().cache();
+    emit cacheStats(c.imageHits(), c.imageMisses(), c.rawHits(), c.rawMisses());
 }
 
 }  // namespace jmnext::qt

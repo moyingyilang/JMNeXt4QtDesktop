@@ -70,6 +70,8 @@ MainWindow::MainWindow() {
     connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
 
     connect(worker_, &JmWorker::status, this, [this](const QString& s) { log(s); });
+    connect(worker_, &JmWorker::cacheStats, this,
+            [this](int ih, int im, int rh, int rm) { lastCacheStats_ = CacheStats{ih, im, rh, rm}; });
     connect(worker_, &JmWorker::failed, this, [this](const QString& s) { log(QStringLiteral("失败：") + s); });
     connect(worker_, &JmWorker::listReady, this,
             [this](const QStringList& titles, const QStringList& ids) {
@@ -564,6 +566,22 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
         }
     }
     return QMainWindow::eventFilter(watched, event);
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void MainWindow::requestCacheStatsAndWait(int timeoutMs) {
+    if (!worker_) return;
+    bool got = false;
+    auto conn = connect(worker_, &JmWorker::cacheStats, this, [&got](int, int, int, int) { got = true; });
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    worker_->reportCacheStats();
+    while (!got && timer.remainingTime() > 0) QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    disconnect(conn);
 }
 
 }  // namespace jmnext::qt

@@ -44,6 +44,10 @@ public slots:
     void showPageAt(int index);
     /// 确保主机已发现（各入口共用，避免详情失败：尚未初始化主机）
     bool ensureStarted();
+    /// 预取第 index 页到缓存（失败静默，不影响当前页）
+    void prefetch(int index);
+    /// 上报缓存统计（跨线程不能返回值，所以用信号）
+    void reportCacheStats();
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
@@ -51,6 +55,7 @@ signals:
     void coverReady(int index, const QImage& image);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
+    void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);
     void failed(const QString& text);
 
 private:
