@@ -208,8 +208,7 @@ void MainWindow::setupUi() {
     buttons->addWidget(unscrambleBtn);
     outer->addLayout(buttons);
 
-    log(QStringLiteral("快捷键：← / PageUp 上一页，→ / PageDown / 空格 下一页；章节用上方下拉框切换"));
-
+    log(QStringLiteral("快捷键：← / PageUp 上一页，→ / PageDown / 空格 / 滚轮 下一页；章节用左侧列表点选切换"));
     logView_ = new QPlainTextEdit();
     logView_->setReadOnly(true);
     logView_->setMaximumHeight(120);
