@@ -13,6 +13,7 @@ add_library(jmnext_core STATIC
     src/core/AesEcb.cpp
     src/core/Base64.cpp
     src/core/JmCrypto.cpp
+    src/core/UpdateCheck.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -40,3 +41,6 @@ add_test(NAME crypto COMMAND test_crypto)
 add_executable(test_base64_crypto tests/test_base64_crypto.cpp)
 target_link_libraries(test_base64_crypto PRIVATE jmnext_core)
 add_test(NAME base64_crypto COMMAND test_base64_crypto)
+add_executable(test_update_check tests/test_update_check.cpp)
+target_link_libraries(test_update_check PRIVATE jmnext_core)
+add_test(NAME update_check COMMAND test_update_check)
