@@ -15,6 +15,7 @@ add_library(jmnext_core STATIC
     src/core/JmCrypto.cpp
     src/core/UpdateCheck.cpp
     src/core/UnscrambleApply.cpp
+    src/core/JmSession.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -48,6 +49,9 @@ add_test(NAME update_check COMMAND test_update_check)
 add_executable(test_unscramble_apply tests/test_unscramble_apply.cpp)
 target_link_libraries(test_unscramble_apply PRIVATE jmnext_core)
 add_test(NAME unscramble_apply COMMAND test_unscramble_apply)
+add_executable(test_session tests/test_session.cpp)
+target_link_libraries(test_session PRIVATE jmnext_core)
+add_test(NAME session COMMAND test_session)
 
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)
