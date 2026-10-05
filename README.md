@@ -1,4 +1,4 @@
-# JMNeXt4Desktop
+# JMNeXt4QtDesktop
 
 JMComic 客户端的**桌面端原生重实现**（C++ / Qt），与主项目 [JMNeXt](https://github.com/moyingyilang/JMNeXt) **并行**存在。
 
@@ -15,7 +15,7 @@ Android 端**继续用 Kotlin/Compose 移植**（ART 侧的性能问题用 Basel
 | 项目 | 技术 | 定位 |
 | --- | --- | --- |
 | JMNeXt（主仓库） | Kotlin + Compose Multiplatform | **稳定线**，继续发布与维护 |
-| **JMNeXt4Desktop**（本仓库） | **C++ + Qt** | **原生线**，按 [docs/PORT-SPEC.md](docs/PORT-SPEC.md) 逐项对齐功能 |
+| **JMNeXt4QtDesktop**（本仓库） | **C++ + Qt** | **原生线**，按 [docs/PORT-SPEC.md](docs/PORT-SPEC.md) 逐项对齐功能 |
 
 原则：**本仓库声明自己对齐的功能基线**（例如"对应 JMNeXt 2.1.7 的功能集"），而不是承诺与主项目永远同步 ——
 两个仓库各自版本、各自发布，互不阻塞。

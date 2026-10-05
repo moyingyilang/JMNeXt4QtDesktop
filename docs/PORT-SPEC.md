@@ -1,4 +1,4 @@
-# 移植规格清单（JMNeXt4Desktop）
+# 移植规格清单（JMNeXt4QtDesktop）
 
 **用途**：这是"一等一重实现"的**判据**。每一项都注明规格来源；实现后逐项勾选，全部勾完才有资格取代 Kotlin 桌面版。
 规格来源以主项目 `JMNeXt` 仓库为准（`shared/`、`desktop/`、`docs/STATE.md`、测试）。
