@@ -16,6 +16,7 @@ add_library(jmnext_core STATIC
     src/core/UpdateCheck.cpp
     src/core/UnscrambleApply.cpp
     src/core/JmSession.cpp
+    src/core/HostDiscovery.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -52,6 +53,9 @@ add_test(NAME unscramble_apply COMMAND test_unscramble_apply)
 add_executable(test_session tests/test_session.cpp)
 target_link_libraries(test_session PRIVATE jmnext_core)
 add_test(NAME session COMMAND test_session)
+add_executable(test_host_discovery tests/test_host_discovery.cpp)
+target_link_libraries(test_host_discovery PRIVATE jmnext_core)
+add_test(NAME host_discovery COMMAND test_host_discovery)
 
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)

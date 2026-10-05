@@ -1,6 +1,6 @@
 // 路径表的抽样断言：盯住"移植后路径没被改错/漏掉"。
 // 判据取自主项目 JmPaths.kt 的实际内容（抽样覆盖读类、写类、登录类各一条）。
-#include "core/JmPaths.h"
+#include "core/JmCore.h"
 
 #include <cstdio>
 #include <cstring>

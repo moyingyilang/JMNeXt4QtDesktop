@@ -2,8 +2,7 @@
 //   MD5   —— RFC 1321 附录 A.5 的测试套件
 //   AES   —— NIST SP 800-38A F.1.5（ECB-AES256）向量，并用 openssl 交叉验证过一个"项目语义"下的已知密文
 // 不用"自己加密自己解密"这种自证式测试。
-#include "core/AesEcb.h"
-#include "core/Md5.h"
+#include "core/JmCore.h"
 
 #include <cstdint>
 #include <cstdio>

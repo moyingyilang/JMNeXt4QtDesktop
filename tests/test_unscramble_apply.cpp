@@ -1,8 +1,6 @@
 // 还原一张"每行颜色不同"的合成图，验证每一行确实按 bands 的指示搬到了目标位置。
 // 判据是**独立复算**：按几何公式自己算一遍"第 y 行应该来自哪一行"，与实现的结果比对。
-#include "core/ImageUnscramble.h"
-#include "core/JmCrypto.h"
-#include "core/UnscrambleApply.h"
+#include "core/JmCore.h"
 
 #include <cstdio>
 #include <vector>

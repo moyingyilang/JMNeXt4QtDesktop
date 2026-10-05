@@ -1,10 +1,6 @@
 // 会话层测试。关键判据：**Token 与响应体 AES 密钥是同一个值** —— 用会话自己算出的 token
 // 去加密一段 JSON，再交给 decryptApiData 解，必须原样解回来（跨组件互证，不是自证）。
-#include "core/AesEcb.h"
-#include "core/Base64.h"
-#include "core/JmCrypto.h"
-#include "core/Md5.h"
-#include "core/JmSession.h"
+#include "core/JmCore.h"
 #include "net/HttpClient.h"
 
 #include <cstdio>

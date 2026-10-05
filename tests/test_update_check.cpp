@@ -1,5 +1,5 @@
 // 版本比较与附件名。判据来自主项目 UpdateCheckTest（7 条）**加上**新定的 fix(n) 规则（4 条）。
-#include "core/UpdateCheck.h"
+#include "core/JmCore.h"
 
 #include <algorithm>
 #include <cstdio>

@@ -1,6 +1,6 @@
 // 切片几何的测试。判据来自主项目注释里点明的那条"最容易出错的性质"：
 // **条带不重不漏地铺满整页**。另加若干可手算的具体用例与边界条件。
-#include "core/ImageUnscramble.h"
+#include "core/JmCore.h"
 
 #include <algorithm>
 #include <cstdio>

@@ -1,7 +1,5 @@
 // Base64（RFC 4648 向量 + 清洗规则）与 JmCrypto 门面（域规则）的测试。
-#include "core/Base64.h"
-#include "core/JmCrypto.h"
-#include "core/Md5.h"
+#include "core/JmCore.h"
 
 #include <vector>
 #include <cstdio>
