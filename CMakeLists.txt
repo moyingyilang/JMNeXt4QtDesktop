@@ -20,6 +20,7 @@ add_library(jmnext_core STATIC
     src/core/BlockRules.cpp
     src/core/JmApi.cpp
     src/core/JmParse.cpp
+    src/core/JmUrls.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -72,6 +73,9 @@ add_test(NAME offline_flow COMMAND test_offline_flow)
 add_executable(test_jm_parse tests/test_jm_parse.cpp)
 target_link_libraries(test_jm_parse PRIVATE jmnext_core)
 add_test(NAME jm_parse COMMAND test_jm_parse)
+add_executable(test_jm_urls tests/test_jm_urls.cpp)
+target_link_libraries(test_jm_urls PRIVATE jmnext_core)
+add_test(NAME jm_urls COMMAND test_jm_urls)
 
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)
