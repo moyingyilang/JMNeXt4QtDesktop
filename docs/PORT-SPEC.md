@@ -75,3 +75,67 @@
 
 - 本清单为**初稿**：A/B/D 三节依据我确实读过的代码与文档；C/E 的部分条目与 B 的两处标了「待核对」。
 - 下一步（实现前）：把「待核对」逐条回主仓库读实，并补齐 C 节（阅读器、搜索、下载、壁纸、通知的真实范围）。
+
+## G. 第一轮核对结果（补 A–F 中「待核对」项）
+
+依据：直接读主仓库 `app/`、`desktop/`、`shared/` 的源码。**已读实的写结论，没读实的保持「待核对」**。
+
+### G1. 阅读器（原 C 节待核对项）
+
+- **翻页模型**：Android 用 `HorizontalPager` + `rememberPagerState`（**横向分页**，非纵向连续滚动）——
+  来源：`app/.../reader/ReaderScreen.kt`（第 33、34 行 import）
+- **换章时的重建语义**：以**章节 id 作 key**，换话时整体重建 —— 这样 LazyColumn 的滚动位置与 Pager 的页码一起归零。
+  注释里专门写了这件事（"换话时整体重建"），说明这是**有意行为**，移植时不要"优化"成保留滚动位置 —— 同上（第 332 行附近）
+- **进度记录**：`ReadProgressStore`（基于 `SharedPrefsKeyValueStore`）记录阅读进度；`recordProgress(payload)` —— 第 252、298 行
+- **相邻章节**：`neighbour(offset)` 取上一话/下一话 —— 第 258 行
+- **图片尺寸**：`PageRatio.kt` 负责按页比例决定显示尺寸（83 行） —— 移植时要一并搬
+
+### G2. 是否有"离线下载"功能
+
+**核对结论：看起来没有独立的下载/离线模块。** 搜 `download|下载|离线|offline` 命中的文件基本都是注释或 URL 字样
+（`ImageBytes.kt` 是取字节、`JmImage.kt`/`ScrambleTransformation.kt` 是图片管线）。
+**待确认**：详情页某处注释提过"追更 / 下载 / 标签收藏的结果提示"，需回去确认那是指"下载图片到缓存"还是真有离线下载入口。
+
+### G3. 追更与通知
+
+- 有 `SerialNotify.kt`（数据层）与 `NotificationsScreen.kt`（界面）—— 未读数是**服务端**给的，不是本地算的（见 `SerialNotify.kt` 注释）
+- 通知入口在首页（`HomeScreen.kt` 里出现相关字样）
+
+### G4. 搜索（原 C 节待核对项）
+
+- 已确认有：排序/检索两组筛选（`SearchFilters.Order` / `SearchFilters.Type`）、搜索历史（可清空）、
+  "换一批"随机推荐、以及"被屏蔽规则挡掉了 N 条"的提示条 —— 来源：`app/.../search/SearchScreen.kt`
+- 具体端点与字段仍**待核对**
+
+### G5. 视觉与动效系统（"一等一"里最容易被低估的一块）★
+
+主项目的界面不只是"颜色 + 布局"，它有一整套**设计系统与动效规范**，移植时必须一并重建，否则观感一定不像：
+
+| 层 | 主项目位置 | 移植要求 |
+| --- | --- | --- |
+| 调色板 | `app/.../ui/theme/Palettes.kt` | 直接对照取色，不要自己"调一版更好看的" |
+| 形状 | `Shapes.kt`、`Tokens.kt` | 圆角/描边/字距等令牌逐项对齐 |
+| **主题风格**（4 套） | `ThemeStyle.kt`（**420 行**） | WindowGlass / Translucent / Miuix / Material 四种表面工艺；**这是最大的移植面** |
+| 主题装配 | `Theme.kt`（324 行） | 颜色/形状/字体的组合方式 |
+| 动效令牌 | `desktop/.../Motion.kt` | 时长（QUICK 120 / NORMAL 220 / PAGE 280 / IMAGE 260 ms）与四条缓动（Standard/Enter/Exit） |
+| 共享元素 | `desktop/.../SharedElement.kt` | 封面→详情页的共享元素过渡 |
+| 交互反馈 | `desktop/.../Interactions.kt` | 悬停/按下/**键盘焦点描边**（这条是本轮新加的，见主项目 docs/STATE.md） |
+
+**两条硬约定**（主项目用血泪换来的，移植时必须遵守）：
+
+1. **数值一律走令牌，不硬编码** —— 时长、缓动、圆角、间距都从 `Motion`/`Tokens` 取；
+2. **只动 `alpha` 与 `transform`，不要动布局** —— 避免每帧重新布局（主项目 `docs/MOTION.md` 的约定）。
+
+**CJK 文本**：主项目为此专门做了"显式选择含中日韩字形的系统字体族"的修复（Windows 上默认字体不含汉字，
+会显示成方框或被 fallback 到日文字形）——来源：`desktop/.../BlogTheme.kt` 的 `cjkFontFamily()`。
+Qt 侧同样要注意：**不要用 `QFont` 默认族直接画中文**，要显式给 CJK 族并确认回退链。
+
+### G6. 仍未核对（实现前必须回主仓库读实）
+
+- [ ] 接口端点表与登录/会话细节（`JmSession.kt`）
+- [ ] `needsUnscramble` 的判定条件（`JmRepository`）
+- [ ] 搜索与分类的具体端点、分页参数、字段名
+- [ ] 收藏夹（多收藏夹/目录）的接口与语义
+- [ ] 壁纸（`WallpaperStore.kt` 328 行）与桌面端的远程壁纸（`WallpaperRemote.kt`）
+- [ ] 屏蔽设置页的完整语义（`BlockSettingsScreen.kt`，含"允许一次"的撤销）
+- [ ] 主题风格的 4 套具体视觉参数（`ThemeStyle.kt` 420 行需逐项抄写）
