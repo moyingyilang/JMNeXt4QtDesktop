@@ -2,6 +2,8 @@
 
 #include "qt/JmClient.h"
 
+#include <cstdlib>
+
 namespace jmnext::qt {
 
 JmWorker::~JmWorker() = default;
@@ -11,12 +13,19 @@ JmClient& JmWorker::client() {
     return *client_;
 }
 
-void JmWorker::loadList() {
+bool JmWorker::ensureStarted() {
+    if (started_) return true;
     if (!client().bootstrap()) {
         emit failed(QStringLiteral("主机发现失败：%1").arg(QString::fromStdString(client().lastError())));
-        return;
+        return false;
     }
+    started_ = true;
     emit status(QStringLiteral("主机：%1").arg(QString::fromStdString(client().host())));
+    return true;
+}
+
+void JmWorker::loadList() {
+    if (!ensureStarted()) return;
     auto list = client().latest(0);
     if (!list) {
         emit failed(QStringLiteral("列表失败：%1").arg(QString::fromStdString(client().lastError())));
@@ -36,21 +45,18 @@ void JmWorker::loadList() {
 
 void JmWorker::loadCovers(int n) {
     if (pendingIds_.isEmpty()) { emit failed(QStringLiteral("还没有列表，无法取封面")); return; }
-    const int limit = qMin(n, pendingIds_.size());
-    for (int i = 0; i < limit; ++i) {
-        // 复用 JmClient 的列表结果：这里只取封面，参数从最近一次列表里拿
-        // （骨架阶段：为简单起见重新拉一次列表，封面地址参数一致）
-    }
-    auto list = client().latest(0);
+    auto list = client().latest(0);        // 封面地址参数（id/image/update_at）来自同一次列表
     if (!list) { emit failed(QStringLiteral("取封面失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
-    for (int i = 0; i < limit && i < static_cast<int>(list->size()); ++i) {
+    const int limit = qMin(n, static_cast<int>(list->size()));
+    for (int i = 0; i < limit; ++i) {
         auto img = client().cover((*list)[static_cast<std::size_t>(i)]);
-        if (!img) continue;
+        if (!img) continue;                // 单张失败不影响其余（下一轮加载时会补）
         emit coverReady(i, *img);
     }
 }
 
 void JmWorker::openChapter(const QString& aid, int page) {
+    if (!ensureStarted()) return;
     currentAid_ = aid;
     auto al = client().album(aid.toStdString());
     if (!al) { emit failed(QStringLiteral("详情失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
@@ -59,29 +65,38 @@ void JmWorker::openChapter(const QString& aid, int page) {
                     .arg(al->tags.size())
                     .arg(al->series.size()));
     if (al->series.empty()) { emit failed(QStringLiteral("该作品没有章节")); return; }
+
     auto ch = client().chapter(al->series.front().id);
     if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
     chapter_ = *ch;
-    step(page - (pageIndex_ < 0 ? 0 : pageIndex_));      // 相对当前位置移动
+    pageIndex_ = -1;                       // 尚未显示任何一页
+    emit status(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
+                    .arg(QString::fromStdString(chapter_.id))
+                    .arg(chapter_.totalPage)
+                    .arg(chapter_.scrambleId));
+    showPageAt(page);                      // 修正后的语义：直接跳到目标页（原来用 step 做相对移动会差一页）
 }
 
 void JmWorker::step(int delta) {
-    if (chapter_.images.empty()) {
-        // 还没有章节：openChapter 会先建立
-        emit failed(QStringLiteral("尚未载入章节"));
+    if (chapter_.images.empty()) { emit failed(QStringLiteral("尚未载入章节")); return; }
+    const int base = pageIndex_ < 0 ? 0 : pageIndex_;   // 未显示任何页时从第 0 页算起
+    const int next = base + delta;
+    if (delta != 0 && pageIndex_ < 0) { showPageAt(0); return; }
+    showPageAt(next);
+}
+
+void JmWorker::showPageAt(int index) {
+    if (chapter_.images.empty()) { emit failed(QStringLiteral("章节没有图片")); return; }
+    if (index < 0 || index >= static_cast<int>(chapter_.images.size())) {
+        emit status(QStringLiteral("页码越界：%1（共 %2 页）").arg(index + 1).arg(chapter_.images.size()));
         return;
     }
-    const int next = pageIndex_ + delta;
-    if (next < 0 || next >= static_cast<int>(chapter_.images.size())) {
-        emit status(QStringLiteral("页码越界：%1（共 %2 页）").arg(next).arg(chapter_.images.size()));
-        return;
-    }
-    const auto& p = chapter_.images[static_cast<std::size_t>(next)];
+    const auto& p = chapter_.images[static_cast<std::size_t>(index)];
     auto img = client().pageImage(p.url, std::atoi(chapter_.id.c_str()), chapter_.scrambleId);
     if (!img) { emit failed(QStringLiteral("取图失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
-    pageIndex_ = next;
+    pageIndex_ = index;
     emit pageReady(*img, QStringLiteral("第 %1/%2 页 %3x%4")
-                              .arg(next + 1)
+                              .arg(index + 1)
                               .arg(chapter_.images.size())
                               .arg(img->width())
                               .arg(img->height()));

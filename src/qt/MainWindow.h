@@ -42,6 +42,8 @@ public:
     int requestListAndWait(int timeoutMs = 60000);
     /// 异步取前 n 张封面并等待（自检用）
     int requestCoversAndWait(int n, int timeoutMs = 120000);
+    /// 异步打开章节并翻页（自检用）：返回收到的页数，-1 表示失败/超时
+    int requestReaderAndWait(const QString& aid, int page, int steps, int timeoutMs = 180000);
     QString lastPageStatus() const { return pendingPageStatus_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）

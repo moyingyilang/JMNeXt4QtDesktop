@@ -152,7 +152,9 @@ void MainWindow::setupUi() {
     buttons->addWidget(openChBtn);
     buttons->addWidget(prevBtn);
     buttons->addWidget(nextBtn);
-    connect(openChBtn, &QPushButton::clicked, this, [this] { openChapter(aidEdit_->text(), 0); });
+    connect(openChBtn, &QPushButton::clicked, this, [this] {
+        if (worker_) worker_->openChapter(aidEdit_->text(), 0);      // 异步：走后台线程
+    });
     // 加载列表走**后台线程**（JmClient 的方法都是同步的，放主线程会卡界面）
     connect(loadListBtn, &QPushButton::clicked, this, [this] {
         if (worker_) worker_->loadList();      // 队列连接到工作线程
@@ -162,8 +164,8 @@ void MainWindow::setupUi() {
         aidEdit_->setText(it->data(Qt::UserRole).toString());
         openChapter(it->data(Qt::UserRole).toString(), 0);
     });
-    connect(prevBtn, &QPushButton::clicked, this, [this] { prevPage(); });
-    connect(nextBtn, &QPushButton::clicked, this, [this] { nextPage(); });
+    connect(prevBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->step(-1); });
+    connect(nextBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->step(1); });
 }
 
 void MainWindow::applyCjkFont() {
@@ -434,6 +436,30 @@ int MainWindow::requestCoversAndWait(int n, int timeoutMs) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
     return coverLoaded_;
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::requestReaderAndWait(const QString& aid, int page, int steps, int timeoutMs) {
+    if (!worker_) return -1;
+    int pages = 0;
+    pendingPageStatus_.clear();
+    auto conn = connect(worker_, &JmWorker::pageReady, this, [&pages](const QImage&, const QString&) { ++pages; });
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    worker_->openChapter(aid, page);
+    while (pages < 1 && timer.remainingTime() > 0) QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    for (int i = 0; i < steps && timer.remainingTime() > 0; ++i) {
+        const int before = pages;
+        worker_->step(1);
+        while (pages == before && timer.remainingTime() > 0)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+    disconnect(conn);
+    return pages;
 }
 
 }  // namespace jmnext::qt

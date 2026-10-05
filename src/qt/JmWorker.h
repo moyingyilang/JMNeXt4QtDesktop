@@ -33,6 +33,10 @@ public slots:
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     void step(int delta);
+    /// 直接跳到第 index 页（0 起）；openChapter 与 step 都经由它
+    void showPageAt(int index);
+    /// 确保主机已发现（各入口共用，避免详情失败：尚未初始化主机）
+    bool ensureStarted();
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
@@ -47,6 +51,7 @@ private:
     std::unique_ptr<JmClient> client_;
     QStringList pendingIds_;     // loadList 之后记住 id，供 loadCovers / openChapter 用
     jmnext::core::ChapterImages chapter_;
+    bool started_ = false;
     QString currentAid_;
     int pageIndex_ = -1;
 };
