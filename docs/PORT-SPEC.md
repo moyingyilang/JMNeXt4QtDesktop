@@ -139,3 +139,25 @@ Qt 侧同样要注意：**不要用 `QFont` 默认族直接画中文**，要显�
 - [ ] 壁纸（`WallpaperStore.kt` 328 行）与桌面端的远程壁纸（`WallpaperRemote.kt`）
 - [ ] 屏蔽设置页的完整语义（`BlockSettingsScreen.kt`，含"允许一次"的撤销）
 - [ ] 主题风格的 4 套具体视觉参数（`ThemeStyle.kt` 420 行需逐项抄写）
+
+### G7. 第二轮核对：剩下的「仍未核对」项已定位到文件（部分读实）
+
+| 待办 | 状态 | 位置与结论 |
+| --- | --- | --- |
+| **接口端点表** | **已定位** ★ | `shared/.../data/remote/JmPaths.kt` —— **这就是移植最该先抄的东西**：所有路径常量集中在此 |
+| 主机发现 | **已定位** | `shared/.../data/remote/JmHostDiscovery.kt`（对应 `JmCrypto` 里那个固定密钥） |
+| 会话层 | **已读实** | `shared/.../data/remote/JmSession.kt` 很薄：`token`/`tokenParam`（都由 `JmCrypto` 派生）、`refresh()` 重算时间戳、`useHost(base)` 换主机、`apiUrl(path)`/`imageUrl(path)` 拼 URL —— **移植时照抄这个结构即可，不要自己设计** |
+| `needsUnscramble` | **已读实** | `JmRepository.needsUnscramble(imageUrl, aid, scrambleId)` → 直接委托 `JmCrypto.needsUnscramble(...)`。注意参数里有 **`scrambleId`**（不是只靠 aid/page），移植时别丢 |
+| 收藏夹（多目录） | **已定位** | `FavoriteTags.kt`（本地缓存统计）、`JmPaths.kt`（接口路径）、`dto/AuthModels.kt`（模型）—— 具体语义**待细读** |
+| 壁纸 | 规模已知 | `WallpaperStore.kt` **328 行**（Android）、`desktop/.../WallpaperRemote.kt` **209 行** —— 功能不小，移植要专门排期 |
+| 追更通知 | 规模已知 | `SerialNotify.kt` **138 行**；未读数来自服务端 |
+| 四套主题参数 | 待抄 | `ThemeStyle.kt` 420 行需逐项抄成 Qt 侧的一份等价配置 |
+
+**给实现者的最短路径建议**（基于这两轮核对）：
+
+1. 先抄 `JmPaths.kt` 端点表 + `JmSession.kt` 结构 + `JmCrypto.kt`（Token/AES/MD5/`needsUnscramble`）—— 这三件通了就能拿到数据；
+2. 再抄 `ImageUnscramble.bands()` 的几何 + 解码，做出"能看图"的最小阅读器；
+3. 然后按 `ThemeStyle.kt`/`Tokens.kt`/`Motion.kt` 重建外观与动效；
+4. 最后补收藏夹、壁纸、通知、屏蔽设置、更新检查。
+
+**验收**：第 1、2 步完成后，用主项目 `shared/src/test` 里对应的算法测试（切片几何、版本比较、屏蔽匹配）作为**逐条对齐的判据**。
