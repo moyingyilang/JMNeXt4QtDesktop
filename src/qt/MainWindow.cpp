@@ -17,7 +17,9 @@
 #include <QLineEdit>
 #include <QPixmap>
 #include <QComboBox>
+#include <QEvent>
 #include <QKeyEvent>
+#include <QWheelEvent>
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QIcon>
@@ -128,6 +130,7 @@ void MainWindow::setupUi() {
         v->setMinimumSize(240, 320);
         v->setAlignment(Qt::AlignCenter);
         v->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
+        v->installEventFilter(this);          // 滚轮翻页（只作用于图片区）
         views->addWidget(v);
     }
     // 左侧：真实首页列表（双击进入阅读器）
@@ -543,6 +546,24 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
             break;
     }
     QMainWindow::keyPressEvent(event);
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+bool MainWindow::eventFilter(QObject* watched, QEvent* event) {
+    // 只处理两个图片区上的滚轮；列表的滚动仍归列表自己
+    if (worker_ && (watched == originalView_ || watched == restoredView_) &&
+        event->type() == QEvent::Wheel) {
+        auto* wheel = static_cast<QWheelEvent*>(event);
+        const int dy = wheel->angleDelta().y();
+        if (dy != 0) {
+            worker_->step(dy > 0 ? -1 : 1);      // 上滚 → 上一页；下滚 → 下一页
+            return true;                          // 吃掉事件，避免再滚动父级
+        }
+    }
+    return QMainWindow::eventFilter(watched, event);
 }
 
 }  // namespace jmnext::qt

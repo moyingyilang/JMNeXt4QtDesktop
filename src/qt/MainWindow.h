@@ -76,6 +76,8 @@ private:
     void setupUi();
     /// 键盘翻页：← / PageUp 上一页，→ / PageDown / 空格 下一页
     void keyPressEvent(QKeyEvent* event) override;
+    /// 滚轮翻页（只挂在图片区上，避免抢走左侧列表的滚动）
+    bool eventFilter(QObject* watched, QEvent* event) override;
     void applyCjkFont();
 
     QLabel* originalView_ = nullptr;
