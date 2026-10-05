@@ -25,6 +25,24 @@ int main(int argc, char** argv) {
         return rc;
     }
 
+    if (argc >= 2 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
+        std::printf(
+            "JMNeXt4QtDesktop（早期阶段）\n"
+            "\n"
+            "用法：\n"
+            "  jmnext4desktop                     起窗口（默认自动加载真实首页列表）\n"
+            "  jmnext4desktop --list [屏蔽词]      加载列表（可给逗号分隔的屏蔽关键词）\n"
+            "  jmnext4desktop --reader <aid>       同步打开某作品第一话第 0 页（自检路径）\n"
+            "  jmnext4desktop --reader-async <aid> <page>   异步打开并翻 2 页（自检路径）\n"
+            "  jmnext4desktop --chapters <aid>     打开某作品章节列表并切到第 3 话（自检）\n"
+            "  jmnext4desktop --zoom <aid>         验证缩放两种模式（自检）\n"
+            "  jmnext4desktop --screenshot <png> [--list]   截图后退出（无显示环境可用）\n"
+            "\n"
+            "附带的独立工具：jmnext4net（真实网络自检）、jmnext4img（图片管线）、jmnext4cli（纯计算）\n"
+            "依赖：Qt 6 与 qt6-image-formats-plugins（真实漫画图是 WebP，缺了图片打不开）\n");
+        return 0;
+    }
+
     if (argc >= 3 && std::string(argv[1]) == "--screenshot") {
         // 起真实窗口 → 拉真实列表（后台线程）→ 等它上屏 → 截图 → 退出
         jmnext::qt::MainWindow win;

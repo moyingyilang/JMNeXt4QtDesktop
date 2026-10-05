@@ -136,3 +136,20 @@ xvfb-run -a -s "-screen 0 1280x800x24" ./build/jmnext4desktop --screenshot /tmp/
 - 账号登录与一切需要登录的接口；
 - **Windows 端**（尤其要确认 webp 插件随包分发，否则真实图片打不开）；
 - macOS / 其它发行版。
+
+## 怎么打包（Linux）
+
+```sh
+./package-linux.sh            # 产出 dist/JMNeXt4QtDesktop-<版本>-linux-<架构>.{tar.gz,deb}
+VERSION=0.1.1 ./package-linux.sh   # 指定版本
+```
+
+当前做法与取舍（如实）：
+
+- **不捆绑 Qt**：捆绑要 linuxdeploy/AppImage 那一套，留到正式发版；现在依赖由系统包提供，
+  deb 里声明 `Depends: libqt6widgets6, libqt6gui6, libqt6network6, qt6-image-formats-plugins`；
+- deb 的依赖名是**在 Debian 12 里 `dpkg` 实测查出来的**，不是猜的；
+- 打包产物已在容器里做过"**装 → 跑真实数据 → 卸**"的验证（`dpkg -i` → 用 Xvfb 跑 `--list`
+  取到真实 80 条并"加载更多"到 160 条 → `dpkg -r` 干净卸载）。
+
+**未验证**：deb 在其它发行版上的安装；Windows / macOS 包。
