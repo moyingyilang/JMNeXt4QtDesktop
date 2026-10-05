@@ -9,6 +9,8 @@ set(CMAKE_AUTORCC ON)
 # 平台无关的核心（先只放算法，之后才是 Qt 界面）
 add_library(jmnext_core STATIC
     src/core/ImageUnscramble.cpp
+    src/core/Md5.cpp
+    src/core/AesEcb.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -30,3 +32,6 @@ add_test(NAME image_unscramble COMMAND test_image_unscramble)
 add_executable(test_paths tests/test_paths.cpp)
 target_link_libraries(test_paths PRIVATE jmnext_core)
 add_test(NAME paths COMMAND test_paths)
+add_executable(test_crypto tests/test_crypto.cpp)
+target_link_libraries(test_crypto PRIVATE jmnext_core)
+add_test(NAME crypto COMMAND test_crypto)
