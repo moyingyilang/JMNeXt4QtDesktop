@@ -59,6 +59,8 @@ int main(int argc, char** argv) {
         const int n = win.requestChapterPickAndWait(QString::fromUtf8(argv[2]), 2);
         if (n < 0) { std::printf("章节自检失败\n"); return 1; }
         std::printf("详情标签：%s\n", win.albumText().toUtf8().constData());
+        const QSize cs = win.coverSize();
+        std::printf("封面尺寸：%dx%d\n", cs.width(), cs.height());
         std::printf("章节数：%d；末页状态：%s\n", n, win.lastPageStatus().toUtf8().constData());
         std::printf("章节选择自检：通过\n");
         return 0;

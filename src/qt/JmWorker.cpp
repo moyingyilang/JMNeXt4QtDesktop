@@ -81,6 +81,7 @@ void JmWorker::openChapter(const QString& aid, int page) {
         QStringList tags;
         for (const auto& t : al->tags) tags << QString::fromStdString(t);
         emit albumReady(QString::fromStdString(al->name), QString::fromStdString(al->author), tags);
+        fetchAlbumCover(aid);
     }
 
     // 把章节列表交给界面（章节选择器）
@@ -217,6 +218,20 @@ void JmWorker::loadMore() {
     pendingIds_ += ids;
     emit status(QStringLiteral("第 %1 页：新增 %2 条（隐藏 %3 条）").arg(next + 1).arg(titles.size()).arg(hidden));
     emit listAppended(titles, ids);
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::fetchAlbumCover(const QString& id) {
+    if (!ensureStarted()) return;
+    core::ListEntry entry;          // 只用 id 走模板路径（服务端列表里的 image 常为空）
+    entry.id = id.toStdString();
+    auto img = client().cover(entry);
+    if (!img) { emit status(QStringLiteral("封面未取到：%1").arg(QString::fromStdString(client().lastError()))); return; }
+    emit albumCoverReady(*img);
+    emit status(QStringLiteral("封面已加载 %1x%2").arg(img->width()).arg(img->height()));
 }
 
 }  // namespace jmnext::qt

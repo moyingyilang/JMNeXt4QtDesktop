@@ -63,6 +63,7 @@ public:
     void requestCacheStatsAndWait(int timeoutMs = 5000);
     QString lastPageStatus() const { return pendingPageStatus_; }
     QString albumText() const { return last_album_text_; }
+    QSize coverSize() const { return lastCoverSize_; }
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
     QString listItemText(int i) const;
@@ -105,6 +106,8 @@ private:
     QLineEdit* blockEdit_ = nullptr;
     QComboBox* chapterBox_ = nullptr;
     QLabel* albumInfo_ = nullptr;
+    QLabel* coverLabel_ = nullptr;
+    QSize lastCoverSize_;
     int coverLoaded_ = 0;
     QThread* workerThread_ = nullptr;
     JmWorker* worker_ = nullptr;

@@ -29,6 +29,8 @@ public:
     ~JmWorker() override;
 
 public slots:
+    /// 取某作品的封面（详情区用）
+    void fetchAlbumCover(const QString& id);
     /// 主机发现 + 拉首页列表：成功发 listReady（标题与 id 两个平行列表），失败发 failed
     void loadList();
     /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数
@@ -56,6 +58,7 @@ signals:
     void listAppended(const QStringList& titles, const QStringList& ids);
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
+    void albumCoverReady(const QImage& image);
     void coverReady(int index, const QImage& image);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);

@@ -99,6 +99,11 @@ MainWindow::MainWindow() {
         log(statusText);
     });
     workerThread_->start();
+    connect(worker_, &JmWorker::albumCoverReady, this, [this](const QImage& img) {
+        lastCoverSize_ = img.size();
+        coverLabel_->setPixmap(QPixmap::fromImage(img).scaled(coverLabel_->size(),
+                                                              Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    });
     connect(worker_, &JmWorker::listAppended, this,
             [this](const QStringList& titles, const QStringList& ids) {
                 for (int i = 0; i < titles.size(); ++i) {
@@ -144,6 +149,11 @@ void MainWindow::setupUi() {
     auto* outer = new QVBoxLayout(central);
 
     auto* views = new QHBoxLayout();
+    views->addWidget(coverLabel_);
+    coverLabel_ = new QLabel(QStringLiteral("（封面）"));
+    coverLabel_->setFixedSize(160, 213);          // 3:4
+    coverLabel_->setAlignment(Qt::AlignCenter);
+    coverLabel_->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
     albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
     albumInfo_->setWordWrap(true);
     outer->addWidget(albumInfo_);
