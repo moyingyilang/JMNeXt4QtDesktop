@@ -11,6 +11,8 @@ add_library(jmnext_core STATIC
     src/core/ImageUnscramble.cpp
     src/core/Md5.cpp
     src/core/AesEcb.cpp
+    src/core/Base64.cpp
+    src/core/JmCrypto.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -35,3 +37,6 @@ add_test(NAME paths COMMAND test_paths)
 add_executable(test_crypto tests/test_crypto.cpp)
 target_link_libraries(test_crypto PRIVATE jmnext_core)
 add_test(NAME crypto COMMAND test_crypto)
+add_executable(test_base64_crypto tests/test_base64_crypto.cpp)
+target_link_libraries(test_base64_crypto PRIVATE jmnext_core)
+add_test(NAME base64_crypto COMMAND test_base64_crypto)
