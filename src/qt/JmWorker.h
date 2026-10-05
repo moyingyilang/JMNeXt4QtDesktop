@@ -33,6 +33,8 @@ public slots:
     void loadList();
     /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数
     void setBlockWords(const QStringList& words);
+    /// 加载下一页（追加到列表末尾）；到末页时上报状态
+    void loadMore();
     /// 为列表前 n 项取封面：成功发 coverReady(index, image)
     void loadCovers(int n);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
@@ -51,6 +53,7 @@ public slots:
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
+    void listAppended(const QStringList& titles, const QStringList& ids);
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void coverReady(int index, const QImage& image);
@@ -66,6 +69,7 @@ private:
     QStringList pendingIds_;     // loadList 之后记住 id，供 loadCovers / openChapter 用
     jmnext::core::ChapterImages chapter_;
     bool started_ = false;
+    int page_ = 0;                          // 当前已加载到第几页（0 起）
     std::vector<std::string> blockWords_;   // 屏蔽关键词（本地规则）
     QString currentAid_;
     int pageIndex_ = -1;

@@ -98,6 +98,16 @@ MainWindow::MainWindow() {
         log(statusText);
     });
     workerThread_->start();
+    connect(worker_, &JmWorker::listAppended, this,
+            [this](const QStringList& titles, const QStringList& ids) {
+                for (int i = 0; i < titles.size(); ++i) {
+                    auto* item = new QListWidgetItem(titles[i]);
+                    item->setData(Qt::UserRole, ids.value(i));
+                    listView_->addItem(item);
+                }
+                log(QStringLiteral("列表现已 %1 条").arg(listView_->count()));
+                pendingListResult_ = listView_->count();
+            });
     connect(worker_, &JmWorker::albumReady, this,
             [this](const QString& name, const QString& author, const QStringList& tags) {
                 albumInfo_->setText(QStringLiteral("%1　——　%2\n标签：%3")
@@ -151,6 +161,9 @@ void MainWindow::setupUi() {
     auto* listRow = new QHBoxLayout();
     listRow->addWidget(listView_);
     auto* loadListBtn = new QPushButton(QStringLiteral("加载真实首页列表"));
+    auto* moreBtn = new QPushButton(QStringLiteral("加载更多"));
+    listRow->addWidget(moreBtn);
+    connect(moreBtn, &QPushButton::clicked, this, [this] { if (worker_) worker_->loadMore(); });
     blockEdit_ = new QLineEdit();
     chapterBox_ = new QComboBox();
     listRow->addWidget(chapterBox_);
@@ -592,6 +605,22 @@ void MainWindow::requestCacheStatsAndWait(int timeoutMs) {
     worker_->reportCacheStats();
     while (!got && timer.remainingTime() > 0) QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
     disconnect(conn);
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+int MainWindow::requestLoadMoreAndWait(int timeoutMs) {
+    if (!worker_) return -1;
+    const int before = listView_ ? listView_->count() : 0;
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    worker_->loadMore();
+    while (listView_ && listView_->count() == before && timer.remainingTime() > 0)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    return listView_ ? listView_->count() : -1;
 }
 
 }  // namespace jmnext::qt

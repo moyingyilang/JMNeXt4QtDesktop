@@ -49,6 +49,7 @@ void JmWorker::loadList() {
     if (hidden > 0)
         emit status(QStringLiteral("已按屏蔽规则隐藏 %1 条（关键词 %2 个）").arg(hidden).arg(blockWords_.size()));
     pendingIds_ = ids;
+    page_ = 0;
     emit listReady(titles, ids);
 }
 
@@ -181,6 +182,41 @@ namespace jmnext::qt {
 void JmWorker::reportCacheStats() {
     const auto& c = client().cache();
     emit cacheStats(c.imageHits(), c.imageMisses(), c.rawHits(), c.rawMisses());
+}
+
+}  // namespace jmnext::qt
+
+namespace jmnext::qt {
+
+void JmWorker::loadMore() {
+    if (!ensureStarted()) return;
+    const int next = page_ + 1;
+    auto list = client().latest(next);
+    if (!list) {
+        emit failed(QStringLiteral("加载第 %1 页失败：%2").arg(next + 1).arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    if (list->empty()) {
+        emit status(QStringLiteral("已到末页（当前共加载 %1 页）").arg(page_ + 1));
+        return;
+    }
+    core::BlockRules rules;
+    rules.words = blockWords_;
+    QStringList titles, ids;
+    int hidden = 0;
+    for (const auto& e : *list) {
+        const core::ListItem item{e.name, e.author, e.categoryTitle, e.categorySubTitle};
+        if (rules.hides(item)) { ++hidden; continue; }
+        titles << QStringLiteral("%1\n   %2　[%3]")
+                      .arg(QString::fromStdString(e.name))
+                      .arg(QString::fromStdString(e.author))
+                      .arg(QString::fromStdString(e.categoryTitle));
+        ids << QString::fromStdString(e.id);
+    }
+    page_ = next;
+    pendingIds_ += ids;
+    emit status(QStringLiteral("第 %1 页：新增 %2 条（隐藏 %3 条）").arg(next + 1).arg(titles.size()).arg(hidden));
+    emit listAppended(titles, ids);
 }
 
 }  // namespace jmnext::qt
