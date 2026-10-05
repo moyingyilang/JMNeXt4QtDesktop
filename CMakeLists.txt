@@ -18,6 +18,7 @@ add_library(jmnext_core STATIC
     src/core/JmSession.cpp
     src/core/HostDiscovery.cpp
     src/core/BlockRules.cpp
+    src/core/JmApi.cpp
 )
 target_include_directories(jmnext_core PUBLIC src)
 
@@ -60,6 +61,9 @@ add_test(NAME host_discovery COMMAND test_host_discovery)
 add_executable(test_block_rules tests/test_block_rules.cpp)
 target_link_libraries(test_block_rules PRIVATE jmnext_core)
 add_test(NAME block_rules COMMAND test_block_rules)
+add_executable(test_jm_api tests/test_jm_api.cpp)
+target_link_libraries(test_jm_api PRIVATE jmnext_core)
+add_test(NAME jm_api COMMAND test_jm_api)
 
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)

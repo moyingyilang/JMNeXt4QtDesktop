@@ -8,6 +8,7 @@
 #include "core/BlockRules.h"   // 新增核心模块时，记得同时加到这里
 #include "core/Base64.h"
 #include "core/HostDiscovery.h"
+#include "core/JmApi.h"
 #include "core/ImageUnscramble.h"
 #include "core/JmCrypto.h"
 #include "core/JmPaths.h"
