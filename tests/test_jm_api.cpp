@@ -1,5 +1,6 @@
-// 业务请求层测试：拼 URL、带 Token/Tokenparam、按"发起请求时"的时间戳解密、
-// 解密失败 refresh 重试一次、网络失败标记主机可疑。全部用假客户端，不碰真实网络。
+// 业务请求层测试：拼 URL、带 Token/Tokenparam/Accept、按"发起请求时"的时间戳解密、
+// **先取信封 {code,data} 再解密**（真实网络已确认的形状）、解密失败 refresh 重试一次、
+// 网络失败标记主机可疑。全部用假客户端，不碰真实网络。
 #include "core/JmCore.h"
 #include "net/HttpClient.h"
 
@@ -27,9 +28,13 @@ static std::string serverEncrypt(const std::string& plain, const std::string& ke
     return base64Encode(aes256EcbEncrypt(data, key));
 }
 
+/// 真实响应形状：{"code":200,"data":"<base64 密文>"}
+static std::string envelope(const std::string& cipher) {
+    return std::string("{\"code\":200,\"data\":\"") + cipher + "\"}";
+}
+
 class FakeHttp : public jmnext::net::HttpClient {
 public:
-    // 每次调用依次取一条脚本（返回 status=0 表示网络类失败）
     std::vector<jmnext::net::HttpResponse> scripted;
     std::vector<std::string> seenUrls;
     std::vector<std::vector<std::string>> seenHeaders;
@@ -45,46 +50,76 @@ public:
 };
 
 int main() {
-    // ---------- 正常一次成功 ----------
+    // ---------- 正常一次成功（响应是信封）----------
     {
         JmSession s("2.1.9", 1700000000);
         s.useHost("api.example.com");
         FakeHttp http;
         const std::string body = R"({"status":"ok","data":{"content":[]}})";
-        http.scripted.push_back(jmnext::net::HttpResponse{200, serverEncrypt(body, s.token())});
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope(serverEncrypt(body, s.token()))});
 
         JmApi api(s, http);
         auto r = api.request("latest", "page=0");
         check(r.has_value(), "请求成功");
         if (r) {
-            eqStr(r->text, body, "解出的正文与原文一致");
+            eqStr(r->text, body, "解出的正文与原文一致（信封里的密文被正确取出并解密）");
             check(!r->retried, "一次成功时不标记重试");
         }
         eqStr(http.seenUrls.at(0), "https://api.example.com/latest?page=0", "URL 含查询串");
-        check(http.seenHeaders.at(0).size() == 2, "带了 Token 与 Tokenparam 两个头");
+        check(http.seenHeaders.at(0).size() == 3, "带了 Token / Tokenparam / Accept 三个头");
         check(http.seenHeaders.at(0)[0].rfind("Token: ", 0) == 0, "第一个头是 Token");
+        check(http.seenHeaders.at(0)[2] == "Accept: application/json, text/plain, */*",
+              "Accept 与主项目 JmRemote 一致");
         check(!s.hostSuspect(), "成功时主机不可疑");
     }
 
-    // ---------- 解密失败 → refresh 重试一次（用新时间戳加密的响应）----------
+    // ---------- 信封里的 \/ 转义必须还原（真实响应就是这么给的）----------
     {
         JmSession s("2.1.9", 1700000000);
         s.useHost("api.example.com");
         FakeHttp http;
         const std::string body = R"({"status":"ok"})";
-        // 第一次：服务端用**旧** token 加密（模拟过期）→ 客户端拿旧时间戳能解，
-        // 所以这里换个更贴近真实的情形：第一次返回用**未来** token 加密的响应（旧时间戳解不开）
-        http.scripted.push_back(jmnext::net::HttpResponse{
-            200, serverEncrypt(body, md5Hex("1700000001" + std::string(TOKEN_SEED)))});
-        // 第二次（refresh 之后，时间戳 +1）：服务端用新 token 加密
-        http.scripted.push_back(jmnext::net::HttpResponse{
-            200, serverEncrypt(body, md5Hex("1700000001" + std::string(TOKEN_SEED)))});
+        std::string cipher = serverEncrypt(body, s.token());
+        // 模拟服务端的 JSON 转义：把 '/' 变成 "\/"
+        std::string escaped;
+        for (char c : cipher) {
+            if (c == '/') escaped += "\\/";
+            else escaped.push_back(c);
+        }
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope(escaped)});
+        JmApi api(s, http);
+        auto r = api.request("latest");
+        check(r.has_value(), "带 \\/ 转义的信封也能解开");
+        if (r) eqStr(r->text, body, "转义还原后内容正确");
+    }
 
+    // ---------- 非信封响应：按"整个 body 就是密文"兼容处理 ----------
+    {
+        JmSession s("2.1.9", 1700000000);
+        s.useHost("api.example.com");
+        FakeHttp http;
+        const std::string body = R"({"ok":true})";
+        http.scripted.push_back(jmnext::net::HttpResponse{200, serverEncrypt(body, s.token())});
+        JmApi api(s, http);
+        auto r = api.request("latest");
+        check(r.has_value(), "非信封（纯密文）也能解开");
+        if (r) eqStr(r->text, body, "内容正确");
+    }
+
+    // ---------- 解密失败 → refresh 重试一次 ----------
+    {
+        JmSession s("2.1.9", 1700000000);
+        s.useHost("api.example.com");
+        FakeHttp http;
+        const std::string body = R"({"status":"ok"})";
+        const std::string future = md5Hex("1700000001" + std::string(TOKEN_SEED));
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope(serverEncrypt(body, future))});
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope(serverEncrypt(body, future))});
         JmApi api(s, http);
         auto r = api.request("latest");
         check(r.has_value(), "重试后成功");
         if (r) {
-            eqStr(r->text, body, "重试后解出的正文正确");
+            eqStr(r->text, body, "重试后内容正确");
             check(r->retried, "标记了重试");
         }
         check(http.seenUrls.size() == 2, "确实发了两次请求");
@@ -96,14 +131,14 @@ int main() {
         JmSession s("2.1.9", 1700000000);
         s.useHost("api.example.com");
         FakeHttp http;
-        http.scripted.push_back(jmnext::net::HttpResponse{200, "不是密文"});
-        http.scripted.push_back(jmnext::net::HttpResponse{200, "仍然不是密文"});
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope("不是密文")});
+        http.scripted.push_back(jmnext::net::HttpResponse{200, envelope("仍然不是密文")});
         JmApi api(s, http);
         check(!api.request("latest").has_value(), "两次都失败 → 返回空");
         eqStr(api.lastError(), "解密失败（已重试一次）", "错误说明写明重试过");
     }
 
-    // ---------- HTTP 错误码 ----------
+    // ---------- HTTP 错误码不算网络类失败 ----------
     {
         JmSession s("2.1.9", 1700000000);
         s.useHost("api.example.com");
@@ -115,7 +150,7 @@ int main() {
         check(!s.hostSuspect(), "HTTP 错误码不算网络类失败（主机本身可达）");
     }
 
-    // ---------- 网络类失败 → 标记主机可疑（上层据此换主机）----------
+    // ---------- 网络类失败 → 标记主机可疑 ----------
     {
         JmSession s("2.1.9", 1700000000);
         s.useHost("api.example.com");
@@ -123,10 +158,10 @@ int main() {
         http.scripted.push_back(jmnext::net::HttpResponse{0, ""});
         JmApi api(s, http);
         check(!api.request("latest").has_value(), "网络失败 → 返回空");
-        check(s.hostSuspect(), "网络类失败要标记主机可疑（否则用户会遇到怎么刷新都没用）");
+        check(s.hostSuspect(), "网络类失败要标记主机可疑");
     }
 
-    // ---------- 主机未初始化 → 明确失败，不发请求 ----------
+    // ---------- 主机未初始化 → 不发请求 ----------
     {
         JmSession s("2.1.9", 1700000000);
         FakeHttp http;
@@ -135,6 +170,7 @@ int main() {
         check(http.seenUrls.empty(), "未初始化主机 → 一个请求都不发");
     }
 
-    if (failures == 0) std::printf("全部通过：业务请求层（URL/请求头/时间戳复用/重试一次/主机可疑）\n");
+    if (failures == 0)
+        std::printf("全部通过：业务请求层（信封/转义/URL/三个头/时间戳复用/重试一次/主机可疑）\n");
     return failures == 0 ? 0 : 1;
 }

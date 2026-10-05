@@ -13,8 +13,10 @@
 #include "qt/QtHttpClient.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
 
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <string>
 
@@ -35,6 +37,11 @@ int main(int argc, char** argv) {
     }
     jmnext::qt::QtHttpClient http;
     const std::string cmd = argv[1];
+    // 默认用**真实当前时间**：服务端会校验时间戳时效（此前硬编码 1700000000 导致解密失败）
+    int64_t now = QDateTime::currentSecsSinceEpoch();
+    for (int i = 2; i + 1 < argc; ++i)
+        if (std::string(argv[i]) == "--fixed-time") now = std::strtoll(argv[i + 1], nullptr, 10);
+    std::printf("使用时间戳: %lld\n", static_cast<long long>(now));
 
     if (cmd == "get" && argc == 3) {
         const auto resp = http.get(argv[2], {});
@@ -45,7 +52,7 @@ int main(int argc, char** argv) {
     }
 
     if (cmd == "discover") {
-        JmSession session("2.1.9", 1700000000);
+        JmSession session("2.1.9", now);
         auto base = discoverHost(session, http, [](const std::vector<std::string>& hosts) {
             if (hosts.empty()) return std::optional<std::string>{};
             std::printf("候选主机 %zu 个，选第一个：%s\n", hosts.size(), hosts.front().c_str());
@@ -60,7 +67,7 @@ int main(int argc, char** argv) {
     }
 
     if (cmd == "latest") {
-        JmSession session("2.1.9", 1700000000);
+        JmSession session("2.1.9", now);
         auto base = discoverHost(session, http, [](const std::vector<std::string>& hosts) {
             return hosts.empty() ? std::optional<std::string>{} : std::optional<std::string>(hosts.front());
         });
@@ -73,6 +80,12 @@ int main(int argc, char** argv) {
         auto r = api.request("latest", "page=0");
         if (!r) {
             std::printf("请求失败：%s\n", api.lastError().c_str());
+            // 诊断：把原始响应也打出来，看清服务端到底回了什么（而不是只看到"解密失败"）
+            const auto raw = http.get(*base + "latest?page=0",
+                                      {"Token: " + session.token(), "Tokenparam: " + session.tokenParam(),
+                                       "Accept: application/json, text/plain, */*"});
+            std::printf("原始响应: 状态码 %d，%zu 字节\n", raw.status, raw.body.size());
+            printHead(raw.body, 600);
             return 1;
         }
         std::printf("HTTP %d，解密后 %zu 字节%s\n", r->status, r->text.size(),

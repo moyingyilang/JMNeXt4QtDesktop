@@ -43,20 +43,24 @@ public:
         if (url.find("bytepluses.com") != std::string::npos) {          // 主机清单（第三方对象存储）
             if (!headers.empty()) return {500, "主机发现不该带任何头"};
             const std::string hosts = R"({"Setting":[],"Server":["api.example.com"],"jm3_Server":[]})";
-            return {200, serverEncrypt(hosts, md5Hex(HOST_SEED))};
+            return {200, serverEncrypt(hosts, md5Hex(HOST_SEED))};   // 主机清单是**裸密文**，不是信封（真实网络已确认）
         }
         if (url.find("/latest") != std::string::npos) {                  // 首页列表
+            // 真实形状（已由真实网络确认）：顶层直接是数组，字段含 id/name/author/category/category_sub
             const std::string body =
-                R"({"status":"ok","data":{"content":[)"
-                R"({"id":"1","name":"NTR作品","author":"某作者"},)"
-                R"({"id":"2","name":"纯爱作品","author":"某作者"}]}})";
-            return {200, serverEncrypt(body, token())};
+                R"([{"id":"1","name":"NTR作品","author":"某作者","image":"",)"
+                R"("category":{"id":"1","title":"同人"},"category_sub":{"id":null,"title":null},)"
+                R"("liked":false,"is_favorite":false,"update_at":1791191078},)"
+                R"({"id":"2","name":"纯爱作品","author":"某作者","image":"",)"
+                R"("category":{"id":"2","title":"單本"},"category_sub":{"id":null,"title":null},)"
+                R"("liked":false,"is_favorite":false,"update_at":1791191079}])";
+            return {200, std::string(R"({"code":200,"data":")") + serverEncrypt(body, token()) + R"("})"};
         }
         if (url.find("/album") != std::string::npos) {                   // 详情
             const std::string body =
                 R"({"status":"ok","data":{"id":"2","name":"纯爱作品","tags":["纯爱","日常"],)"
                 R"("images":["https://img.example.com/1.jpg","https://img.example.com/2.jpg"]}})";
-            return {200, serverEncrypt(body, token())};
+            return {200, std::string(R"({"code":200,"data":")") + serverEncrypt(body, token()) + R"("})"};
         }
         if (url.find("img.example.com") != std::string::npos) {          // 图片字节（不加密，走图床）
             return {200, imageBytes};
