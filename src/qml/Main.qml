@@ -108,7 +108,9 @@ ApplicationWindow {
                     fillMode: Image.PreserveAspectFit
                     source: root.pageUrl
                     onStatusChanged: if (status === Image.Ready)
-                        console.log("QML 阅读页已显示：" + sourceSize.width + "x" + sourceSize.height)
+                        console.log("QML 阅读页已显示：源 " + sourceSize.width + "x" + sourceSize.height
+                                    + "，实际绘制 " + Math.round(paintedWidth) + "x" + Math.round(paintedHeight)
+                                    + "，阅读器可见=" + root.reading)
                 }
 
                 RowLayout {
