@@ -33,6 +33,7 @@
 #include <QTimer>
 #include <QPlainTextEdit>
 #include <QScrollArea>
+#include <QSplitter>
 #include <QStringList>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -150,10 +151,15 @@ MainWindow::MainWindow() {
 void MainWindow::setupUi() {
     setWindowTitle(QStringLiteral("JMNeXt4QtDesktop %1 —— JMComic 桌面端（原生 C++/Qt，早期阶段）")
                        .arg(jmnext::core::APP_VERSION));
-    auto* central = new QWidget(this);          // 上一轮我删标题行时误删了这行，这里补回
-    auto* outer = new QVBoxLayout(central);
-    outer->setContentsMargins(10, 8, 10, 8);   // 四周留白：之前控件贴边，观感很生
-    outer->setSpacing(6);                      // 控件之间留一点缝
+    auto* split = new QSplitter(Qt::Horizontal);
+    auto* leftPanel = new QWidget();   auto* leftCol = new QVBoxLayout(leftPanel);
+    auto* rightPanel = new QWidget();  auto* rightCol = new QVBoxLayout(rightPanel);
+    leftCol->setContentsMargins(10, 8, 6, 8);    leftCol->setSpacing(6);
+    rightCol->setContentsMargins(6, 8, 10, 8);   rightCol->setSpacing(6);
+    split->addWidget(leftPanel);
+    split->addWidget(rightPanel);
+    split->setStretchFactor(0, 0);               // 左侧窄
+    split->setStretchFactor(1, 1);               // 右侧主区域
 
     auto* views = new QHBoxLayout();
     coverLabel_ = new QLabel(QStringLiteral("（封面）"));
@@ -163,7 +169,7 @@ void MainWindow::setupUi() {
     views->addWidget(coverLabel_);          // 必须在 coverLabel_ 创建之后加（此前插在前面，导致布局收到空指针）
     albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
     albumInfo_->setWordWrap(true);
-    outer->addWidget(albumInfo_);
+    rightCol->addWidget(albumInfo_);
     originalView_ = new QLabel(QStringLiteral("（未加载图片）"));
     restoredView_ = new QLabel(QStringLiteral("（未还原）"));
     restoredScroll_ = new QScrollArea();
@@ -193,35 +199,35 @@ void MainWindow::setupUi() {
     {
         auto* h = new QLabel(QStringLiteral("② 章节（点选切换）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
-        outer->addWidget(h);
+        leftCol->addWidget(h);
     }
-    outer->addWidget(chapterList_, 1);   // 章节列表占一份
+    leftCol->addWidget(chapterList_, 1);   // 章节列表占一份
     listRow->addWidget(blockEdit_);
     blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
     listRow->addWidget(loadListBtn);
     {
         auto* h = new QLabel(QStringLiteral("① 作品列表（双击进入阅读）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
-        outer->addWidget(h);
+        leftCol->addWidget(h);
     }
-    outer->addLayout(listRow);
+    leftCol->addLayout(listRow);
     {
         auto* h = new QLabel(QStringLiteral("③ 阅读区（← → 翻页，滚轮可用，适应窗口 / 100% 可切换）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
-        outer->addWidget(h);
+        rightCol->addWidget(h);
     }
     pageLabel_ = new QLabel(QStringLiteral("（尚未打开章节）"));
     pageLabel_->setStyleSheet(QStringLiteral("color:#b9bcc2; padding:2px 0;"));
-    outer->addWidget(pageLabel_);
-    outer->addLayout(views);
-    outer->setStretchFactor(views, 2);   // 阅读区占两份，让它成为主区域
+    rightCol->addWidget(pageLabel_);
+    rightCol->addLayout(views);
+    rightCol->setStretchFactor(views, 2);   // 阅读区占两份，让它成为主区域
 
     auto* form = new QFormLayout();
     aidEdit_ = new QLineEdit(QStringLiteral("1"));
     pageEdit_ = new QLineEdit(QStringLiteral("1"));
     form->addRow(QStringLiteral("作品号 (aid)"), aidEdit_);
     form->addRow(QStringLiteral("页码 (page，接口原样字符串)"), pageEdit_);
-    outer->addLayout(form);
+    rightCol->addLayout(form);
 
     auto* buttons = new QHBoxLayout();
     buttons->setSpacing(6);                    // 8 个按钮挤在一行时更要留缝
@@ -231,15 +237,15 @@ void MainWindow::setupUi() {
     auto* unscrambleBtn = new QPushButton(QStringLiteral("还原"));
     buttons->addWidget(openBtn);
     buttons->addWidget(unscrambleBtn);
-    outer->addLayout(buttons);
+    rightCol->addLayout(buttons);
 
     log(QStringLiteral("快捷键：← / PageUp 上一页，→ / PageDown / 空格 / 滚轮 下一页；章节用左侧列表点选切换"));
     logView_ = new QPlainTextEdit();
     logView_->setReadOnly(true);
     logView_->setMaximumHeight(120);
-    outer->addWidget(logView_);
+    rightCol->addWidget(logView_);
 
-    setCentralWidget(central);
+    setCentralWidget(split);                   // 根容器换成左右分栏
 
     connect(openBtn, &QPushButton::clicked, this, [this] {
         const QString path = QFileDialog::getOpenFileName(this, QStringLiteral("选择漫画图片"));
