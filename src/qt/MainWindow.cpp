@@ -1,3 +1,4 @@
+#include "qt/Theme.h"
 #include "qt/MainWindow.h"
 
 #include "core/JmCrypto.h"
@@ -253,6 +254,23 @@ void MainWindow::setupUi() {
         });
     }
     leftCol->addLayout(listRow);
+    // 风格选择：切换时重建全局样式表（深/浅取自 app 属性 jmDark，由 main.cpp 设置）
+    {
+        auto* styleRow = new QHBoxLayout();
+        styleRow->addWidget(new QLabel(QStringLiteral("风格")));
+        styleBox_ = new QComboBox();
+        styleBox_->addItems({QStringLiteral("windowGlass"), QStringLiteral("translucent"),
+                             QStringLiteral("flatBlur"), QStringLiteral("miuix")});
+        styleBox_->setCurrentIndex(0);            // 默认 windowGlass（与主项目一致）
+        styleRow->addWidget(styleBox_, 1);
+        leftCol->addLayout(styleRow);
+        connect(styleBox_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
+            if (!qApp) return;
+            const bool dark = qApp->property("jmDark").toBool();
+            qApp->setStyleSheet(themeQss(styleFromName(name), dark));
+            log(QStringLiteral("已切换风格：%1").arg(name));
+        });
+    }
     {
         auto* h = new QLabel(QStringLiteral("③ 阅读区（← → 翻页，滚轮可用，适应窗口 / 100% 可切换）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
@@ -529,6 +547,8 @@ int MainWindow::loadRealList() {
 }
 
 int MainWindow::listCount() const { return listView_ ? listView_->count() : 0; }
+
+int MainWindow::styleItemCount() const { return styleBox_ ? styleBox_->count() : 0; }
 
 QString MainWindow::listItemText(int i) const {
     if (!listView_ || i < 0 || i >= listView_->count()) return {};

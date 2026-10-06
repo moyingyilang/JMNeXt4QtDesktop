@@ -77,6 +77,8 @@ public:
     int listCount() const;
     /// 列表第 i 条的显示文本（自检用）
     QString listItemText(int i) const;
+    /// 风格下拉项数（自检用）
+    int styleItemCount() const;               // 实现在 .cpp（QComboBox 在头文件里只有前向声明）
     bool showPage(int index);
 
     /// 载入某作品的某章节，并跳到指定页（真实链路：详情 → 章节 → 下载 → 还原）
@@ -115,6 +117,7 @@ private:
     QListWidget* listView_ = nullptr;
     QLineEdit* blockEdit_ = nullptr;
     QLineEdit* searchEdit_ = nullptr;
+    QComboBox* styleBox_ = nullptr;           // 风格选择（四套具名风格）
     bool twoPageUi_ = false;          // 与 worker 的双页开关保持一致
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;

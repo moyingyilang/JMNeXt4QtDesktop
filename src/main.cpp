@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
             if (std::string(argv[i]) == "--theme") style = jmnext::qt::styleFromName(QString::fromUtf8(argv[i + 1]));
         for (int i = 1; i < argc; ++i) if (std::string(argv[i]) == "--light") light = true;
         app.setStyleSheet(jmnext::qt::themeQss(style, !light));
+        app.setProperty("jmDark", !light);        // 供界面切换风格时判断深/浅
         std::printf("主题：%s（%s）\n", jmnext::qt::styleName(style), light ? "浅色" : "深色");
         std::printf("  实际配色：%s\n", jmnext::qt::styleSummary(style, !light).toUtf8().constData());
     }
@@ -142,6 +143,7 @@ int main(int argc, char** argv) {
         const int n = win.requestListAndWait();
         if (n < 0) { std::printf("加载失败\n"); return 1; }
         std::printf("列表条数：%d\n", n);
+        std::printf("风格下拉项数：%d\n", win.styleItemCount());
         const int more = win.requestLoadMoreAndWait();
         std::printf("加载更多之后：%d 条\n", more);
         for (int i = 0; i < 3 && i < n; ++i)
