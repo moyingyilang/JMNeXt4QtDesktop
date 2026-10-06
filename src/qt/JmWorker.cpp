@@ -28,6 +28,7 @@ bool JmWorker::ensureStarted() {
 }
 
 void JmWorker::loadList() {
+    lastQuery_.clear();          // 回到首页列表
     if (!ensureStarted()) return;
     auto list = client().latest(0);
     if (!list) {
@@ -60,6 +61,7 @@ void JmWorker::loadList() {
 }
 
 void JmWorker::search(const QString& word, int page) {
+    lastQuery_ = word;           // 记住当前是搜索结果，"加载更多"要翻搜索的第 N 页
     if (!ensureStarted()) return;
     emit status(QStringLiteral("正在搜索：%1").arg(word));
     auto list = client().search(word.toStdString(), page);
@@ -275,7 +277,10 @@ namespace jmnext::qt {
 void JmWorker::loadMore() {
     if (!ensureStarted()) return;
     const int next = page_ + 1;
-    auto list = client().latest(next);
+    // 加载更多要跟着当前列表走：搜索结果显示时翻搜索的第 N 页，否则翻首页列表。
+    // （此前一律翻首页列表，于是搜索后点加载更多会把首页内容混进搜索结果里。）
+    const bool inSearch = !lastQuery_.isEmpty();
+    auto list = inSearch ? client().search(lastQuery_.toStdString(), next) : client().latest(next);
     if (!list) {
         emit failed(QStringLiteral("加载第 %1 页失败：%2").arg(next + 1).arg(QString::fromStdString(client().lastError())));
         return;

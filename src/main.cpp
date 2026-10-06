@@ -153,6 +153,8 @@ int main(int argc, char** argv) {
             std::printf("  第 %d 项：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
         const int covers = win.requestCoversAndWait(3);
         std::printf("搜索结果封面：成功 %d 张\n", covers);
+        const int more = win.requestLoadMoreAndWait();
+        std::printf("搜索后再加载更多：累计 %d 条\n", more);
         return 0;
     }
 
