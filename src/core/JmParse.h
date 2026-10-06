@@ -56,6 +56,16 @@ std::optional<std::vector<ListEntry>> parseLatestList(const std::string& json);
 std::optional<AlbumInfo> parseAlbum(const std::string& json);
 std::optional<ChapterImages> parseChapterImages(const std::string& json);
 
+/// 搜索结果页（search 接口）
+struct SearchPage {
+    int total = 0;                  // 服务端报的总数（可能被截断/给上限值，仅作参考）
+    std::vector<ListEntry> items;   // content 数组，条目字段与首页列表相同
+};
+
+/// 解析 search 响应：{"search_query":..,"total":N,"content":[ ... ]}
+/// 实现上复用 parseLatestList（它找第一个 '[' 再配对括号），把 content 的数组切片交给它。
+std::optional<SearchPage> parseSearchPage(const std::string& json);
+
 /// JSON 字符串里的转义还原（至少处理 \/ \" \\ \n \t \r \uXXXX 的常见情形）
 std::string unescapeJson(const std::string& raw);
 

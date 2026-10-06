@@ -266,4 +266,20 @@ bool needsUnscrambleFor(int aid, int scrambleId, const std::string& url) {
     return needsUnscramble(url, aid, scrambleId);
 }
 
+std::optional<SearchPage> parseSearchPage(const std::string& json) {
+    // 找 "content" 后面的数组，交给 parseLatestList（它对"数组切片"同样适用）
+    const auto key = json.find("\"content\"");
+    if (key == std::string::npos) return std::nullopt;
+    const auto start = json.find('[', key);
+    if (start == std::string::npos) return std::nullopt;
+    const auto end = matchingBracket(json, start);
+    if (end == std::string::npos) return std::nullopt;
+    auto items = parseLatestList(json.substr(start, end - start + 1));
+    if (!items) return std::nullopt;
+
+    SearchPage page;
+    page.items = *items;
+    if (const auto t = scalarField(json, "total"); !t.empty()) page.total = std::atoi(t.c_str());
+    return page;
+}
 }  // namespace jmnext::core

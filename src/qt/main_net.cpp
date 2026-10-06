@@ -59,6 +59,29 @@ int main(int argc, char** argv) {
         return resp.ok() ? 0 : 1;
     }
 
+    if (cmd == "search" && argc >= 3) {
+        // 搜索：探明的参数名是 search_query（用 key/keyword 服务端会返回 search_query:"" 的空结果）
+        const std::string word = argv[2];
+        const std::string page = (argc >= 4) ? argv[3] : "1";
+        JmSession session("2.1.9", now);
+        auto base = discoverHost(session, http, [](const std::vector<std::string>& hosts) {
+            return hosts.empty() ? std::optional<std::string>{} : std::optional<std::string>(hosts.front());
+        });
+        if (!base) { std::printf("主机发现失败\n"); return 1; }
+        JmApi api(session, http);
+        auto r = api.request("search", "search_query=" + word + "&page=" + page);
+        if (!r) { std::printf("搜索失败：%s\n", http.lastError().c_str()); return 1; }
+        auto parsed = jmnext::core::parseSearchPage(r->text);
+        if (!parsed) { std::printf("解析失败（%zu 字节）\n", r->text.size()); return 1; }
+        std::printf("关键词：%s  第 %s 页  服务端 total=%d  本页 %zu 条\n",
+                    word.c_str(), page.c_str(), parsed->total, parsed->items.size());
+        for (std::size_t i = 0; i < parsed->items.size() && i < 5; ++i) {
+            std::printf("  [%zu] aid=%s  %s（%s）\n", i + 1, parsed->items[i].id.c_str(),
+                        parsed->items[i].name.c_str(), parsed->items[i].categoryTitle.c_str());
+        }
+        return 0;
+    }
+
     if (cmd == "update") {
         // 更新检查：拉 GitHub 最新 release，按 core::UpdateCheck 的规则比较
         // （fix(n) 规则也在 core 里，已有单测；这里只做"取 tag → 比较 → 给出该下哪个包"）

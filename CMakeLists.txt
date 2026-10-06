@@ -83,6 +83,9 @@ add_test(NAME read_progress COMMAND test_read_progress)
 add_executable(test_envelope tests/test_envelope.cpp)
 target_link_libraries(test_envelope PRIVATE jmnext_core)
 add_test(NAME envelope COMMAND test_envelope)
+add_executable(test_search_parse tests/test_search_parse.cpp)
+target_link_libraries(test_search_parse PRIVATE jmnext_core)
+add_test(NAME search_parse COMMAND test_search_parse)
 
 # 无头 CLI（纯计算链路，不需要 Qt 与显示）
 add_executable(jmnext4cli src/cli/main.cpp)
