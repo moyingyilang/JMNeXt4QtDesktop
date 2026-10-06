@@ -152,6 +152,8 @@ void MainWindow::setupUi() {
                        .arg(jmnext::core::APP_VERSION));
     auto* central = new QWidget(this);          // 上一轮我删标题行时误删了这行，这里补回
     auto* outer = new QVBoxLayout(central);
+    outer->setContentsMargins(10, 8, 10, 8);   // 四周留白：之前控件贴边，观感很生
+    outer->setSpacing(6);                      // 控件之间留一点缝
 
     auto* views = new QHBoxLayout();
     coverLabel_ = new QLabel(QStringLiteral("（封面）"));
@@ -221,6 +223,7 @@ void MainWindow::setupUi() {
     outer->addLayout(form);
 
     auto* buttons = new QHBoxLayout();
+    buttons->setSpacing(6);                    // 8 个按钮挤在一行时更要留缝
     auto* openBtn = new QPushButton(QStringLiteral("打开图片…"));
     auto* zoomBtn = new QPushButton(QStringLiteral("适应窗口 / 100%"));
     buttons->addWidget(zoomBtn);
