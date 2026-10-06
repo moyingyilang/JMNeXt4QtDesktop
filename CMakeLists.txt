@@ -29,9 +29,16 @@ find_package(Qt6 COMPONENTS Widgets)
 
 # 界面骨架（在没有 Qt 的环境里也能只编核心与测试）
 if(Qt6_FOUND)
-    add_executable(jmnext4desktop src/main.cpp src/qt/MainWindow.cpp src/qt/ImageCodec.cpp
-        src/qt/JmClient.cpp src/qt/QtHttpClient.cpp src/qt/ImageCache.cpp src/qt/JmWorker.cpp)
-    target_link_libraries(jmnext4desktop PRIVATE jmnext_core Qt6::Widgets Qt6::Gui Qt6::Network)
+# 共用 Qt 层（网络客户端 / 缓存 / 解码 / 后台 worker）——widget 与 QML 两个前端都用它。
+# 刻意不含 MainWindow.cpp：那是 widget 专属界面；QML 侧由 JmBackend 复用同一个 JmWorker。
+add_library(jmnext_qtlayer STATIC
+    src/qt/ImageCodec.cpp src/qt/JmClient.cpp src/qt/QtHttpClient.cpp
+    src/qt/ImageCache.cpp src/qt/JmWorker.cpp)
+target_include_directories(jmnext_qtlayer PUBLIC src)
+target_link_libraries(jmnext_qtlayer PUBLIC jmnext_core Qt6::Gui Qt6::Network Qt6::Core)
+
+add_executable(jmnext4desktop src/main.cpp src/qt/MainWindow.cpp)
+    target_link_libraries(jmnext4desktop PRIVATE jmnext_qtlayer Qt6::Widgets Qt6::Gui Qt6::Network)
 else()
     message(STATUS "未找到 Qt6：跳过界面目标，只构建核心与测试")
 endif()
@@ -115,7 +122,7 @@ qt_add_executable(jmnext4qml
     src/qt/ThemeTokens.h
 )
 target_include_directories(jmnext4qml PRIVATE src)
-target_link_libraries(jmnext4qml PRIVATE jmnext_core Qt6::Quick Qt6::Qml Qt6::Gui Qt6::QuickControls2)
+target_link_libraries(jmnext4qml PRIVATE jmnext_qtlayer Qt6::Quick Qt6::Qml Qt6::Gui Qt6::QuickControls2)
 qt_add_qml_module(jmnext4qml
     URI JMNeXt
     VERSION 1.0
