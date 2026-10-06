@@ -156,7 +156,7 @@ void MainWindow::setupUi() {
     coverLabel_ = new QLabel(QStringLiteral("（封面）"));
     coverLabel_->setFixedSize(160, 213);          // 3:4
     coverLabel_->setAlignment(Qt::AlignCenter);
-    coverLabel_->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
+    coverLabel_->setObjectName(QStringLiteral("cover"));   // 交给 QSS
     views->addWidget(coverLabel_);          // 必须在 coverLabel_ 创建之后加（此前插在前面，导致布局收到空指针）
     albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
     albumInfo_->setWordWrap(true);
@@ -170,7 +170,7 @@ void MainWindow::setupUi() {
     restoredView_->setAlignment(Qt::AlignCenter);
     for (QWidget* v : {static_cast<QWidget*>(originalView_), static_cast<QWidget*>(restoredScroll_)}) {
         v->setMinimumSize(240, 320);
-        v->setStyleSheet(QStringLiteral("border: 1px solid #888;"));
+        v->setObjectName(QStringLiteral("viewer"));   // 交给 QSS（内联样式会盖掉主题，所以改用 objectName）
         v->installEventFilter(this);          // 滚轮翻页（只作用于图片区）
         views->addWidget(v);
     }
