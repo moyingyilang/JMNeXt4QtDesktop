@@ -59,6 +59,24 @@ int main(int argc, char** argv) {
                                   dark ? QStringLiteral("深色") : QStringLiteral("浅色"),
                                   QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
 
+    // --page <png>：直接把本地图片喂给阅读器（**测试通道**，绕开网络）。
+    // 用途：离线验证"阅读器能不能把图画出来、尺寸对不对"，不受 CDN 波动影响。
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--page") {
+            const QString png = QString::fromUtf8(argv[i + 1]);
+            QTimer::singleShot(500, &backend, [&backend, png] {
+                const QImage img(png);
+                if (img.isNull()) {
+                    qInfo().noquote() << QStringLiteral("--page：读不到图片 %1").arg(png);
+                    return;
+                }
+                backend.setPagePath(png);
+                qInfo().noquote() << QStringLiteral("--page：已把 %1（%2x%3）交给阅读器")
+                                         .arg(png).arg(img.width()).arg(img.height());
+            });
+        }
+    }
+
     // --read <aid>：打开该作品并自动读第一话（无头验证阅读器）。
     // 注意：只设 autoReadAid 不会加载任何东西，必须真的调用 loadAlbum（上一次尝试就是漏了这一步）。
     for (int i = 1; i + 1 < argc; ++i) {
