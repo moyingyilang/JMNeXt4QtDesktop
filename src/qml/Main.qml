@@ -2,34 +2,142 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// P0 最小窗口：只验证 Qt Quick 在容器里能起、能显示、能拿到 C++ 侧传进来的信息。
-// 真正的五屏 1:1 实现在 P2；主题/效果在 P3。
+// P2 第一屏：首页列表（标题 + 封面 + 点击进入阅读）。
+// 数据与图片都来自共用后端：backend（JmBackend）负责数据，image://jm/ 由 JmImageProvider 负责图片。
+// 说明：这里的布局是"结构级"复刻的起点，P3 才会按主项目五套表面工艺细化观感。
 ApplicationWindow {
     id: root
-    width: 900; height: 600
+    width: 1180; height: 780
     visible: true
     title: "JMNeXt4QtDesktop (QML) " + appVersion
-    color: "#1e1f22"
+    color: darkTheme ? "#1e1f22" : "#f5f6f8"
 
-    ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 12
-        Text {
-            text: "JMNeXt4QtDesktop — QML 前端（P0 骨架）"
-            color: "#e6e6e6"; font.pixelSize: 22
+    // 列表数据：标题、aid、封面 URL（URL 由后端在取封面时给出，见 coverUrlReady）
+    ListModel { id: listModel }
+
+    RowLayout {
+        anchors.fill: parent
+        spacing: 0
+
+        // 左栏：作品列表
+        ColumnLayout {
+            Layout.preferredWidth: 380
+            Layout.fillHeight: true
+            spacing: 6
+
+            Text {
+                text: "作品列表（" + listModel.count + " 条）"
+                color: "#9aa0a8"; font.pixelSize: 12
+                Layout.leftMargin: 10; Layout.topMargin: 8
+            }
+
+            ListView {
+                id: listView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                model: listModel
+                spacing: 2
+
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: 74
+                    color: mouseArea.containsMouse ? "#26282c" : "transparent"
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        spacing: 8
+
+                        // 封面：后端给出 URL 前显示占位（image 源为空时不请求）
+                        Image {
+                            Layout.preferredWidth: 48
+                            Layout.preferredHeight: 64
+                            fillMode: Image.PreserveAspectCrop
+                            source: coverUrl.length > 0
+                                    ? "image://jm/cover?" + encodeURIComponent(coverUrl)
+                                    : ""
+                            // 加载失败或尚未就绪时，用纯色底代替空白
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#2b2d31"; border.color: "#3a3d43"; border.width: 1
+                                visible: parent.status !== Image.Ready
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: title
+                            color: "#e6e6e6"
+                            font.pixelSize: 13
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 3
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            console.log("QML 点击作品 aid=" + aid)
+                            backend.openChapter(aid, 0)
+                        }
+                    }
+                }
+            }
         }
-        Text {
-            text: "版本：" + appVersion + "    渲染后端：" + renderBackend
-            color: "#9aa0a8"; font.pixelSize: 14
-        }
-        Text {
-            text: "当前风格：" + themeName + "    深浅：" + (darkTheme ? "深色" : "浅色")
-            color: "#9aa0a8"; font.pixelSize: 14
-        }
+
+        // 右栏：阅读区（P2 后续屏会在这里做详情与阅读器）
         Rectangle {
-            Layout.preferredWidth: 220; Layout.preferredHeight: 40
-            radius: 6; color: "#2b2d31"; border.color: "#3a3d43"; border.width: 1
-            Text { anchors.centerIn: parent; text: "（后续在此放五屏）"; color: "#e6e6e6" }
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            color: darkTheme ? "#141517" : "#ffffff"
+
+            ColumnLayout {
+                anchors.centerIn: parent
+                spacing: 10
+                Text {
+                    text: pageStatus.length > 0 ? pageStatus : "（尚未打开章节）"
+                    color: "#b9bcc2"; font.pixelSize: 14
+                }
+                Text {
+                    text: "读到的页面会显示在这里（P2 后续）"
+                    color: "#8a8f98"; font.pixelSize: 12
+                }
+            }
         }
+    }
+
+    // 状态行（后端 status 信号）
+    property string pageStatus: ""
+
+    Connections {
+        target: backend
+
+        function onListReady(titles, ids) {
+            listModel.clear()
+            for (var i = 0; i < titles.length; ++i)
+                listModel.append({ "title": titles[i], "aid": ids[i], "coverUrl": "" })
+            console.log("QML 列表已填充：" + listModel.count + " 条")
+            backend.loadCovers(20)          // 让前 20 条的封面 URL 与图片就位
+        }
+
+        function onCoverUrlReady(index, url) {
+            if (index >= 0 && index < listModel.count) {
+                listModel.setProperty(index, "coverUrl", url)
+                if (index === 0) console.log("QML 收到封面 URL：index 0")
+            }
+        }
+
+        function onStatus(text) { root.pageStatus = text }
+        function onFailed(text) { root.pageStatus = "失败：" + text }
+        function onPageReady(image, statusText) { root.pageStatus = statusText }
+    }
+
+    Component.onCompleted: {
+        console.log("QML 首页列表：开始加载")
+        backend.loadList()
     }
 }

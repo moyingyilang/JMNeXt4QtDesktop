@@ -109,7 +109,10 @@ int main(int argc, char** argv) {
     }
     if (argc >= 3 && std::string(argv[1]) == "--shot") {
         const QString out = QString::fromUtf8(argv[2]);
-        QTimer::singleShot(1500, &app, [&engine, out] {
+        // 可选第三个参数：延时毫秒（默认 1500）。真实网络取列表/封面要 1.5~4 秒，
+        // 所以验证带数据的界面时要显式给长一些，否则会拍到"还没加载"的空窗。
+        const int delayMs = (argc >= 4) ? std::atoi(argv[3]) : 1500;
+        QTimer::singleShot(delayMs, &app, [&engine, out] {
             if (auto* w = qobject_cast<QQuickWindow*>(engine.rootObjects().value(0))) {
                 const QImage img = w->grabWindow();
                 qInfo().noquote() << QStringLiteral("截图%1：%2 %3x%4")
