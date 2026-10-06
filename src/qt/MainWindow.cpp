@@ -186,12 +186,28 @@ void MainWindow::setupUi() {
     blockEdit_ = new QLineEdit();
     chapterList_ = new QListWidget();
     chapterList_->setMinimumHeight(150);
-    outer->addWidget(chapterList_);
+    {
+        auto* h = new QLabel(QStringLiteral("② 章节（点选切换）"));
+        h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
+        outer->addWidget(h);
+    }
+    outer->addWidget(chapterList_, 1);   // 章节列表占一份
     listRow->addWidget(blockEdit_);
     blockEdit_->setPlaceholderText(QStringLiteral("toggle"));   // 文本在构造函数里设置（避免此处出现中文标点）
     listRow->addWidget(loadListBtn);
+    {
+        auto* h = new QLabel(QStringLiteral("① 作品列表（双击进入阅读）"));
+        h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
+        outer->addWidget(h);
+    }
     outer->addLayout(listRow);
+    {
+        auto* h = new QLabel(QStringLiteral("③ 阅读区（← → 翻页，滚轮可用，适应窗口 / 100% 可切换）"));
+        h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
+        outer->addWidget(h);
+    }
     outer->addLayout(views);
+    outer->setStretchFactor(views, 2);   // 阅读区占两份，让它成为主区域
 
     auto* form = new QFormLayout();
     aidEdit_ = new QLineEdit(QStringLiteral("1"));
