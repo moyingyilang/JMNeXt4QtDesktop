@@ -110,6 +110,7 @@ private:
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
     QLineEdit* blockEdit_ = nullptr;
+    QLineEdit* searchEdit_ = nullptr;      // 搜索框（回车或点按钮即搜）
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;
     QLabel* coverLabel_ = nullptr;

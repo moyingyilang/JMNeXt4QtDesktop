@@ -90,8 +90,10 @@ MainWindow::MainWindow() {
                 }
                 log(QStringLiteral("列表已加载：%1 条").arg(titles.size()));
                 pendingListResult_ = static_cast<int>(titles.size());
+                if (worker_) worker_->loadCovers(12);   // 列表/搜索结果都带封面（此前交互式路径没有封面）
             });
     connect(worker_, &JmWorker::coverReady, this, [this](int index, const QImage& img) {
+        log(QStringLiteral("封面 %1 已显示（%2x%3）").arg(index + 1).arg(img.width()).arg(img.height()));
         if (!listView_ || index < 0 || index >= listView_->count()) return;
         listView_->item(index)->setIcon(QIcon(QPixmap::fromImage(img).scaled(
             72, 96, Qt::KeepAspectRatio, Qt::SmoothTransformation)));
@@ -214,6 +216,23 @@ void MainWindow::setupUi() {
         auto* h = new QLabel(QStringLiteral("① 作品列表（双击进入阅读）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
         leftCol->addWidget(h);
+    }
+    {
+        auto* searchRow = new QHBoxLayout();
+        searchEdit_ = new QLineEdit();
+        searchEdit_->setPlaceholderText(QStringLiteral("搜索关键词（回车）"));
+        auto* searchBtn = new QPushButton(QStringLiteral("搜索"));
+        searchRow->addWidget(searchEdit_, 1);
+        searchRow->addWidget(searchBtn);
+        leftCol->addLayout(searchRow);
+        connect(searchBtn, &QPushButton::clicked, this, [this] {
+            const QString w = searchEdit_ ? searchEdit_->text().trimmed() : QString();
+            if (!w.isEmpty() && worker_) worker_->search(w, 1);
+        });
+        connect(searchEdit_, &QLineEdit::returnPressed, this, [this] {
+            const QString w = searchEdit_ ? searchEdit_->text().trimmed() : QString();
+            if (!w.isEmpty() && worker_) worker_->search(w, 1);
+        });
     }
     leftCol->addLayout(listRow);
     {
