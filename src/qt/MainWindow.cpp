@@ -72,7 +72,11 @@ MainWindow::MainWindow() {
     worker_->moveToThread(workerThread_);
     connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
 
-    connect(worker_, &JmWorker::status, this, [this](const QString& s) { log(s); });
+    connect(worker_, &JmWorker::status, this, [this](const QString& s) {
+        log(s);
+        // 加载中的提示也显示在页码位置：首屏要 1–4 秒，界面上必须先有反馈
+        if (pageLabel_ && s.startsWith(QStringLiteral("正在加载"))) pageLabel_->setText(s);
+    });
     connect(worker_, &JmWorker::cacheStats, this,
             [this](int ih, int im, int rh, int rm) { lastCacheStats_ = CacheStats{ih, im, rh, rm}; });
     connect(worker_, &JmWorker::failed, this, [this](const QString& s) { log(QStringLiteral("失败：") + s); });

@@ -69,6 +69,7 @@ void JmWorker::loadCovers(int n) {
 }
 
 void JmWorker::openChapter(const QString& aid, int page) {
+    emit status(QStringLiteral("正在加载作品详情…"));
     if (!ensureStarted()) return;
     currentAid_ = aid;
     auto al = client().album(aid.toStdString());
@@ -131,6 +132,7 @@ void JmWorker::step(int delta) {
 }
 
 void JmWorker::showPageAt(int index) {
+    emit status(QStringLiteral("正在加载第 %1 页…").arg(index + 1));   // 让界面先给出反馈，而不是像卡住
     if (chapter_.images.empty()) { emit failed(QStringLiteral("章节没有图片")); return; }
     if (index < 0 || index >= static_cast<int>(chapter_.images.size())) {
         emit status(QStringLiteral("页码越界：%1（共 %2 页）").arg(index + 1).arg(chapter_.images.size()));
