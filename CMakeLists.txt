@@ -103,3 +103,21 @@ if(Qt6_FOUND)
     add_executable(jmnext4net src/qt/main_net.cpp)
     target_link_libraries(jmnext4net PRIVATE jmnext_qtnet Qt6::Core)
 endif()
+
+# ---------------------------------------------------------------------------
+# QML 前端（P0 骨架）。与 widget 版共用 core/（Qt 无关）与 qt/Theme.h、qt/JmClient。
+# 注意：容器里是 Qt 6.4.2，MultiEffect（6.5+）不存在；模糊/颗粒将来走 Qt5Compat 或自写 ShaderEffect。
+# ---------------------------------------------------------------------------
+find_package(Qt6 REQUIRED COMPONENTS Quick Qml QuickControls2)
+qt_add_executable(jmnext4qml
+    src/qml/main_qml.cpp
+    src/qt/Theme.h
+    src/qt/ThemeTokens.h
+)
+target_include_directories(jmnext4qml PRIVATE src)
+target_link_libraries(jmnext4qml PRIVATE jmnext_core Qt6::Quick Qt6::Qml Qt6::Gui Qt6::QuickControls2)
+qt_add_qml_module(jmnext4qml
+    URI JMNeXt
+    VERSION 1.0
+    QML_FILES src/qml/Main.qml
+)
