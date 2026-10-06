@@ -371,3 +371,25 @@ jmnext4qml --page <png> --shot out.png 9000
 
 **工具经验**：几何探针依赖 QML 里的 id（`readerPane`/`pageImage`）。我在排查时一度把它改成
 `rightPane`（那是**详情**面板的 id），属于指错对象 —— 记录在此避免重犯：改探针前先核对 id 归属。
+
+### 构建提速：Qt 端改用 Ninja（2026-10-06）
+
+**问题**：Makefile 生成器下，**每次** `cmake --build build` 都会重编 QML 缓存（`Main_qml.cpp`）并重新链接，
+即使一行代码都没改 —— 连续三次实测 18.7 / 25.1 / 13.2 秒。
+
+**根因**：`Main_qml.cpp` 的依赖包含 `JMNeXt/jmnext4qml.qmltypes`、`.rcc/*.qrc` 与 C++ 类型注册产物；
+只要 `qmltyperegistrations` 重跑（构建输出里每次都能看到它），这条链就整体重跑。这是 Makefile 对
+生成文件依赖的典型问题，Ninja 能正确处理。
+
+**改动**：`build/` 重新配置为 Ninja（`cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release`），
+其余命令（`cmake --build build`、`ctest --test-dir build`、脚本里的可执行文件路径）**都不需要改**。
+
+**实测（同机同命令）**：
+
+| 场景 | Makefile | Ninja |
+| --- | --- | --- |
+| 无改动增量 | 13~25 秒（每次） | **0.04~0.20 秒** |
+| 首次全量重建 | 未测 | 77.3 秒（一次性） |
+
+**验证**：重建后 `ctest` 16/16 通过；QML 前端仍能起并截图（证明换生成器没破坏功能）。
+**未采用**：`ccache`（容器已装 4.7.5）暂未接入，留待评估全量重建收益。
