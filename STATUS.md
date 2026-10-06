@@ -109,3 +109,51 @@ ctest --test-dir build                      # 期望 15/15
 第二次把 `category.id`（值就是 "2"）也当成作品 id 混入样本，且对空 series 的正则越界、
 给出假的"相同"判定）。结论只采信**直接查看原始响应**得到的那几条。工具本身的教训：
 用正则从 JSON 里抠字段很容易越界，**要看证据就打印原始片段**。
+
+## 关于"对齐主项目主题"（规格 G5）的真实情况 —— 先纠正我自己的说法
+
+我在目标里一直写"主项目四套主题"，**这是不准确的**。去看主项目源码后确认：
+
+**位置**：`JMComic_Next/app/src/main/kotlin/com/jmnext/ui/theme/ThemeStyle.kt` 与 `Theme.kt`
+（工作区里的主项目目录名是 `JMComic_Next`，不是我以为的 `JMNeXt`）。
+
+**事实**：主项目有**五套**可选风格，而且是五套**表面工艺**，不是五套配色。主项目自己的注释写着：
+"这不是「五套配色」，而是五套**表面工艺**：圆角尺度、表面材质、描边、投影、字体层级、动效手感都不一样。
+只换颜色的话，五套风格在截图里会长得一样 —— 那和做五个主题包没区别"。默认是 `WindowGlass`。
+
+| 风格 | 参考 | 关键差异 |
+| --- | --- | --- |
+| WindowGlass（默认） | Windows 11 窗口玻璃 | 8dp 圆角、发丝描边、Acrylic 颗粒 |
+| Translucent | Windhawk 透明系 | 重度透明 + 强调色薄染 |
+| FlatBlur | 平面化 + 高斯模糊 | 无描边、无颗粒、无高光 |
+| Miuix | HyperOS | 大圆角实心卡片、无描边、弹性按压 |
+| Material | Material You 3 | 按 M3 颜色角色分层、可动态取色 |
+
+每套风格的参数（来自 ThemeStyle.kt）：
+`RadiusScale(xs/sm/md/lg/xl)`、`fillAlphaScale`、`accentTint`、`hairline`（描边宽度）、
+`backdropSaturate`、`noise`（颗粒）、`shadows`（多级投影）、`pressScale`（弹性按压）、
+`lineHeightFactor`、`wallpaperScrim`、`backdropGlow`。
+
+### 这个 Qt 栈里能做到什么（如实）
+
+| 主项目要素 | Qt Widgets + QSS 能否做到 |
+| --- | --- |
+| 配色 / 圆角尺度 / 描边（hairline） | **能**（QSS 的 border-radius、border、rgba 颜色） |
+| 按下反馈（pressScale 的静态近似） | 部分能（`:pressed` 伪状态改内边距/颜色；真弹性动效要 QPropertyAnimation） |
+| 投影（shadows 多级） | 部分能（QSS 无 box-shadow，需 QGraphicsDropShadowEffect 逐控件加） |
+| 颗粒（noise / Acrylic 颗粒） | **不能**（需自绘噪声纹理） |
+| 高斯模糊 / 背景透明（FlatBlur、Translucent） | **不能**（Qt Widgets 没有 backdrop blur；需换 QML 或自绘合成） |
+| 行高（lineHeightFactor） | **不能**（QSS 无 line-height） |
+| 壁纸压暗 / 背光（wallpaperScrim、backdropGlow） | **不能**（依赖壁纸取景，本实现也没有壁纸功能） |
+| 动效手感（弹性、过渡） | 需逐处 QPropertyAnimation 写，工作量大 |
+
+**结论**：忠实复刻五套风格在这个技术栈上**做不到**。可行的做法是"**五套具名风格 + 能落地的子集**"：
+每套给正确的配色、圆角尺度、描边、按下反馈；**并在文档与界面上如实说明"模糊/颗粒/动效未实现"**，
+而不是做五个只有名字不同、看起来一样的主题（那正是主项目注释里批评的做法）。
+
+### 下一步（(d) 的落地计划）
+
+1. 从主项目 `Theme.kt` 提取五套风格的**配色 token**（浅色/深色两套），照抄数值，不自创；
+2. Qt 侧把 `Theme.h` 从"深色/浅色"扩成"五套具名风格 × 深/浅"，先落地配色+圆角+描边+按下反馈；
+3. 每套拍一张截图给用户确认；界面上标注"模糊与颗粒未实现"；
+4. 投影（QGraphicsDropShadowEffect）与按下动画按需逐项补，每项单独验证。
