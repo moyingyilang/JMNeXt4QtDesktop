@@ -182,10 +182,19 @@ void MainWindow::setupUi() {
     coverLabel_->setFixedSize(160, 213);          // 3:4
     coverLabel_->setAlignment(Qt::AlignCenter);
     coverLabel_->setObjectName(QStringLiteral("cover"));   // 交给 QSS
-    views->addWidget(coverLabel_);          // 必须在 coverLabel_ 创建之后加（此前插在前面，导致布局收到空指针）
     albumInfo_ = new QLabel(QStringLiteral("（尚未选择作品）"));
     albumInfo_->setWordWrap(true);
-    rightCol->addWidget(albumInfo_);
+    // 详情区：封面 + 文字（标题/作者/标签）单独一行，放在阅读区上方；
+    // 此前封面被加进阅读区那一行（views），位置很怪。注意本块必须在 coverLabel_/albumInfo_
+    // **创建之后**执行，否则布局会收到空指针（这个坑我早先踩过）。
+    {
+        auto* detailRow = new QHBoxLayout();
+        detailRow->addWidget(coverLabel_, 0, Qt::AlignTop);
+        albumInfo_->setObjectName(QStringLiteral("albumInfo"));   // 交给 QSS
+        albumInfo_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        detailRow->addWidget(albumInfo_, 1);
+        rightCol->addLayout(detailRow);
+    }
     originalView_ = new QLabel(QStringLiteral("（未加载图片）"));
     restoredView_ = new QLabel(QStringLiteral("（未还原）"));
     restoredScroll_ = new QScrollArea();
