@@ -61,6 +61,8 @@ public:
     void setBlockWordsForTest(const QStringList& words) { if (worker_) worker_->setBlockWords(words); }
     /// 触发一次异步拉列表（截图自检用；不等待结果）
     void requestListAsync() { if (worker_) worker_->loadList(); }
+    /// 触发一次搜索（异步；截图与外部脚本用，结果进入左侧列表）
+    void searchAsync(const QString& word) { if (worker_) worker_->search(word, 1); }
     /// 打开某作品并跳到第 page 页（异步；截图与外部脚本用）
     void openReaderAsync(const QString& aid, int page) { if (worker_) worker_->openChapter(aid, page); }
     /// 触发 worker 上报缓存统计并等它回来（自检用）

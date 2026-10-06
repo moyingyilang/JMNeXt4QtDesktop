@@ -70,6 +70,10 @@ int main(int argc, char** argv) {
             QCoreApplication::quit();
         });
         // 可选：把真实阅读页也载入（用于给用户看实际画面）。纯加法，不动上面的逻辑。
+        if (argc >= 4 && std::string(argv[3]) == "--search") {
+            const QString q = QString::fromUtf8(argv[4]);
+            QTimer::singleShot(400, &app, [&win, q] { win.searchAsync(q); });
+        }
         if (argc >= 5 && std::string(argv[3]) == "--reader") {
             const QString readerAid = QString::fromUtf8(argv[4]);
             QTimer::singleShot(21000, &app, [&win, readerAid] { win.openReaderAsync(readerAid, 2); });
