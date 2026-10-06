@@ -157,6 +157,17 @@ inline QString styleOverrideQss(Style style, bool dark) {
     return q;
 }
 
+/// 该风格实际取到的关键配色（自检用：让"风格是否真的生效"变成可核对的值）
+inline QString styleSummary(Style style, bool dark) {
+    const tokens::Palette p = (style == Style::Translucent) ? tokens::translucent(dark)
+                            : (style == Style::FlatBlur)    ? tokens::flatBlur(dark)
+                            : (style == Style::Miuix)       ? tokens::miuix(dark)
+                                                            : tokens::windowGlass(dark);
+    return QStringLiteral("surface1=%1 accent=%2 text=%3 stroke=%4")
+        .arg(QString::fromLatin1(p.surface1), QString::fromLatin1(p.accent),
+             QString::fromLatin1(p.text), QString::fromLatin1(p.stroke));
+}
+
 /// 最终样式表：基础（深/浅）+ 所选风格的覆盖块。
 inline QString themeQss(Style style, bool dark) {
     return (dark ? darkThemeQss() : lightThemeQss()) + styleOverrideQss(style, dark);
