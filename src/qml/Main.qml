@@ -92,6 +92,7 @@ ApplicationWindow {
 
         // 右栏：阅读器（有页面后覆盖详情视图）
         Rectangle {
+            id: readerPane
             visible: root.reading
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -103,14 +104,17 @@ ApplicationWindow {
                 spacing: 6
 
                 Image {
+                    id: pageImage
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     fillMode: Image.PreserveAspectFit
                     source: root.pageUrl
-                    onStatusChanged: if (status === Image.Ready)
+                    onStatusChanged: if (status === Image.Ready) {
+                        geomProbe.restart()
                         console.log("QML 阅读页已显示：源 " + sourceSize.width + "x" + sourceSize.height
                                     + "，实际绘制 " + Math.round(paintedWidth) + "x" + Math.round(paintedHeight)
                                     + "，阅读器可见=" + root.reading)
+                    }
                 }
 
                 RowLayout {
@@ -213,6 +217,14 @@ ApplicationWindow {
     // 阅读器状态：**不在绑定里直接读 context property**（编译后的 QML 绑定看不到它们，会当 null），
     // 改由 Connections 的 onPageChanged 计算后赋给根属性，绑定只读根属性。
     property bool reading: false
+    // 诊断用：页面就绪 1.5 秒后再量一次几何（onStatusChanged 那一刻可能还没完成布局）
+    Timer {
+        id: geomProbe
+        interval: 1500
+        onTriggered: console.log("几何：阅读器 " + Math.round(readerPane.width) + "x" + Math.round(readerPane.height)
+                                + "，图片 " + Math.round(pageImage.width) + "x" + Math.round(pageImage.height)
+                                + "，绘制 " + Math.round(pageImage.paintedWidth) + "x" + Math.round(pageImage.paintedHeight))
+    }
     property string pageUrl: ""
     property string albumName: ""
     property string albumAuthor: ""

@@ -137,10 +137,14 @@ int main(int argc, char** argv) {
 
     if (argc >= 3 && std::string(argv[1]) == "--shot") {
         const QString out = QString::fromUtf8(argv[2]);
-        // 可选第三个参数：延时毫秒（默认 1500）。真实网络取列表/封面要 1.5~4 秒，
-        // 所以验证带数据的界面时要显式给长一些，否则会拍到"还没加载"的空窗。
-        const int delayMs = (argc >= 4) ? std::atoi(argv[3]) : 1500;
-        QTimer::singleShot(delayMs, &app, [&engine, out] {
+        // 第三个参数是**最长等待**毫秒（默认 1500）：数据/页面先就绪就先拍，最长等这么久。
+        // 为什么从"固定延时"改成"条件等待"：真实网络时机波动大，固定延时下同一条命令
+        // 有时拍到内容、有时拍到空窗（P2 阅读器那次 40 秒都没等到页面）。
+        const int maxWaitMs = (argc >= 4) ? std::atoi(argv[3]) : 1500;
+        bool grabbed = false;
+        auto grabAndQuit = [&engine, out, &grabbed]() {
+            if (grabbed) return;
+            grabbed = true;
             if (auto* w = qobject_cast<QQuickWindow*>(engine.rootObjects().value(0))) {
                 const QImage img = w->grabWindow();
                 qInfo().noquote() << QStringLiteral("截图%1：%2 %3x%4")
@@ -152,8 +156,13 @@ int main(int argc, char** argv) {
                 qInfo().noquote() << QStringLiteral("截图失败：拿不到窗口");
             }
             QGuiApplication::quit();
-
-        });
+        };
+        // 页面图就绪后再等 1.2 秒（让布局与绘制落定）再拍
+        QObject::connect(&backend, &jmnext::qt::JmBackend::pageReady, &app,
+                         [grabAndQuit, &app](const QImage&, const QString&) {
+                             QTimer::singleShot(1200, &app, grabAndQuit);
+                         });
+        QTimer::singleShot(maxWaitMs, &app, grabAndQuit);   // 兜底：最多等 maxWaitMs
     }
     return app.exec();
 }
