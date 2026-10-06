@@ -44,6 +44,17 @@ int main(int argc, char** argv) {
                                              QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
     // 实测真实 URL 是 qrc:/JMNeXt/src/qml/Main.qml（见 build/.rcc/*_raw_qml_0.qrc）
+    // 先扫一遍参数、只设置 QML 启动时就要读到的属性。
+    // 为什么必须在 load 之前：engine.load() 是同步的，QML 的 Component.onCompleted 在它内部执行，
+    // 那时若拿不到 initialSearch，就会先把首页列表加载上来，把搜索结果覆盖掉（第一次验证就撞到了）。
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--search") {
+            engine.rootContext()->setContextProperty(QStringLiteral("initialSearch"),
+                                                     QString::fromUtf8(argv[i + 1]));
+        } else if (std::string(argv[i]) == "--read") {
+        }
+    }
+
     engine.load(QUrl(QStringLiteral("qrc:/JMNeXt/src/qml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
         std::printf("QML 加载失败\n");
@@ -74,6 +85,14 @@ int main(int argc, char** argv) {
                 qInfo().noquote() << QStringLiteral("--page：已把 %1（%2x%3）交给阅读器")
                                          .arg(png).arg(img.width()).arg(img.height());
             });
+        }
+    }
+
+    // --search <词>：启动后按关键词搜索（无头验证搜索屏用）
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--search") {
+            const QString word = QString::fromUtf8(argv[i + 1]);
+            QTimer::singleShot(500, &backend, [&backend, word] { backend.search(word, 1); });
         }
     }
 

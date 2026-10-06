@@ -29,6 +29,25 @@ ApplicationWindow {
             Layout.fillHeight: true
             spacing: 6
 
+            // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.topMargin: 8
+                spacing: 6
+
+                TextField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    placeholderText: "搜索作品…"
+                    text: typeof initialSearch !== "undefined" ? initialSearch : ""
+                    onAccepted: backend.search(text, 1)
+                }
+                Button {
+                    text: "搜索"
+                    onClicked: backend.search(searchField.text, 1)
+                }
+            }
+
             Text {
                 text: "作品列表（" + listModel.count + " 条）"
                 color: "#9aa0a8"; font.pixelSize: 12
@@ -294,7 +313,10 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        console.log("QML 首页列表：开始加载")
-        backend.loadList()
+        // --search 带词时不加载首页（否则会把搜索结果覆盖掉——第一次验证时就撞上了）
+        if (typeof initialSearch === "undefined" || initialSearch.length === 0) {
+            console.log("QML 首页列表：开始加载")
+            backend.loadList()
+        }
     }
 }
