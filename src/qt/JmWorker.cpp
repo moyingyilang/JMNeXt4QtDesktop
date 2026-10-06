@@ -69,26 +69,61 @@ void JmWorker::loadCovers(int n) {
 }
 
 void JmWorker::openChapter(const QString& aid, int page) {
-    emit status(QStringLiteral("正在加载作品详情…"));
+    emit status(QStringLiteral("正在加载…"));
     if (!ensureStarted()) return;
     currentAid_ = aid;
+
+    // 首图优先：详情（标签 + 章节列表）与封面挪到首图**之后**再取，不再挡在阅读前面。
+    // 依据：实测 series[0].id 与作品 id 相同，所以第一话可以直接用 aid 取；
+    // 万一某个作品不同，下面的 directOk==false 分支会回退到"先详情、再用 series[0].id"的老路。
+    bool directOk = false;
+
+    // 1) 进度恢复优先（不需要详情）
+    if (page == 0) {
+        if (auto saved = core::loadReadProgress(progressPath()); saved && saved->aid == aid.toStdString()) {
+            if (auto ch = client().chapter(saved->chapterId)) {
+                chapter_ = *ch;
+                pageIndex_ = -1;
+                directOk = true;
+                emit status(QStringLiteral("恢复上次进度：第 %1 页（作品 %2）").arg(saved->page + 1).arg(aid));
+                showPageAt(saved->page);
+            }
+        }
+    }
+
+    // 2) 没有进度就用作品 id 当第一话
+    if (!directOk) {
+        if (auto ch = client().chapter(aid.toStdString())) {
+            chapter_ = *ch;
+            pageIndex_ = -1;
+            directOk = true;
+            emit status(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
+                            .arg(QString::fromStdString(chapter_.id))
+                            .arg(chapter_.totalPage)
+                            .arg(chapter_.scrambleId));
+            showPageAt(page);
+        }
+    }
+
+    // 3) 详情与章节列表随后再取（界面上的标签与章节列表）
     auto al = client().album(aid.toStdString());
-    if (!al) { emit failed(QStringLiteral("详情失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
+    if (!al) {
+        if (!directOk) emit failed(QStringLiteral("详情失败：%1").arg(QString::fromStdString(client().lastError())));
+        else emit status(QStringLiteral("详情获取失败（阅读不受影响）：%1")
+                             .arg(QString::fromStdString(client().lastError())));
+        return;
+    }
     emit status(QStringLiteral("详情：%1（标签 %2，章节 %3）")
                     .arg(QString::fromStdString(al->name))
                     .arg(al->tags.size())
                     .arg(al->series.size()));
-    if (al->series.empty()) { emit failed(QStringLiteral("该作品没有章节")); return; }
 
-    // 详情信息交给界面（标题/作者/标签）
     {
         QStringList tags;
         for (const auto& t : al->tags) tags << QString::fromStdString(t);
         emit albumReady(QString::fromStdString(al->name), QString::fromStdString(al->author), tags);
         fetchAlbumCover(aid);
     }
-
-    // 把章节列表交给界面（章节选择器）
     {
         QStringList names, ids;
         for (const auto& se : al->series) {
@@ -98,29 +133,19 @@ void JmWorker::openChapter(const QString& aid, int page) {
         emit chaptersReady(names, ids);
     }
 
-    // 进度恢复：同一作品且请求第 0 页时，接着上次的位置读。
-    // 注意必须放在"发出章节列表"**之后** —— 否则会提前 return，界面的章节列表就空了（我第一版就犯了这个错）。
-    if (page == 0) {
-        if (auto saved = core::loadReadProgress(progressPath()); saved && saved->aid == aid.toStdString()) {
-            if (auto ch = client().chapter(saved->chapterId)) {
-                chapter_ = *ch;
-                pageIndex_ = -1;
-                emit status(QStringLiteral("恢复上次进度：第 %1 页（作品 %2）").arg(saved->page + 1).arg(aid));
-                showPageAt(saved->page);
-                return;
-            }
-        }
+    // 4) 回退路径：直接用 aid 取不到章节时，才按老办法用章节表里的第一项
+    if (!directOk) {
+        if (al->series.empty()) { emit failed(QStringLiteral("该作品没有章节")); return; }
+        auto ch = client().chapter(al->series.front().id);
+        if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
+        chapter_ = *ch;
+        pageIndex_ = -1;
+        emit status(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
+                        .arg(QString::fromStdString(chapter_.id))
+                        .arg(chapter_.totalPage)
+                        .arg(chapter_.scrambleId));
+        showPageAt(page);
     }
-
-    auto ch = client().chapter(al->series.front().id);
-    if (!ch) { emit failed(QStringLiteral("章节失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
-    chapter_ = *ch;
-    pageIndex_ = -1;                       // 尚未显示任何一页
-    emit status(QStringLiteral("章节：%1 共 %2 页，scramble_id=%3")
-                    .arg(QString::fromStdString(chapter_.id))
-                    .arg(chapter_.totalPage)
-                    .arg(chapter_.scrambleId));
-    showPageAt(page);                      // 修正后的语义：直接跳到目标页（原来用 step 做相对移动会差一页）
 }
 
 void JmWorker::step(int delta) {
