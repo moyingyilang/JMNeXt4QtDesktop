@@ -82,7 +82,8 @@ ApplicationWindow {
                         hoverEnabled: true
                         onClicked: {
                             console.log("QML 点击作品 aid=" + aid)
-                            backend.openChapter(aid, 0)
+                            root.albumAid = aid
+                            backend.loadAlbum(aid)
                         }
                     }
                 }
@@ -100,6 +101,20 @@ ApplicationWindow {
                 anchors.margins: 14
                 spacing: 8
 
+                Image {
+                    id: detailCover
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: 160
+                    fillMode: Image.PreserveAspectCrop
+                    source: root.albumAid.length > 0 ? "image://jm/albumcover?" + root.albumAid : ""
+                    onStatusChanged: if (status === Image.Ready)
+                        console.log("QML 详情封面已加载：" + sourceSize.width + "x" + sourceSize.height)
+                    Rectangle {
+                        anchors.fill: parent; color: "#2b2d31"
+                        border.color: "#3a3d43"; border.width: 1
+                        visible: parent.status !== Image.Ready
+                    }
+                }
                 Text {
                     text: root.albumName.length > 0 ? root.albumName : "（从左侧选一个作品）"
                     color: "#e6e6e6"; font.pixelSize: 18; wrapMode: Text.WordWrap
@@ -159,6 +174,7 @@ ApplicationWindow {
     property string albumName: ""
     property string albumAuthor: ""
     property string albumTags: ""
+    property string albumAid: ""
     ListModel { id: chapterModel }
 
     Connections {
@@ -191,6 +207,8 @@ ApplicationWindow {
                 chapterModel.append({ "name": names[i], "cid": ids[i] })
             console.log("QML 章节列表已填充：" + chapterModel.count + " 条")
         }
+
+        function onCurrentAidChanged() { root.albumAid = backend.currentAid }
 
         function onStatus(text) { root.pageStatus = text }
         function onFailed(text) { root.pageStatus = "失败：" + text }

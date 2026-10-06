@@ -43,7 +43,11 @@ void JmBackend::invoke(const char* method, Args&&... args) {
 void JmBackend::loadList() { invoke("loadList"); }
 void JmBackend::loadMore() { invoke("loadMore"); }
 void JmBackend::search(const QString& word, int page) { invoke("search", Q_ARG(QString, word), Q_ARG(int, page)); }
-void JmBackend::loadAlbum(const QString& aid) { invoke("loadAlbum", Q_ARG(QString, aid)); }
+void JmBackend::loadAlbum(const QString& aid) {
+    currentAid_ = aid;
+    emit currentAidChanged();
+    invoke("loadAlbum", Q_ARG(QString, aid));
+}
 void JmBackend::openChapterId(const QString& chapterId, int page) {
     invoke("openChapterId", Q_ARG(QString, chapterId), Q_ARG(int, page));
 }

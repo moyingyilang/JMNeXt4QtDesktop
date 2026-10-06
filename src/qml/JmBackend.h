@@ -25,6 +25,7 @@ public:
     Q_INVOKABLE void search(const QString& word, int page = 1);
     Q_INVOKABLE void openChapter(const QString& aid, int page = 0);
     Q_INVOKABLE void loadAlbum(const QString& aid);
+    Q_PROPERTY(QString currentAid READ currentAid NOTIFY currentAidChanged)
     Q_INVOKABLE void openChapterId(const QString& chapterId, int page = 0);
     Q_INVOKABLE void step(int delta);
     Q_INVOKABLE void setBlockWords(const QStringList& words);
@@ -37,6 +38,7 @@ signals:
     void listAppended(const QStringList& titles, const QStringList& ids);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
+    void currentAidChanged();
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
     void coverReady(int index, const QImage& image);
@@ -48,6 +50,8 @@ signals:
 private:
     QThread* thread_ = nullptr;
     JmWorker* worker_ = nullptr;
+    QString currentAid() const { return currentAid_; }
+    QString currentAid_;
     template <typename... Args>
     void invoke(const char* method, Args&&... args);
 };
