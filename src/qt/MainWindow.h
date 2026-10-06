@@ -47,6 +47,8 @@ public:
 
     /// 异步拉列表并等待结果（自检用；返回条数，-1 表示超时/失败）
     int requestListAndWait(int timeoutMs = 60000);
+    /// 搜索并等结果进入列表（返回值=列表条数；-1 表示失败或超时）
+    int requestSearchAndWait(const QString& word, int timeoutMs = 60000);
     /// 异步取前 n 张封面并等待（自检用）
     int requestCoversAndWait(int n, int timeoutMs = 120000);
     /// 触发一次加载更多并等结果（自检用），返回累计条数

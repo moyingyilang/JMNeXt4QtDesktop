@@ -139,6 +139,17 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (argc >= 3 && std::string(argv[1]) == "--search") {
+        jmnext::qt::MainWindow win;
+        const QString word = QString::fromUtf8(argv[2]);
+        const int n = win.requestSearchAndWait(word);
+        if (n < 0) { std::printf("搜索失败或超时\n"); return 1; }
+        std::printf("搜索 %s：列表条数 %d\n", argv[2], n);
+        for (int i = 0; i < n && i < 3; ++i)
+            std::printf("  第 %d 项：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
+        return 0;
+    }
+
     if (argc >= 4 && std::string(argv[1]) == "--reader") {
         jmnext::qt::MainWindow win;
         const QString aid = QString::fromUtf8(argv[2]);

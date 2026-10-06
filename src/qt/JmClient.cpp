@@ -82,6 +82,16 @@ std::optional<std::vector<ListEntry>> JmClient::latest(int page) {
     return parsed;
 }
 
+std::optional<std::vector<ListEntry>> JmClient::search(const std::string& word, int page) {
+    if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
+    JmApi api(session_, http_);
+    auto r = api.request("search", "search_query=" + word + "&page=" + std::to_string(page));
+    if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    auto parsed = parseSearchPage(r->text);
+    if (!parsed) { lastError_ = "搜索解析失败"; return std::nullopt; }
+    return parsed->items;
+}
+
 std::optional<AlbumInfo> JmClient::album(const std::string& id) {
     if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
     JmApi api(session_, http_);

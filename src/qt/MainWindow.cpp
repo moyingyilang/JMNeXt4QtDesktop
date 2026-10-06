@@ -591,6 +591,18 @@ int MainWindow::requestReaderAndWait(const QString& aid, int page, int steps, in
 
 namespace jmnext::qt {
 
+int MainWindow::requestSearchAndWait(const QString& word, int timeoutMs) {
+    if (!worker_) return -1;
+    QTimer timer;
+    timer.setSingleShot(true);
+    timer.start(timeoutMs);
+    pendingListResult_ = -1;
+    worker_->search(word, 1);
+    while (pendingListResult_ < 0 && timer.remainingTime() > 0)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    return pendingListResult_;
+}
+
 int MainWindow::requestChapterPickAndWait(const QString& aid, int index, int timeoutMs) {
     if (!worker_) return -1;
     int chapterCount = 0, pages = 0;

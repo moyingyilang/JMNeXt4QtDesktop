@@ -25,6 +25,8 @@ public:
     QString cachedHost() const;
     void saveCachedHost(const QString& host) const;
     std::optional<std::vector<jmnext::core::ListEntry>> latest(int page = 0);
+    /// 搜索（参数名 search_query 是探出来的；条目字段与首页列表相同）
+    std::optional<std::vector<jmnext::core::ListEntry>> search(const std::string& word, int page);
     std::optional<jmnext::core::AlbumInfo> album(const std::string& id);
     std::optional<jmnext::core::ChapterImages> chapter(const std::string& id);
     ImageCache& cache() { return cache_; }

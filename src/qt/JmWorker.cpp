@@ -56,6 +56,33 @@ void JmWorker::loadList() {
     emit listReady(titles, ids);
 }
 
+void JmWorker::search(const QString& word, int page) {
+    if (!ensureStarted()) return;
+    emit status(QStringLiteral("正在搜索：%1").arg(word));
+    auto list = client().search(word.toStdString(), page);
+    if (!list) {
+        emit failed(QStringLiteral("搜索失败：%1").arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    core::BlockRules rules;
+    rules.words = blockWords_;
+    QStringList titles, ids;
+    int hidden = 0;
+    for (const auto& e : *list) {
+        const core::ListItem item{e.name, e.author, e.categoryTitle, e.categorySubTitle};
+        if (rules.hides(item)) { ++hidden; continue; }
+        titles << QStringLiteral("%1\n   %2　[%3]")
+                      .arg(QString::fromStdString(e.name))
+                      .arg(QString::fromStdString(e.author))
+                      .arg(QString::fromStdString(e.categoryTitle));
+        ids << QString::fromStdString(e.id);
+    }
+    if (hidden > 0) emit status(QStringLiteral("搜索结果里按屏蔽规则隐藏 %1 条").arg(hidden));
+    pendingIds_ = ids;
+    page_ = 0;
+    emit listReady(titles, ids);          // 界面收到后替换列表（与"加载首页列表"同一套机制）
+}
+
 void JmWorker::loadCovers(int n) {
     if (pendingIds_.isEmpty()) { emit failed(QStringLiteral("还没有列表，无法取封面")); return; }
     auto list = client().latest(0);        // 封面地址参数（id/image/update_at）来自同一次列表
