@@ -205,3 +205,28 @@ Qt 侧同样要注意：**不要用 `QFont` 默认族直接画中文**，要显�
 
 - 主项目用 Compose 的多套主题与自研动效；本实现目前**没有**做视觉系统对齐（规格 G5 是最大缺口）；
 - 主项目的阅读进度是"按作品记录"，本实现只记**最后一次**（单条），多作品续读尚未支持。
+
+## 下一步的精确定法：左右分栏（QSplitter）
+
+现状：所有区域纵向堆叠在一个 `QVBoxLayout`（`outer`）里 —— 所以界面"像表单而不像阅读器"。
+
+改法（约 10 处路由改动，需一次做完，不要中途停）：
+
+1. 在 `MainWindow::setupUi()` 里，`auto* outer = new QVBoxLayout(central);` **之后**加：
+   ```cpp
+   auto* rootRow   = new QHBoxLayout(central);
+   auto* leftPanel  = new QWidget();  auto* leftCol  = new QVBoxLayout(leftPanel);
+   auto* rightPanel = new QWidget();  auto* rightCol = new QVBoxLayout(rightPanel);
+   auto* split = new QSplitter(Qt::Horizontal);
+   split->addWidget(leftPanel); split->addWidget(rightPanel);
+   split->setStretchFactor(0, 0); split->setStretchFactor(1, 1);   // 左侧窄、右侧主区域
+   leftCol->setContentsMargins(0,0,0,0);  rightCol->setContentsMargins(0,0,0,0);
+   ```
+2. 把所有属于**左侧**的 `outer->add…` 改为 `leftCol->add…`：
+   「① 作品列表」标题块、`listView_`、`listRow`（含加载/更多/屏蔽输入）、「② 章节」标题块、`chapterList_`；
+3. 其余 `outer->add…` 改为 `rightCol->add…`：
+   「③ 阅读区」标题块、`views`、`pageLabel_`、`form`、`buttons`、`logView_`；
+4. 最后 `setCentralWidget(split)`（替换 `central`），并删掉不再使用的 `outer`/`central` 组合方式；
+5. 编译 + `ctest` 15/15 + 拍截图对比。
+
+**注意**：`#include <QSplitter>` 要加；`outer->setContentsMargins/setSpacing` 的调用要挪到 `leftCol`/`rightCol` 上（否则留白失效）。

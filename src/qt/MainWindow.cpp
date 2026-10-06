@@ -179,6 +179,7 @@ void MainWindow::setupUi() {
     }
     // 左侧：真实首页列表（双击进入阅读器）
     listView_ = new QListWidget();
+    listView_->setMinimumWidth(300);           // 避免被压得过窄（列表面板的下限）
     listView_->setMinimumWidth(300);
     auto* listRow = new QHBoxLayout();
     listRow->addWidget(listView_);
