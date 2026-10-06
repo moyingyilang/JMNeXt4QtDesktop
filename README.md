@@ -203,3 +203,27 @@ VERSION=0.1.1 ./package-linux.sh   # 指定版本
 
 - 判断一张阅读页截图是否有效，**看字节数**：空窗口约 37 KB，真实阅读页约 135 KB；
 - 如果拿到的是小文件，重拍一次即可，不要当成"渲染坏了"。
+
+## 运行状态与偏好存在哪里
+
+全部位于 `QStandardPaths::AppDataLocation`（Linux 上实测为 `~/.local/share/jmnext4desktop/`），
+都是**纯文本单行文件**，便于查看与排错：
+
+| 文件 | 内容 | 谁写 |
+| --- | --- | --- |
+| `host.txt` | 上次发现的主机（如 `https://www.cdnhjk.net/`） | 启动时发现成功后写入；下次启动直接用它，省一轮往返（实测 1588 ms -> 16 ms） |
+| `progress.txt` | 阅读进度：三行 = 作品 id / 章节 id / 页码 | 每翻一页写入；再次打开同一作品会接着上次读 |
+| `style.txt` | 界面风格名：`windowGlass` / `translucent` / `flatBlur` / `miuix` | 命令行 `--theme` 或界面下拉框 |
+| `dark.txt` | `dark` 或 `light` | 命令行 `--light` 或界面按钮 |
+
+**重置办法**：删掉对应文件即可。例如：
+
+```sh
+rm ~/.local/share/jmnext4desktop/host.txt      # 下次启动重新做主机发现
+rm ~/.local/share/jmnext4desktop/progress.txt  # 忘掉阅读进度
+rm ~/.local/share/jmnext4desktop/style.txt ~/.local/share/jmnext4desktop/dark.txt   # 回到默认外观
+```
+
+**容错约定**：这四个文件读不出来、内容为空或名字不认识时，一律**回落到默认值**
+（重新发现主机 / 没有进度 / `windowGlass` / 深色），不因为一个脏值让程序表现异常。
+图片缓存在另一个位置（由 `JmClient` 的缓存目录管理，存的是**未还原的原始字节**）。
