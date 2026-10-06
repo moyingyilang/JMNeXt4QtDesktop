@@ -3,6 +3,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QDir>
 #include <QTimer>
 #include <QDebug>
 #include <QQuickWindow>
@@ -30,6 +31,15 @@ int main(int argc, char** argv) {
     engine.addImageProvider(QStringLiteral("jm"), imageProvider);   // QML 里用 image://jm/cover?<url>
     jmnext::qt::JmBackend backend;
     engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
+    // 页面图到达 -> GUI 线程落成临时 PNG -> 通过 backend 的属性给 QML（QML 的 Image 不能直接吃 QImage）
+    QObject::connect(&backend, &jmnext::qt::JmBackend::pageReady, &app,
+                     [&backend](const QImage& img, const QString&) {
+                         static int seq = 0;
+                         const QString path = QDir(QDir::tempPath())
+                                                  .filePath(QStringLiteral("jmnext-page-%1.png").arg(++seq % 2));
+                         if (img.save(path, "PNG")) backend.setPagePath(path);
+                     });
+
     engine.rootContext()->setContextProperty(QStringLiteral("renderBackend"),
                                              QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
@@ -48,6 +58,16 @@ int main(int argc, char** argv) {
                                   QString::fromLatin1(jmnext::qt::styleName(style)),
                                   dark ? QStringLiteral("深色") : QStringLiteral("浅色"),
                                   QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
+
+    // --read <aid>：打开该作品并自动读第一话（无头验证阅读器）。
+    // 注意：只设 autoReadAid 不会加载任何东西，必须真的调用 loadAlbum（上一次尝试就是漏了这一步）。
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--read") {
+            const QString aid = QString::fromUtf8(argv[i + 1]);
+            engine.rootContext()->setContextProperty(QStringLiteral("autoReadAid"), aid);
+            QTimer::singleShot(500, &backend, [&backend, aid] { backend.loadAlbum(aid); });
+        }
+    }
 
     // --shot <png>：延时抓一张窗口图再退出（P0 用来证明"真的渲染出了画面"，P2 起用来看每屏效果）
 

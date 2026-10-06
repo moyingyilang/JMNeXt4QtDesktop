@@ -90,8 +90,45 @@ ApplicationWindow {
             }
         }
 
+        // 右栏：阅读器（有页面后覆盖详情视图）
+        Rectangle {
+            visible: root.reading
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            color: darkTheme ? "#101113" : "#f0f1f3"
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 8
+                spacing: 6
+
+                Image {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    fillMode: Image.PreserveAspectFit
+                    source: root.pageUrl
+                    onStatusChanged: if (status === Image.Ready)
+                        console.log("QML 阅读页已显示：" + sourceSize.width + "x" + sourceSize.height)
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Button { text: "上一页"; onClicked: backend.step(-1) }
+                    Button { text: "下一页"; onClicked: backend.step(1) }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.pageStatus
+                        color: "#b9bcc2"; font.pixelSize: 12
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+        }
+
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
         Rectangle {
+            visible: !root.reading
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: darkTheme ? "#141517" : "#ffffff"
@@ -171,6 +208,10 @@ ApplicationWindow {
 
     // 状态行（后端 status 信号）
     property string pageStatus: ""
+    // 阅读器状态：**不在绑定里直接读 context property**（编译后的 QML 绑定看不到它们，会当 null），
+    // 改由 Connections 的 onPageChanged 计算后赋给根属性，绑定只读根属性。
+    property bool reading: false
+    property string pageUrl: ""
     property string albumName: ""
     property string albumAuthor: ""
     property string albumTags: ""
@@ -206,6 +247,8 @@ ApplicationWindow {
             for (var i = 0; i < names.length; ++i)
                 chapterModel.append({ "name": names[i], "cid": ids[i] })
             console.log("QML 章节列表已填充：" + chapterModel.count + " 条")
+            if (typeof autoReadAid !== "undefined" && autoReadAid === root.albumAid && ids.length > 0)
+                backend.openChapterId(ids[0], 0)
         }
 
         function onCurrentAidChanged() { root.albumAid = backend.currentAid }
@@ -213,6 +256,13 @@ ApplicationWindow {
         function onStatus(text) { root.pageStatus = text }
         function onFailed(text) { root.pageStatus = "失败：" + text }
         function onPageReady(image, statusText) { root.pageStatus = statusText }
+
+        function onPageChanged() {
+            root.reading = backend.pageSeq > 0
+            root.pageUrl = root.reading
+                    ? "file://" + backend.pagePath + "?v=" + backend.pageSeq
+                    : ""
+        }
     }
 
     Component.onCompleted: {

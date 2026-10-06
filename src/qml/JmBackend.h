@@ -26,6 +26,9 @@ public:
     Q_INVOKABLE void openChapter(const QString& aid, int page = 0);
     Q_INVOKABLE void loadAlbum(const QString& aid);
     Q_PROPERTY(QString currentAid READ currentAid NOTIFY currentAidChanged)
+    // 阅读页：页面图在 GUI 线程落成临时 PNG 后，通过这两个属性给 QML（带 NOTIFY，绑定可用）
+    Q_PROPERTY(QString pagePath READ pagePath NOTIFY pageChanged)
+    Q_PROPERTY(int pageSeq READ pageSeq NOTIFY pageChanged)
     Q_INVOKABLE void openChapterId(const QString& chapterId, int page = 0);
     Q_INVOKABLE void step(int delta);
     Q_INVOKABLE void setBlockWords(const QStringList& words);
@@ -39,6 +42,7 @@ signals:
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
     void currentAidChanged();
+    void pageChanged();
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
     void coverReady(int index, const QImage& image);
@@ -52,6 +56,14 @@ private:
     JmWorker* worker_ = nullptr;
     QString currentAid() const { return currentAid_; }
     QString currentAid_;
+    QString pagePath() const { return pagePath_; }
+    int pageSeq() const { return pageSeq_; }
+public:
+    /// 页面图落盘后调用（GUI 线程）
+    void setPagePath(const QString& path) { pagePath_ = path; ++pageSeq_; emit pageChanged(); }
+private:
+    QString pagePath_;
+    int pageSeq_ = 0;
     template <typename... Args>
     void invoke(const char* method, Args&&... args);
 };
