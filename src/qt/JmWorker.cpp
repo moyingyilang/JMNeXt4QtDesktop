@@ -201,11 +201,15 @@ void JmWorker::showPageAt(int index) {
     auto img = client().pageImage(p.url, std::atoi(chapter_.id.c_str()), chapter_.scrambleId);
     if (!img) { emit failed(QStringLiteral("取图失败：%1").arg(QString::fromStdString(client().lastError()))); return; }
     pageIndex_ = index;
-    emit pageReady(*img, QStringLiteral("第 %1/%2 页 %3x%4")
+    const int pct = chapter_.images.empty()
+                        ? 0
+                        : static_cast<int>((index + 1) * 100 / static_cast<int>(chapter_.images.size()));
+    emit pageReady(*img, QStringLiteral("第 %1/%2 页 %3x%4 · %5%")
                               .arg(index + 1)
                               .arg(chapter_.images.size())
                               .arg(img->width())
-                              .arg(img->height()));
+                              .arg(img->height())
+                              .arg(pct));
     saveProgressNow();          // 记录进度（下次打开同一作品接着读）
     // 预取下一页与上一页：读漫画大部分时间在往后翻，回翻也是常见动作
     prefetch(index + 1);

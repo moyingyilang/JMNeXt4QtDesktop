@@ -37,6 +37,7 @@ QScrollBar::handle:vertical   { background: #3a3d43; border-radius: 5px; min-hei
 QScrollBar::handle:vertical:hover { background: #4a4d55; }
 QScrollBar::add-line, QScrollBar::sub-line { height: 0; }
 QComboBox      { background: #2b2d31; border: 1px solid #3a3d43; border-radius: 6px; padding: 4px 8px; }
+QLabel#pageInfo { color: #9aa0a8; padding: 2px 0; font-size: 12px; }
 )QSS");
 }
 
@@ -66,6 +67,7 @@ QScrollBar:vertical   { background: #f5f6f8; width: 10px; }
 QScrollBar::handle:vertical   { background: #c9ccd2; border-radius: 5px; min-height: 24px; }
 QScrollBar::add-line, QScrollBar::sub-line { height: 0; }
 QComboBox      { background: #ffffff; border: 1px solid #c9ccd2; border-radius: 6px; padding: 4px 8px; }
+QLabel#pageInfo { color: #5a5f68; padding: 2px 0; font-size: 12px; }
 )QSS");
 }
 

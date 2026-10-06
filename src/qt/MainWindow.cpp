@@ -241,7 +241,7 @@ void MainWindow::setupUi() {
         rightCol->addWidget(h);
     }
     pageLabel_ = new QLabel(QStringLiteral("（尚未打开章节）"));
-    pageLabel_->setStyleSheet(QStringLiteral("color:#b9bcc2; padding:2px 0;"));
+    pageLabel_->setObjectName(QStringLiteral("pageInfo"));   // 交给主题（内联样式会盖掉主题）
     rightCol->addWidget(pageLabel_);
     rightCol->addLayout(views);
     rightCol->setStretchFactor(views, 2);   // 阅读区占两份，让它成为主区域
