@@ -9,6 +9,7 @@
 #include <QChar>
 #include <QFileDialog>
 #include <QFont>
+#include <QGraphicsDropShadowEffect>
 #include <QFontDatabase>
 #include <QFontMetricsF>
 #include <QFormLayout>
@@ -252,6 +253,22 @@ void MainWindow::setupUi() {
             const QString w = searchEdit_ ? searchEdit_->text().trimmed() : QString();
             if (!w.isEmpty() && worker_) worker_->search(w, 1);
         });
+    }
+    // 投影：封面与阅读区各挂一层。Qt Widgets 没有 QSS 的 box-shadow，只能逐控件加效果器。
+    // 参数刻意保守（模糊 12、偏移 (0,2)）：这是"卡片浮起来一点"，不是主项目那套多级投影。
+    {
+        auto addShadow = [](QWidget* w) {
+            if (!w) return;
+            auto* eff = new QGraphicsDropShadowEffect(w);
+            eff->setBlurRadius(12);
+            eff->setOffset(0, 2);
+            eff->setColor(QColor(0, 0, 0, 120));
+            w->setGraphicsEffect(eff);
+        };
+        addShadow(coverLabel_);
+        addShadow(restoredScroll_);
+        shadowsApplied_ = 2;
+        log(QStringLiteral("投影：封面与阅读区各挂一层（模糊 12，偏移 0,2）"));
     }
     leftCol->addLayout(listRow);
     // 风格选择：切换时重建全局样式表（深/浅取自 app 属性 jmDark，由 main.cpp 设置）

@@ -80,6 +80,8 @@ public:
     QString listItemText(int i) const;
     /// 风格下拉项数（自检用）
     int styleItemCount() const;               // 实现在 .cpp（QComboBox 在头文件里只有前向声明）
+    /// 已挂投影的控件数（自检用）
+    int shadowCount() const { return shadowsApplied_; }
     /// 当前是否深色（自检用）
     bool isDarkUi() const { return darkUi_; }
     bool showPage(int index);
@@ -124,6 +126,7 @@ private:
     QPushButton* darkBtn_ = nullptr;          // 深色/浅色切换
     bool twoPageUi_ = false;
     bool darkUi_ = true;              // 当前深浅（初始值在 setupUi 里按保存值设置）          // 与 worker 的双页开关保持一致
+    int shadowsApplied_ = 0;          // 已挂投影的控件数（自检用；只存 int，避免头文件里用到不完整的 Qt 类型）
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;
     QLabel* coverLabel_ = nullptr;

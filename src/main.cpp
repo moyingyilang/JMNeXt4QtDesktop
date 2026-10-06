@@ -147,6 +147,7 @@ int main(int argc, char** argv) {
         std::printf("列表条数：%d\n", n);
         std::printf("风格下拉项数：%d\n", win.styleItemCount());
         std::printf("界面深浅：%s\n", win.isDarkUi() ? "深色" : "浅色");
+        std::printf("已挂投影控件数：%d\n", win.shadowCount());
         const int more = win.requestLoadMoreAndWait();
         std::printf("加载更多之后：%d 条\n", more);
         for (int i = 0; i < 3 && i < n; ++i)
