@@ -74,6 +74,8 @@ int main(int argc, char** argv) {
             const QString q = QString::fromUtf8(argv[4]);
             QTimer::singleShot(400, &app, [&win, q] { win.searchAsync(q); });
         }
+        for (int i = 1; i < argc; ++i)          // --two-page：截图也用双页模式
+            if (std::string(argv[i]) == "--two-page") win.setTwoPageForTest(true);
         if (argc >= 5 && std::string(argv[3]) == "--reader") {
             const QString readerAid = QString::fromUtf8(argv[4]);
             QTimer::singleShot(21000, &app, [&win, readerAid] { win.openReaderAsync(readerAid, 2); });
