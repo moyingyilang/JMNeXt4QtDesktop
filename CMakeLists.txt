@@ -117,6 +117,7 @@ endif()
 # ---------------------------------------------------------------------------
 find_package(Qt6 REQUIRED COMPONENTS Quick Qml QuickControls2)
 qt_add_executable(jmnext4qml
+    src/qml/JmImageProvider.cpp
     src/qml/JmBackend.cpp
     src/qml/main_qml.cpp
     src/qt/Theme.h

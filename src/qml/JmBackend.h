@@ -37,6 +37,7 @@ signals:
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
     void coverReady(int index, const QImage& image);
+    void coverUrlReady(int index, const QString& url);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);
     void status(const QString& text);
     void failed(const QString& text);

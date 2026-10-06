@@ -69,6 +69,8 @@ signals:
     void albumCoverReady(const QImage& image);
     void previewReady(int index, const QImage& image, const QString& status);   // 双页模式下"下一页"就绪
     void coverReady(int index, const QImage& image);
+    /// 与 coverReady 配套：先告知该下标的封面 URL（QML 侧图片提供器据此命中同一份磁盘缓存）
+    void coverUrlReady(int index, const QString& url);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);

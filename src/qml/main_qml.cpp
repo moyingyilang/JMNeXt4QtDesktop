@@ -11,6 +11,7 @@
 #include "qt/Theme.h"
 #include "qt/StartupInfo.h"
 #include "qml/JmBackend.h"
+#include "qml/JmImageProvider.h"
 
 int main(int argc, char** argv) {
     QGuiApplication app(argc, argv);
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
     engine.rootContext()->setContextProperty(QStringLiteral("themeName"),
                                              QString::fromLatin1(jmnext::qt::styleName(style)));
     engine.rootContext()->setContextProperty(QStringLiteral("darkTheme"), dark);
+    auto* imageProvider = new jmnext::qt::JmImageProvider();
+    engine.addImageProvider(QStringLiteral("jm"), imageProvider);   // QML 里用 image://jm/cover?<url>
     jmnext::qt::JmBackend backend;
     engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
     engine.rootContext()->setContextProperty(QStringLiteral("renderBackend"),
@@ -57,7 +60,31 @@ int main(int argc, char** argv) {
                              qInfo().noquote() << QStringLiteral("自检：列表 %1 条，首条：%2")
                                                       .arg(titles.size())
                                                       .arg(titles.value(0).section('\n', 0, 0));
-                             backend.openChapter(QStringLiteral("209827"), 0);
+                             backend.loadCovers(1);   // 先让 worker 把一张封面写入磁盘缓存
+                         });
+        QString coverUrl;
+        QObject::connect(&backend, &jmnext::qt::JmBackend::coverUrlReady, &app,
+                         [&coverUrl](int index, const QString& url) {
+                             if (index == 0) coverUrl = url;
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::coverReady, &app,
+                         [&app, &coverUrl, imageProvider](int index, const QImage& img) {
+                             if (index != 0) return;
+                             qInfo().noquote() << QStringLiteral("自检：worker 取到封面 %1x%2，URL 是否拿到：%3")
+                                                      .arg(img.width()).arg(img.height())
+                                                      .arg(coverUrl.isEmpty() ? QStringLiteral("否")
+                                                                              : QStringLiteral("是"));
+                             QSize got;
+                             const QImage hit = imageProvider->requestImage(
+                                 QStringLiteral("cover?") +
+                                     QString::fromUtf8(QUrl::toPercentEncoding(coverUrl)), &got, QSize(160, 213));
+                             qInfo().noquote() << QStringLiteral("自检：提供器按同一 URL 取到 %1x%2")
+                                                      .arg(hit.width()).arg(hit.height());
+                             const QImage miss = imageProvider->requestImage(
+                                 QStringLiteral("cover?%2Fnot-exist"), &got, QSize(120, 160));
+                             qInfo().noquote() << QStringLiteral("自检：不存在的 id 返回 %1x%2（占位图）")
+                                                      .arg(miss.width()).arg(miss.height());
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
                          });
         QObject::connect(&backend, &jmnext::qt::JmBackend::pageReady, &app,
                          [&app, &pages](const QImage& img, const QString& statusText) {

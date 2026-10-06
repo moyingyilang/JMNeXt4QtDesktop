@@ -19,6 +19,7 @@ JmBackend::JmBackend(QObject* parent) : QObject(parent) {
     connect(worker_, &JmWorker::chaptersReady, this, &JmBackend::chaptersReady);
     connect(worker_, &JmWorker::pageReady, this, &JmBackend::pageReady);
     connect(worker_, &JmWorker::coverReady, this, &JmBackend::coverReady);
+    connect(worker_, &JmWorker::coverUrlReady, this, &JmBackend::coverUrlReady);
     connect(worker_, &JmWorker::cacheStats, this, &JmBackend::cacheStats);
     connect(worker_, &JmWorker::status, this, &JmBackend::status);
     connect(worker_, &JmWorker::failed, this, &JmBackend::failed);

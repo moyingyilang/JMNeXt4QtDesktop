@@ -98,7 +98,10 @@ void JmWorker::loadCovers(int n) {
     // （3）白费一次网络往返。现在下标与界面显示项严格一致。
     const int limit = qMin(n, static_cast<int>(currentEntries_.size()));
     for (int i = 0; i < limit; ++i) {
-        auto img = client().cover(currentEntries_[static_cast<std::size_t>(i)]);
+        const auto& entry = currentEntries_[static_cast<std::size_t>(i)];
+        const std::string url = client().coverUrlFor(entry);
+        if (!url.empty()) emit coverUrlReady(i, QString::fromStdString(url));
+        auto img = client().cover(entry);
         if (!img) continue;
         emit coverReady(i, *img);
     }

@@ -157,6 +157,11 @@ std::optional<QImage> JmClient::pageImage(const std::string& url, int aid, int s
 
 namespace jmnext::qt {
 
+std::string JmClient::coverUrlFor(const core::ListEntry& entry) const {
+    auto url = core::coverUrl(entry.id, entry.image, entry.updateAt, session_.imageBaseForCover());
+    return url.value_or(std::string{});
+}
+
 std::optional<QImage> JmClient::cover(const core::ListEntry& entry) {
     const std::string base = session_.imageBaseForCover();   // 图床缺省时用 API 主机（骨架阶段够用）
     auto url = core::coverUrl(entry.id, entry.image, entry.updateAt, base);

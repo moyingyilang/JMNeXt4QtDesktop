@@ -36,6 +36,8 @@ public:
 
     /// 取列表项的封面缩略图（3x4 模板，带缓存）—— 真实网络已验证该地址返回 JPEG 400x533
     std::optional<QImage> cover(const jmnext::core::ListEntry& entry);
+    /// 该条目的封面 URL（与 cover() 内部使用的完全一致；QML 侧图片提供器要用它做缓存键）
+    std::string coverUrlFor(const jmnext::core::ListEntry& entry) const;
     std::optional<QImage> pageImage(const std::string& url, int aid, int scrambleId);
 
     const std::string& lastError() const { return lastError_; }
