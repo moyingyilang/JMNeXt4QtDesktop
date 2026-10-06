@@ -5,6 +5,7 @@
 //
 // 自检存在的理由：容器里没有显示，界面层的代码否则无法被验证。走的是与窗口完全相同的代码路径。
 #include "qt/JmClient.h"
+#include "qt/Theme.h"
 #include "qt/MainWindow.h"
 
 #include <QApplication>
@@ -16,6 +17,12 @@
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    // 界面主题：默认深色；--light 用浅色。先把"Qt 系统默认观感"换掉（第 (a) 步）
+    {
+        bool light = false;
+        for (int i = 1; i < argc; ++i) if (std::string(argv[i]) == "--light") light = true;
+        app.setStyleSheet(light ? jmnext::qt::lightThemeQss() : jmnext::qt::darkThemeQss());
+    }
 
     if (argc >= 3 && std::string(argv[1]) == "--selftest") {
         jmnext::qt::MainWindow win;
