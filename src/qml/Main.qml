@@ -67,6 +67,10 @@ ApplicationWindow {
                     height: 74
                     color: mouseArea.containsMouse ? root.cSurface2 : "transparent"
                     radius: root.radiusMd
+                    // 动效（QML 原生，widget 侧做不到）：悬停颜色过渡 + 按压弹性缩放
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    scale: mouseArea.pressed ? 0.985 : 1.0
+                    Behavior on scale { SpringAnimation { spring: 2.5; damping: 0.35 } }
 
                     RowLayout {
                         anchors.fill: parent
@@ -163,6 +167,8 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: root.cSurface1
+            border.color: root.cStroke
+            border.width: 1
 
             ColumnLayout {
                 anchors.fill: parent
@@ -336,6 +342,7 @@ ApplicationWindow {
             root.cStroke = themeInit.stroke
             root.radiusMd = themeInit.radiusMd
         }
+        console.log("QML 动效：列表悬停过渡与按压弹性已启用")
         console.log("QML 主题：" + themeName + " 背景 " + root.cBg + " 强调 " + root.cAccent
                     + " 文字 " + root.cText + " 圆角 " + root.radiusMd)
         console.log("QML 首页列表：开始加载")
