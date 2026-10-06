@@ -10,6 +10,7 @@ SRC=${1:?需要主项目 theme 目录}
 OUT=${2:-src/qt/ThemeTokens.h}
 TOK=$SRC/Tokens.kt
 PAL=$SRC/Palettes.kt
+SPEC=$SRC/ThemeStyle.kt
 [ -f "$TOK" ] || { echo "找不到 $TOK"; exit 3; }
 
 pairs() {   # pairs <文件> <起始行> <结束行> -> "字段 #AARRGGBB"
@@ -82,6 +83,22 @@ merge .dark.base  MiuixDark        .dark.miuix
   emit translucent .light.translucent .dark.translucent
   emit flatBlur    .light.flatblur    .dark.flatblur
   emit miuix       .light.miuix       .dark.miuix
+  echo "struct Radius { int xs, sm, md, lg, xl; };"
+  echo
+  rad() {   # rad <C++ 名> <Kotlin spec 名>：按**具名** spec 块关联，不靠顺序猜
+    s=$(grep -n "^    val $2 = JmSpec(" "$SPEC" | head -1 | cut -d: -f1)
+    if [ -z "$s" ]; then echo "  [提示] $2 没有独立 spec 块（可能继承基座），未生成圆角" >&2; return 0; fi
+    e=$(awk -v s="$s" 'NR>s && /^    \)$/ {print NR; exit}' "$SPEC")
+    line=$(sed -n "${s},${e}p" "$SPEC" | grep -m1 "radius = RadiusScale(")
+    if [ -z "$line" ]; then echo "  [提示] $2 未声明 radius，未生成圆角" >&2; return 0; fi
+    nums=$(echo "$line" | grep -oE '[0-9]+\.dp' | sed 's/\.dp//' | paste -sd, -)
+    echo "inline Radius ${1}Radius() { return Radius{$nums}; }"
+  }
+  rad windowGlass windowGlass
+  rad translucent translucent
+  rad flatBlur    flatBlur
+  rad miuix       miuix
+  echo
   echo "}  // namespace jmnext::qt::tokens"
 } > "$OUT"
 rm -f .light.* .dark.*

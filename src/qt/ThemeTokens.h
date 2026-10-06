@@ -245,4 +245,10 @@ inline Palette miuix(bool dark) {
     return dark ? darkPal : lightPal;
 }
 
+struct Radius { int xs, sm, md, lg, xl; };
+
+inline Radius windowGlassRadius() { return Radius{2,4,6,8,12}; }
+inline Radius flatBlurRadius() { return Radius{8,12,16,20,28}; }
+inline Radius miuixRadius() { return Radius{4,8,12,16,24}; }
+
 }  // namespace jmnext::qt::tokens
