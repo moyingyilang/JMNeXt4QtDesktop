@@ -17,6 +17,7 @@
 #include <QLineEdit>
 #include <QPixmap>
 #include <QComboBox>
+#include <QDateTime>
 #include <QEvent>
 #include <QKeyEvent>
 #include <QWheelEvent>
@@ -365,8 +366,13 @@ void MainWindow::unscrambleNow() {
 }
 
 void MainWindow::log(const QString& line) {
-    if (logView_) logView_->appendPlainText(line);
-    std::printf("%s\n", line.toUtf8().constData());
+    // 加一个自启动以来的毫秒时间戳：这样日志能直接看出"加载一页要多久""缓存命中快多少"，
+    // 而不只是"感觉卡/不卡"。
+    static const qint64 startMs = QDateTime::currentMSecsSinceEpoch();
+    const qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - startMs;
+    const QString stamped = QStringLiteral("[%1 ms] %2").arg(elapsed, 6).arg(line);
+    if (logView_) logView_->appendPlainText(stamped);
+    std::printf("%s\n", stamped.toUtf8().constData());
     std::fflush(stdout);
 }
 
