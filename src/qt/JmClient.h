@@ -20,6 +20,10 @@ class JmClient {
 public:
     /// 主机发现。返回是否成功；失败原因见 lastError()
     bool bootstrap();
+    /// 主机缓存（省掉每次启动的"两个入口请求 + 解密"）
+    QString cachedHostPath() const;
+    QString cachedHost() const;
+    void saveCachedHost(const QString& host) const;
     std::optional<std::vector<jmnext::core::ListEntry>> latest(int page = 0);
     std::optional<jmnext::core::AlbumInfo> album(const std::string& id);
     std::optional<jmnext::core::ChapterImages> chapter(const std::string& id);

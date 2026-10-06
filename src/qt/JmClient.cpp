@@ -5,6 +5,9 @@
 #include "qt/ImageCodec.h"
 
 #include <QDateTime>
+#include <QStandardPaths>
+#include <QFile>
+#include <QDir>
 #include <QImage>
 
 #include <vector>
@@ -26,6 +29,17 @@ QImage toQImage(const std::vector<uint32_t>& px, int w, int h) {
 bool JmClient::bootstrap() {
     lastError_.clear();
     session_.refresh(QDateTime::currentSecsSinceEpoch());   // 用真实当前时间（服务端校验时效）
+
+    // 先试**缓存的主机**：主机相当稳定，缓存命中就省掉"两个入口请求 + 解密"这一整轮往返
+    // （实测首屏约 3.7 秒，其中主机发现占一部分）。缓存失效时会自然回退到下面的发现流程。
+    const QString cached = cachedHost();
+    if (!cached.isEmpty()) {
+        session_.useHost(cached.toStdString());
+        host_ = session_.apiBaseUrl();
+        bootstrapped_ = true;
+        return true;
+    }
+
     auto base = discoverHost(session_, http_, [](const std::vector<std::string>& hosts) {
         return hosts.empty() ? std::optional<std::string>{} : std::optional<std::string>(hosts.front());
     });
@@ -34,8 +48,28 @@ bool JmClient::bootstrap() {
         return false;
     }
     host_ = *base;
+    saveCachedHost(QString::fromStdString(host_));   // 记下来，下次直接用
     bootstrapped_ = true;
     return true;
+}
+
+QString JmClient::cachedHostPath() const {
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    return dir + "/host.txt";
+}
+
+QString JmClient::cachedHost() const {
+    QFile f(cachedHostPath());
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    const QString s = QString::fromUtf8(f.readAll()).trimmed();
+    if (s.isEmpty() || !s.startsWith("http")) return {};     // 不合法就当作没有缓存
+    return s;
+}
+
+void JmClient::saveCachedHost(const QString& host) const {
+    QFile f(cachedHostPath());
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) f.write(host.toUtf8());
 }
 
 std::optional<std::vector<ListEntry>> JmClient::latest(int page) {
