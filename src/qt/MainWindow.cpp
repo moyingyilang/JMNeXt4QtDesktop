@@ -273,6 +273,21 @@ void MainWindow::setupUi() {
             log(QStringLiteral("已切换风格：%1").arg(name));
         });
     }
+    // 深色/浅色切换：重建全局样式表并记住（初始值取保存值）
+    {
+        darkUi_ = loadSavedDark();
+        auto* darkRow = new QHBoxLayout();
+        darkBtn_ = new QPushButton(darkUi_ ? QStringLiteral("切换为浅色") : QStringLiteral("切换为深色"));
+        darkRow->addWidget(darkBtn_);
+        leftCol->addLayout(darkRow);
+        connect(darkBtn_, &QPushButton::clicked, this, [this] {
+            darkUi_ = !darkUi_;
+            if (qApp) qApp->setStyleSheet(themeQss(styleFromName(styleBox_ ? styleBox_->currentText() : QString()), darkUi_));
+            saveDark(darkUi_);
+            darkBtn_->setText(darkUi_ ? QStringLiteral("切换为浅色") : QStringLiteral("切换为深色"));
+            log(darkUi_ ? QStringLiteral("已切换为深色") : QStringLiteral("已切换为浅色"));
+        });
+    }
     {
         auto* h = new QLabel(QStringLiteral("③ 阅读区（← → 翻页，滚轮可用，适应窗口 / 100% 可切换）"));
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));

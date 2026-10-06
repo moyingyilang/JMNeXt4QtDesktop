@@ -196,4 +196,20 @@ inline void saveStyle(Style s) {
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) f.write(styleName(s));
 }
 
+// 深/浅偏好的持久化（与 style.txt 分开，避免改已生效的文件格式）
+inline QString darkPrefPath() {
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    return dir + "/dark.txt";
+}
+inline bool loadSavedDark() {
+    QFile f(darkPrefPath());
+    if (!f.open(QIODevice::ReadOnly)) return true;          // 没有记录就用深色（当前默认）
+    return f.readAll().trimmed() != QByteArray("light");
+}
+inline void saveDark(bool dark) {
+    QFile f(darkPrefPath());
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) f.write(dark ? "dark" : "light");
+}
+
 }  // namespace jmnext::qt

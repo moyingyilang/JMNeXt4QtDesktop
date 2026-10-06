@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
     QApplication app(argc, argv);
     // 界面主题：默认深色；--light 用浅色。先把"Qt 系统默认观感"换掉（第 (a) 步）
     {
-        bool light = false;
+        bool light = !jmnext::qt::loadSavedDark();   // 沿用上次深浅；--light 可覆盖
         jmnext::qt::Style style = jmnext::qt::loadSavedStyle();   // 沿用上次选择；没有则 windowGlass
         for (int i = 1; i + 1 < argc; ++i)
             if (std::string(argv[i]) == "--theme") style = jmnext::qt::styleFromName(QString::fromUtf8(argv[i + 1]));
@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
         app.setStyleSheet(jmnext::qt::themeQss(style, !light));
         app.setProperty("jmDark", !light);        // 供界面切换风格时判断深/浅
         jmnext::qt::saveStyle(style);            // 记住选择（下次启动沿用）
+        jmnext::qt::saveDark(!light);
         std::printf("主题：%s（%s）\n", jmnext::qt::styleName(style), light ? "浅色" : "深色");
         std::printf("  实际配色：%s\n", jmnext::qt::styleSummary(style, !light).toUtf8().constData());
     }
@@ -145,6 +146,7 @@ int main(int argc, char** argv) {
         if (n < 0) { std::printf("加载失败\n"); return 1; }
         std::printf("列表条数：%d\n", n);
         std::printf("风格下拉项数：%d\n", win.styleItemCount());
+        std::printf("界面深浅：%s\n", win.isDarkUi() ? "深色" : "浅色");
         const int more = win.requestLoadMoreAndWait();
         std::printf("加载更多之后：%d 条\n", more);
         for (int i = 0; i < 3 && i < n; ++i)
