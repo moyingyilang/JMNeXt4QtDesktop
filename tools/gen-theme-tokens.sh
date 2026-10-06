@@ -14,10 +14,10 @@ SPEC=$SRC/ThemeStyle.kt
 [ -f "$TOK" ] || { echo "找不到 $TOK"; exit 3; }
 
 pairs() {   # pairs <文件> <起始行> <结束行> -> "字段 #AARRGGBB"
-  sed -n "$2,$3p" "$1" | grep -oE '^[[:space:]]+[a-zA-Z]+ = (Color\(0x[0-9A-Fa-f]{8}\)|Color\.White|Color\.Black)' | \
-    sed -E 's/^[[:space:]]+([a-zA-Z]+) = Color\(0x([0-9A-Fa-f]{8})\)/\1 #\2/;
-            s/^[[:space:]]+([a-zA-Z]+) = Color\.White/\1 #FFFFFFFF/;
-            s/^[[:space:]]+([a-zA-Z]+) = Color\.Black/\1 #FF000000/'
+  sed -n "$2,$3p" "$1" | grep -oE '^[[:space:]]+[a-zA-Z0-9_]+ = (Color\(0x[0-9A-Fa-f]{8}\)|Color\.White|Color\.Black)' | \
+    sed -E 's/^[[:space:]]+([a-zA-Z0-9_]+) = Color\(0x([0-9A-Fa-f]{8})\)/\1 #\2/;
+            s/^[[:space:]]+([a-zA-Z0-9_]+) = Color\.White/\1 #FFFFFFFF/;
+            s/^[[:space:]]+([a-zA-Z0-9_]+) = Color\.Black/\1 #FF000000/'
 }
 block_range() {   # block_range <文件> <val 名> -> "起始 结束"
   s=$(grep -n "^val $2" "$1" | head -1 | cut -d: -f1)

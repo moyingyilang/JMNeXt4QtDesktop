@@ -13,6 +13,9 @@ struct Palette {
     const char* accentSoft;
     const char* accentGlow;
     const char* surfaceMica;
+    const char* surface1;
+    const char* surface2;
+    const char* surface3;
     const char* surfaceSunken;
     const char* surfaceHover;
     const char* surfaceActive;
@@ -39,6 +42,9 @@ inline Palette windowGlass(bool dark) {
         p.accentSoft = "#1A0F6CBD";
         p.accentGlow = "#470F6CBD";
         p.surfaceMica = "#B8F6F7FA";
+        p.surface1 = "#94FFFFFF";
+        p.surface2 = "#BCFFFFFF";
+        p.surface3 = "#DBFFFFFF";
         p.surfaceSunken = "#090F172A";
         p.surfaceHover = "#0D0F172A";
         p.surfaceActive = "#140F172A";
@@ -64,6 +70,9 @@ inline Palette windowGlass(bool dark) {
         p.accentSoft = "#2460CDFF";
         p.accentGlow = "#5760CDFF";
         p.surfaceMica = "#B816181E";
+        p.surface1 = "#0EFFFFFF";
+        p.surface2 = "#B8262931";
+        p.surface3 = "#E630343E";
         p.surfaceSunken = "#3D000000";
         p.surfaceHover = "#14FFFFFF";
         p.surfaceActive = "#21FFFFFF";
@@ -93,6 +102,9 @@ inline Palette translucent(bool dark) {
         p.accentSoft = "#1A0F6CBD";
         p.accentGlow = "#470F6CBD";
         p.surfaceMica = "#8CF6F7FA";
+        p.surface1 = "#5EFFFFFF";
+        p.surface2 = "#85FFFFFF";
+        p.surface3 = "#A6FFFFFF";
         p.surfaceSunken = "#0B0F172A";
         p.surfaceHover = "#100F172A";
         p.surfaceActive = "#1A0F172A";
@@ -118,6 +130,9 @@ inline Palette translucent(bool dark) {
         p.accentSoft = "#2460CDFF";
         p.accentGlow = "#5760CDFF";
         p.surfaceMica = "#99101218";
+        p.surface1 = "#0AFFFFFF";
+        p.surface2 = "#7A262931";
+        p.surface3 = "#A330343E";
         p.surfaceSunken = "#4D000000";
         p.surfaceHover = "#1AFFFFFF";
         p.surfaceActive = "#29FFFFFF";
@@ -147,6 +162,9 @@ inline Palette flatBlur(bool dark) {
         p.accentSoft = "#1A0F6CBD";
         p.accentGlow = "#470F6CBD";
         p.surfaceMica = "#CCF7F8FA";
+        p.surface1 = "#B3FFFFFF";
+        p.surface2 = "#D9FFFFFF";
+        p.surface3 = "#F2FFFFFF";
         p.surfaceSunken = "#090F172A";
         p.surfaceHover = "#0D0F172A";
         p.surfaceActive = "#140F172A";
@@ -172,6 +190,9 @@ inline Palette flatBlur(bool dark) {
         p.accentSoft = "#2460CDFF";
         p.accentGlow = "#5760CDFF";
         p.surfaceMica = "#CC14161C";
+        p.surface1 = "#991E2128";
+        p.surface2 = "#CC262A33";
+        p.surface3 = "#E62E323C";
         p.surfaceSunken = "#4D000000";
         p.surfaceHover = "#14FFFFFF";
         p.surfaceActive = "#21FFFFFF";
@@ -201,6 +222,9 @@ inline Palette miuix(bool dark) {
         p.accentSoft = "#1F3482FF";
         p.accentGlow = "#4D3482FF";
         p.surfaceMica = "#FFF2F3F5";
+        p.surface1 = "#FFFFFFFF";
+        p.surface2 = "#FFFFFFFF";
+        p.surface3 = "#FFFFFFFF";
         p.surfaceSunken = "#0F000000";
         p.surfaceHover = "#0A000000";
         p.surfaceActive = "#14000000";
@@ -226,6 +250,9 @@ inline Palette miuix(bool dark) {
         p.accentSoft = "#294C93FF";
         p.accentGlow = "#5C4C93FF";
         p.surfaceMica = "#FF000000";
+        p.surface1 = "#FF1C1C1E";
+        p.surface2 = "#FF242426";
+        p.surface3 = "#FF2C2C2E";
         p.surfaceSunken = "#59000000";
         p.surfaceHover = "#14FFFFFF";
         p.surfaceActive = "#21FFFFFF";
