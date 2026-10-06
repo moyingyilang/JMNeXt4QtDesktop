@@ -111,6 +111,7 @@ private:
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;
     QLabel* coverLabel_ = nullptr;
+    QLabel* pageLabel_ = nullptr;
     QSize lastCoverSize_;
     int coverLoaded_ = 0;
     QThread* workerThread_ = nullptr;

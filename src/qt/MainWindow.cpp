@@ -95,6 +95,7 @@ MainWindow::MainWindow() {
         lastPageImage_ = img;
         applyReaderImage(img);
         pageStatus_ = statusText;
+        if (pageLabel_) pageLabel_->setText(statusText);
         pendingPageStatus_ = statusText;
         log(statusText);
     });
@@ -206,6 +207,9 @@ void MainWindow::setupUi() {
         h->setStyleSheet(QStringLiteral("color:#8a8f98; padding-top:6px;"));
         outer->addWidget(h);
     }
+    pageLabel_ = new QLabel(QStringLiteral("（尚未打开章节）"));
+    pageLabel_->setStyleSheet(QStringLiteral("color:#b9bcc2; padding:2px 0;"));
+    outer->addWidget(pageLabel_);
     outer->addLayout(views);
     outer->setStretchFactor(views, 2);   // 阅读区占两份，让它成为主区域
 
