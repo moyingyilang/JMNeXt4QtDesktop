@@ -261,3 +261,21 @@ ctest --test-dir build      # 期望 16/16
 1. 后端自检里先让 worker 取一张封面（`loadCovers(1)` 会触发 `coverReady`）；
 2. 再用**同一个 URL** 向提供器请求一次，打印命中与尺寸 —— 命中即证明"worker 写盘、提供器读盘"跨实例生效；
 3. 另请求一个不存在的 id，确认返回的是**占位图**（不是空图、不崩溃）。
+
+### P2 第三屏（阅读器）尝试记录：已撤回，两个已知错误
+
+第一次尝试"QML 阅读器"时改了两处，**未提交、已撤回**，两个错误记在这里避免重犯：
+
+1. **context property 不是信号**：我在 `Connections { target: backend }` 里写了
+   `onPageFileChanged` / `onPageSeqChanged`，想接 `main_qml.cpp` 里用
+   `setContextProperty("pageFile", ...)` 设置的值。QML 运行时报
+   "Detected function ... but no signal of the target matches the name" ——
+   根因（context property 没有变更信号）反而被这行警告直接指出来了。
+   正确做法：用一个带 `Q_PROPERTY(... NOTIFY ...)` 的小 QObject 暴露给 QML，
+   而不是裸 context property。
+2. **`--read` 没有触发任何加载**：只设置了 `autoReadAid`，却没有像 `--open` 那样调用
+   `backend.loadAlbum(aid)`，所以详情与章节列表都没发生，阅读器分支自然没被走到
+   （日志里只有首页列表，截图与上一屏字节数相同即为例证）。
+
+**结论**：QML 显示 `QImage` 的可行路径是"GUI 线程落临时文件 + 用带 NOTIFY 的属性暴露路径"；
+下一次先把属性对象做好，再谈阅读器，避免又出一个"看起来完成了"的空屏。
