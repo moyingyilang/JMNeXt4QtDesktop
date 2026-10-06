@@ -107,6 +107,15 @@ MainWindow::MainWindow() {
         pendingPageStatus_ = statusText;
         log(statusText);
     });
+    connect(worker_, &JmWorker::previewReady, this, [this](int, const QImage& img, const QString& status) {
+        if (!originalView_ || img.isNull()) return;
+        if (!twoPageUi_) { originalView_->clear(); return; }     // 单页模式不显示第二页
+        QPixmap pm = QPixmap::fromImage(img);
+        if (zoomFit_) pm = pm.scaled(restoredScroll_->viewport()->size(), Qt::KeepAspectRatio,
+                                     Qt::SmoothTransformation);
+        originalView_->setPixmap(pm);
+        log(status);
+    });
     connect(chapterList_, &QListWidget::itemClicked, this, [this](QListWidgetItem* it) {
         if (worker_ && it) worker_->openChapterId(it->data(Qt::UserRole).toString(), 0);
     });
@@ -260,6 +269,12 @@ void MainWindow::setupUi() {
     auto* openBtn = new QPushButton(QStringLiteral("打开图片…"));
     auto* zoomBtn = new QPushButton(QStringLiteral("适应窗口 / 100%"));
     buttons->addWidget(zoomBtn);
+    auto* twoPageBtn = new QPushButton(QStringLiteral("单页 / 双页"));
+    buttons->addWidget(twoPageBtn);
+    connect(twoPageBtn, &QPushButton::clicked, this, [this] {
+        setTwoPageForTest(!twoPageUi_);
+        log(twoPageUi_ ? QStringLiteral("界面：双页布局") : QStringLiteral("界面：单页布局"));
+    });
     auto* unscrambleBtn = new QPushButton(QStringLiteral("还原"));
     buttons2->addWidget(openBtn);
     buttons2->addWidget(unscrambleBtn);

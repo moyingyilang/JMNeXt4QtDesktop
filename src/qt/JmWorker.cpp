@@ -213,6 +213,7 @@ void JmWorker::showPageAt(int index) {
                               .arg(img->height())
                               .arg(pct));
     saveProgressNow();          // 记录进度（下次打开同一作品接着读）
+    if (twoPage_) previewNext(index + 1);      // 双页模式：翻页后同步换掉右侧那页
     // 预取下一页与上一页：读漫画大部分时间在往后翻，回翻也是常见动作
     prefetch(index + 1);
     prefetch(index - 1);
@@ -221,6 +222,24 @@ void JmWorker::showPageAt(int index) {
 }  // namespace jmnext::qt
 
 namespace jmnext::qt {
+
+void JmWorker::setTwoPage(bool on) {
+    twoPage_ = on;
+    emit status(on ? QStringLiteral("双页模式：开（右侧显示下一页）")
+                   : QStringLiteral("双页模式：关（只看当前页）"));
+    if (on && pageIndex_ >= 0) previewNext(pageIndex_ + 1);
+}
+
+void JmWorker::previewNext(int index) {
+    if (!twoPage_ || chapter_.images.empty()) return;
+    if (index < 0 || index >= static_cast<int>(chapter_.images.size())) return;
+    const auto& p = chapter_.images[static_cast<std::size_t>(index)];
+    auto img = client().pageImage(p.url, std::atoi(chapter_.id.c_str()), chapter_.scrambleId);
+    if (!img) return;                                   // 取不到就不显示，不打断阅读
+    emit previewReady(index, *img, QStringLiteral("双页：第 %1/%2 页已就位")
+                                           .arg(index + 1)
+                                           .arg(chapter_.images.size()));
+}
 
 void JmWorker::setBlockWords(const QStringList& words) {
     blockWords_.clear();

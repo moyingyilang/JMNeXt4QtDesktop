@@ -112,6 +112,8 @@ int main(int argc, char** argv) {
 
     if (argc >= 4 && std::string(argv[1]) == "--reader-async") {
         jmnext::qt::MainWindow win;
+        for (int i = 1; i < argc; ++i)          // --two-page：打开双页模式（自检用）
+            if (std::string(argv[i]) == "--two-page") win.setTwoPageForTest(true);
         const int pages = win.requestReaderAndWait(QString::fromUtf8(argv[2]), std::atoi(argv[3]), 2);
         if (pages < 1) { std::printf("异步阅读器自检失败\n"); return 1; }
         win.requestCacheStatsAndWait();

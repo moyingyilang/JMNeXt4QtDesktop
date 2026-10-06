@@ -59,6 +59,8 @@ public:
     int requestChapterPickAndWait(const QString& aid, int index, int timeoutMs = 180000);
     /// 自检用：把屏蔽关键词交给 worker（正式路径由界面输入框触发）
     void setBlockWordsForTest(const QStringList& words) { if (worker_) worker_->setBlockWords(words); }
+    /// 单页/双页切换（自检用；界面按钮走同一入口）
+    void setTwoPageForTest(bool on) { twoPageUi_ = on; if (worker_) worker_->setTwoPage(on); }
     /// 触发一次异步拉列表（截图自检用；不等待结果）
     void requestListAsync() { if (worker_) worker_->loadList(); }
     /// 触发一次搜索（异步；截图与外部脚本用，结果进入左侧列表）
@@ -112,7 +114,8 @@ private:
     QPlainTextEdit* logView_ = nullptr;
     QListWidget* listView_ = nullptr;
     QLineEdit* blockEdit_ = nullptr;
-    QLineEdit* searchEdit_ = nullptr;      // 搜索框（回车或点按钮即搜）
+    QLineEdit* searchEdit_ = nullptr;
+    bool twoPageUi_ = false;          // 与 worker 的双页开关保持一致
     QListWidget* chapterList_ = nullptr;
     QLabel* albumInfo_ = nullptr;
     QLabel* coverLabel_ = nullptr;

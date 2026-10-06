@@ -37,6 +37,8 @@ public slots:
     void search(const QString& word, int page = 1);
     /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数
     void setBlockWords(const QStringList& words);
+    /// 单页/双页：开时在 originalView_ 位置显示下一页
+    void setTwoPage(bool on);
     /// 加载下一页（追加到列表末尾）；到末页时上报状态
     void loadMore();
     /// 为列表前 n 项取封面：成功发 coverReady(index, image)
@@ -65,6 +67,7 @@ signals:
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
+    void previewReady(int index, const QImage& image, const QString& status);   // 双页模式下"下一页"就绪
     void coverReady(int index, const QImage& image);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
@@ -81,6 +84,8 @@ private:
     jmnext::core::ChapterImages chapter_;
     bool started_ = false;
     int page_ = 0;                          // 当前已加载到第几页（0 起）
+    bool twoPage_ = false;                  // 双页模式
+    void previewNext(int index);            // 取第 index 页并 emit previewReady（不改变当前页）
     std::vector<std::string> blockWords_;   // 屏蔽关键词（本地规则）
     QString currentAid_;
     int pageIndex_ = -1;
