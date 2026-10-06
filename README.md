@@ -227,3 +227,26 @@ rm ~/.local/share/jmnext4desktop/style.txt ~/.local/share/jmnext4desktop/dark.tx
 **容错约定**：这四个文件读不出来、内容为空或名字不认识时，一律**回落到默认值**
 （重新发现主机 / 没有进度 / `windowGlass` / 深色），不因为一个脏值让程序表现异常。
 图片缓存在另一个位置（由 `JmClient` 的缓存目录管理，存的是**未还原的原始字节**）。
+
+## 主题能做到什么、做不到什么（如实）
+
+界面支持四套具名风格（`windowGlass` / `translucent` / `flatBlur` / `miuix`，与主项目同名），
+配色与圆角**照抄主项目数值**（由 `tools/gen-theme-tokens.sh` 从主项目生成，生成结果提交在
+`src/qt/ThemeTokens.h`，本仓库构建时不依赖主项目）。命令行 `--theme <名字>`、`--light`，
+也可在界面左侧栏切换，两者都会被记住（见上一节的状态文件）。
+
+**但**这个技术栈（Qt Widgets + QSS）做不到主项目那五套风格的**全部**观感。下表是逐项的实话：
+
+| 主项目要素 | 本实现 |
+| --- | --- |
+| 配色 / 圆角尺度 / 描边 | 支持（来自生成表） |
+| 按下反馈 | 支持（QSS `:pressed` 改变背景与文字色；**没有**弹性缩放动效） |
+| 投影（多级 shadows） | **未做**（QSS 无 box-shadow，需逐控件 `QGraphicsDropShadowEffect`） |
+| 颗粒 / Acrylic noise | **做不到**（需自绘噪声纹理） |
+| 高斯模糊 / 背景透明（flatBlur、translucent 的关键效果） | **做不到**（Qt Widgets 没有 backdrop blur，需 QML 或自绘合成） |
+| 行高（lineHeightFactor） | **做不到**（QSS 无 line-height） |
+| 壁纸压暗 / 背光（wallpaperScrim、backdropGlow） | **做不到**（本实现也没有壁纸功能） |
+| Material You 3（第五套风格） | **未接入**：主项目里它直接用 M3 颜色角色、不从调色板挑，本表没有它的配色 |
+
+换句话说：目前是"**四套具名风格 + 能落地的子集**"，而不是忠实复刻五套表面工艺。
+不做成"五个只有名字不同、看起来一样的主题"是有意的 —— 主项目注释里就批评过那种做法。
