@@ -75,6 +75,7 @@ private:
     JmClient& client();          // 在工作线程内惰性创建
 
     std::unique_ptr<JmClient> client_;
+    std::vector<jmnext::core::ListEntry> currentEntries_;   // **过滤后**的当前列表（下标与界面显示项一致，供封面用）
     QStringList pendingIds_;     // loadList 之后记住 id，供 loadCovers / openChapter 用
     jmnext::core::ChapterImages chapter_;
     bool started_ = false;

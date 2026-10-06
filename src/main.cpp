@@ -147,6 +147,8 @@ int main(int argc, char** argv) {
         std::printf("搜索 %s：列表条数 %d\n", argv[2], n);
         for (int i = 0; i < n && i < 3; ++i)
             std::printf("  第 %d 项：%s\n", i + 1, win.listItemText(i).toUtf8().constData());
+        const int covers = win.requestCoversAndWait(3);
+        std::printf("搜索结果封面：成功 %d 张\n", covers);
         return 0;
     }
 
