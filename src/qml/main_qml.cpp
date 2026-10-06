@@ -4,6 +4,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QDir>
+#include <QVariantMap>
 #include <QTimer>
 #include <QDebug>
 #include <QQuickWindow>
@@ -26,6 +27,15 @@ int main(int argc, char** argv) {
                                              QString::fromLatin1(jmnext::core::APP_VERSION));
     engine.rootContext()->setContextProperty(QStringLiteral("themeName"),
                                              QString::fromLatin1(jmnext::qt::styleName(style)));
+    // --ui-style <名>：覆盖界面风格（无头验证与截图对比用）。
+    // **不能用 --style**：那是 Qt/QML 自己的保留参数（会被 QML 引擎吃掉，
+    // 表现为 module "miuix" is not installed）。必须在主题映射构建之前生效。
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--ui-style") {
+            engine.rootContext()->setContextProperty(QStringLiteral("themeName"),
+                                                     QString::fromUtf8(argv[i + 1]));
+        }
+    }
     engine.rootContext()->setContextProperty(QStringLiteral("darkTheme"), dark);
     auto* imageProvider = new jmnext::qt::JmImageProvider();
     engine.addImageProvider(QStringLiteral("jm"), imageProvider);   // QML 里用 image://jm/cover?<url>
@@ -44,6 +54,44 @@ int main(int argc, char** argv) {
                                              QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
     // 实测真实 URL 是 qrc:/JMNeXt/src/qml/Main.qml（见 build/.rcc/*_raw_qml_0.qrc）
+    // 主题 token 传入 QML（必须在 engine.load 之前，见下面的顺序说明）。
+    // 用 QVariantMap：QML 在 Component.onCompleted 里把它复制到根属性，之后绑定只读根属性 ——
+    // 因为编译后的 QML 绑定读不到 context property（会当 null），这个坑在 P2 阅读器里踩过一次。
+    {
+        using namespace jmnext::qt;
+        // 从已经设好的 context property 读回风格名：不依赖任何局部变量名，避免与
+        // Theme.h 的函数 styleName(Style) 撞名（撞了两次）。
+        const QString styleKey =
+            engine.rootContext()->contextProperty(QStringLiteral("themeName")).toString();
+        const auto pal = [styleKey, dark] {
+            if (styleKey == QLatin1String("translucent")) return tokens::translucent(dark);
+            if (styleKey == QLatin1String("flatBlur"))    return tokens::flatBlur(dark);
+            if (styleKey == QLatin1String("miuix"))       return tokens::miuix(dark);
+            return tokens::windowGlass(dark);
+        }();
+        const auto rad = (styleKey == QLatin1String("flatBlur")) ? tokens::flatBlurRadius()
+                       : (styleKey == QLatin1String("miuix"))    ? tokens::miuixRadius()
+                                                                  : tokens::windowGlassRadius();
+        QVariantMap m;
+        const auto put = [&m](const char* k, const char* v) { m.insert(QString::fromLatin1(k), QString::fromUtf8(v ? v : "")); };
+        put("accent", pal.accent);            put("accentHover", pal.accentHover);
+        put("accentActive", pal.accentActive); put("accentFg", pal.accentFg);
+        put("accentSoft", pal.accentSoft);     put("surfaceMica", pal.surfaceMica);
+        put("surface1", pal.surface1);         put("surface2", pal.surface2);
+        put("surface3", pal.surface3);         put("surfaceSunken", pal.surfaceSunken);
+        put("surfaceHover", pal.surfaceHover); put("surfaceActive", pal.surfaceActive);
+        put("stroke", pal.stroke);             put("strokeStrong", pal.strokeStrong);
+        put("strokeInner", pal.strokeInner);   put("text", pal.text);
+        put("textSecondary", pal.textSecondary); put("textTertiary", pal.textTertiary);
+        put("textOnAccent", pal.textOnAccent); put("error", pal.error);
+        m.insert(QStringLiteral("radiusXs"), rad.xs);
+        m.insert(QStringLiteral("radiusSm"), rad.sm);
+        m.insert(QStringLiteral("radiusMd"), rad.md);
+        m.insert(QStringLiteral("radiusLg"), rad.lg);
+        put("styleName", styleKey.toUtf8().constData());
+        engine.rootContext()->setContextProperty(QStringLiteral("themeInit"), m);
+    }
+
     // 先扫一遍参数、只设置 QML 启动时就要读到的属性。
     // 为什么必须在 load 之前：engine.load() 是同步的，QML 的 Component.onCompleted 在它内部执行，
     // 那时若拿不到 initialSearch，就会先把首页列表加载上来，把搜索结果覆盖掉（第一次验证就撞到了）。

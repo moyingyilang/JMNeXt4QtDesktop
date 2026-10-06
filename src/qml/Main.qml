@@ -10,7 +10,7 @@ ApplicationWindow {
     width: 1180; height: 780
     visible: true
     title: "JMNeXt4QtDesktop (QML) " + appVersion
-    color: darkTheme ? "#1e1f22" : "#f5f6f8"
+    color: root.cBg
 
     // 列表数据：标题、aid、封面 URL（URL 由后端在取封面时给出，见 coverUrlReady）
     ListModel { id: listModel }
@@ -65,7 +65,8 @@ ApplicationWindow {
                 delegate: Rectangle {
                     width: ListView.view.width
                     height: 74
-                    color: mouseArea.containsMouse ? "#26282c" : "transparent"
+                    color: mouseArea.containsMouse ? root.cSurface2 : "transparent"
+                    radius: root.radiusMd
 
                     RowLayout {
                         anchors.fill: parent
@@ -91,7 +92,7 @@ ApplicationWindow {
                         Text {
                             Layout.fillWidth: true
                             text: title
-                            color: "#e6e6e6"
+                            color: root.cText
                             font.pixelSize: 13
                             wrapMode: Text.WordWrap
                             maximumLineCount: 3
@@ -119,7 +120,7 @@ ApplicationWindow {
             visible: root.reading
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: darkTheme ? "#101113" : "#f0f1f3"
+            color: root.cBg
 
             ColumnLayout {
                 anchors.fill: parent
@@ -148,7 +149,7 @@ ApplicationWindow {
                     Text {
                         Layout.fillWidth: true
                         text: root.pageStatus
-                        color: "#b9bcc2"; font.pixelSize: 12
+                        color: root.cTextSecondary; font.pixelSize: 12
                         elide: Text.ElideRight
                     }
                 }
@@ -161,7 +162,7 @@ ApplicationWindow {
             id: rightPane
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: darkTheme ? "#141517" : "#ffffff"
+            color: root.cSurface1
 
             ColumnLayout {
                 anchors.fill: parent
@@ -237,6 +238,16 @@ ApplicationWindow {
     }
 
     // 状态行（后端 status 信号）
+    // 主题 token（由 C++ 在 load 之前以 QVariantMap 传入，onCompleted 里复制过来）
+    property string cBg: "#1e1f22"
+    property string cSurface1: "#26282c"
+    property string cSurface2: "#2f3237"
+    property string cText: "#e6e6e6"
+    property string cTextSecondary: "#b9bcc2"
+    property string cAccent: "#5b8def"
+    property string cStroke: "#3a3d43"
+    property int radiusMd: 6
+
     property string pageStatus: ""
     // 临时布局探针：启动 3 秒后打印各层宽度（不需要页面，避免网络波动影响测量）
     Timer {
@@ -315,7 +326,19 @@ ApplicationWindow {
     Component.onCompleted: {
         // --search 带词时不加载首页（否则会把搜索结果覆盖掉——第一次验证时就撞上了）
         if (typeof initialSearch === "undefined" || initialSearch.length === 0) {
-            console.log("QML 首页列表：开始加载")
+            if (typeof themeInit !== "undefined" && themeInit) {
+            root.cBg = themeInit.surfaceMica
+            root.cSurface1 = themeInit.surface1
+            root.cSurface2 = themeInit.surface2
+            root.cText = themeInit.text
+            root.cTextSecondary = themeInit.textSecondary
+            root.cAccent = themeInit.accent
+            root.cStroke = themeInit.stroke
+            root.radiusMd = themeInit.radiusMd
+        }
+        console.log("QML 主题：" + themeName + " 背景 " + root.cBg + " 强调 " + root.cAccent
+                    + " 文字 " + root.cText + " 圆角 " + root.radiusMd)
+        console.log("QML 首页列表：开始加载")
             backend.loadList()
         }
     }
