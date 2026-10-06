@@ -16,6 +16,7 @@ JmBackend::JmBackend(QObject* parent) : QObject(parent) {
     connect(worker_, &JmWorker::listReady, this, &JmBackend::listReady);
     connect(worker_, &JmWorker::listAppended, this, &JmBackend::listAppended);
     connect(worker_, &JmWorker::albumReady, this, &JmBackend::albumReady);
+    connect(worker_, &JmWorker::albumCoverReady, this, &JmBackend::albumCoverReady);
     connect(worker_, &JmWorker::chaptersReady, this, &JmBackend::chaptersReady);
     connect(worker_, &JmWorker::pageReady, this, &JmBackend::pageReady);
     connect(worker_, &JmWorker::coverReady, this, &JmBackend::coverReady);
@@ -42,6 +43,11 @@ void JmBackend::invoke(const char* method, Args&&... args) {
 void JmBackend::loadList() { invoke("loadList"); }
 void JmBackend::loadMore() { invoke("loadMore"); }
 void JmBackend::search(const QString& word, int page) { invoke("search", Q_ARG(QString, word), Q_ARG(int, page)); }
+void JmBackend::loadAlbum(const QString& aid) { invoke("loadAlbum", Q_ARG(QString, aid)); }
+void JmBackend::openChapterId(const QString& chapterId, int page) {
+    invoke("openChapterId", Q_ARG(QString, chapterId), Q_ARG(int, page));
+}
+
 void JmBackend::openChapter(const QString& aid, int page) { invoke("openChapter", Q_ARG(QString, aid), Q_ARG(int, page)); }
 void JmBackend::step(int delta) { invoke("step", Q_ARG(int, delta)); }
 void JmBackend::setBlockWords(const QStringList& words) { invoke("setBlockWords", Q_ARG(QStringList, words)); }

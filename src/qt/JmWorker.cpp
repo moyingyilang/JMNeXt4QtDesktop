@@ -91,6 +91,29 @@ void JmWorker::search(const QString& word, int page) {
     emit listReady(titles, ids);          // 界面收到后替换列表（与"加载首页列表"同一套机制）
 }
 
+void JmWorker::loadAlbum(const QString& aid) {
+    if (!ensureStarted()) return;
+    currentAid_ = aid;
+    emit status(QStringLiteral("正在加载作品详情…"));
+    auto al = client().album(aid.toStdString());
+    if (!al) {
+        emit failed(QStringLiteral("详情失败：%1").arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    QStringList tags;
+    for (const auto& t : al->tags) tags << QString::fromStdString(t);
+    emit albumReady(QString::fromStdString(al->name), QString::fromStdString(al->author), tags);
+    QStringList names, ids;
+    for (const auto& se : al->series) {
+        names << (se.name.empty() ? QStringLiteral("(未命名)") : QString::fromStdString(se.name));
+        ids << QString::fromStdString(se.id);
+    }
+    emit chaptersReady(names, ids);
+    emit status(QStringLiteral("详情：%1（标签 %2，章节 %3）")
+                    .arg(QString::fromStdString(al->name)).arg(tags.size()).arg(ids.size()));
+    fetchAlbumCover(aid);                 // 详情页的封面
+}
+
 void JmWorker::loadCovers(int n) {
     if (currentEntries_.empty()) { emit failed(QStringLiteral("还没有列表，无法取封面")); return; }
     // 用"当前列表"的条目（含搜索结果），而不是重新拉一次首页列表：

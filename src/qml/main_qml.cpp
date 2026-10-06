@@ -107,6 +107,14 @@ int main(int argc, char** argv) {
         });
         return app.exec();
     }
+    // --open <aid>：启动后直接打开某作品的详情页（无头验证用：点不了鼠标，但要能拍到详情屏）
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--open") {
+            const QString aid = QString::fromUtf8(argv[i + 1]);
+            QTimer::singleShot(500, &backend, [&backend, aid] { backend.loadAlbum(aid); });
+        }
+    }
+
     if (argc >= 3 && std::string(argv[1]) == "--shot") {
         const QString out = QString::fromUtf8(argv[2]);
         // 可选第三个参数：延时毫秒（默认 1500）。真实网络取列表/封面要 1.5~4 秒，
@@ -124,6 +132,7 @@ int main(int argc, char** argv) {
                 qInfo().noquote() << QStringLiteral("截图失败：拿不到窗口");
             }
             QGuiApplication::quit();
+
         });
     }
     return app.exec();

@@ -33,6 +33,8 @@ public slots:
     void fetchAlbumCover(const QString& id);
     /// 主机发现 + 拉首页列表：成功发 listReady（标题与 id 两个平行列表），失败发 failed
     void loadList();
+    /// 只取详情与章节列表（进详情页用；不拉任何页面图）
+    void loadAlbum(const QString& aid);
     /// 搜索（结果走 listReady，界面按"替换列表"处理；屏蔽规则同样生效）
     void search(const QString& word, int page = 1);
     /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数

@@ -89,22 +89,66 @@ ApplicationWindow {
             }
         }
 
-        // 右栏：阅读区（P2 后续屏会在这里做详情与阅读器）
+        // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: darkTheme ? "#141517" : "#ffffff"
 
             ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 10
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 8
+
                 Text {
-                    text: pageStatus.length > 0 ? pageStatus : "（尚未打开章节）"
-                    color: "#b9bcc2"; font.pixelSize: 14
+                    text: root.albumName.length > 0 ? root.albumName : "（从左侧选一个作品）"
+                    color: "#e6e6e6"; font.pixelSize: 18; wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
                 }
                 Text {
-                    text: "读到的页面会显示在这里（P2 后续）"
+                    text: root.albumAuthor
+                    color: "#b9bcc2"; font.pixelSize: 13
+                }
+                Text {
+                    text: root.albumTags
+                    color: "#9aa0a8"; font.pixelSize: 12; wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+                Text {
+                    text: "章节（" + chapterModel.count + "）"
+                    color: "#9aa0a8"; font.pixelSize: 12
+                    Layout.topMargin: 6
+                }
+                ListView {
+                    id: chapterView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: chapterModel
+                    spacing: 2
+                    delegate: Rectangle {
+                        width: ListView.view.width; height: 30
+                        color: chapterMouse.containsMouse ? "#26282c" : "transparent"
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left; anchors.leftMargin: 6
+                            text: (index + 1) + ". " + name
+                            color: "#e6e6e6"; font.pixelSize: 13
+                        }
+                        MouseArea {
+                            id: chapterMouse
+                            anchors.fill: parent; hoverEnabled: true
+                            onClicked: {
+                                console.log("QML 点击章节 index=" + index + " id=" + cid)
+                                backend.openChapterId(cid, 0)
+                            }
+                        }
+                    }
+                }
+                Text {
+                    text: pageStatus
                     color: "#8a8f98"; font.pixelSize: 12
+                    Layout.fillWidth: true; elide: Text.ElideRight
                 }
             }
         }
@@ -112,6 +156,10 @@ ApplicationWindow {
 
     // 状态行（后端 status 信号）
     property string pageStatus: ""
+    property string albumName: ""
+    property string albumAuthor: ""
+    property string albumTags: ""
+    ListModel { id: chapterModel }
 
     Connections {
         target: backend
@@ -129,6 +177,19 @@ ApplicationWindow {
                 listModel.setProperty(index, "coverUrl", url)
                 if (index === 0) console.log("QML 收到封面 URL：index 0")
             }
+        }
+
+        function onAlbumReady(name, author, tags) {
+            root.albumName = name; root.albumAuthor = author
+            root.albumTags = "标签：" + tags.join("、")
+            console.log("QML 收到详情：" + name + "（标签 " + tags.length + "）")
+        }
+
+        function onChaptersReady(names, ids) {
+            chapterModel.clear()
+            for (var i = 0; i < names.length; ++i)
+                chapterModel.append({ "name": names[i], "cid": ids[i] })
+            console.log("QML 章节列表已填充：" + chapterModel.count + " 条")
         }
 
         function onStatus(text) { root.pageStatus = text }
