@@ -9,6 +9,7 @@
 
 #include "core/Version.h"
 #include "qt/Theme.h"
+#include "qt/StartupInfo.h"
 
 int main(int argc, char** argv) {
     QGuiApplication app(argc, argv);
@@ -32,6 +33,10 @@ int main(int argc, char** argv) {
         std::printf("QML 加载失败\n");
         return 1;
     }
+        bool verbose = false;
+        for (int i = 1; i < argc; ++i) if (std::string(argv[i]) == "--verbose") verbose = true;
+        app.setProperty("jmVerbose", verbose);
+        qInfo().noquote() << jmnext::qt::startupEnvSummary();
     qInfo().noquote() << QStringLiteral("QML 前端已起：版本 %1，风格 %2，深浅 %3，后端 %4")
                              .arg(QString::fromLatin1(jmnext::core::APP_VERSION),
                                   QString::fromLatin1(jmnext::qt::styleName(style)),

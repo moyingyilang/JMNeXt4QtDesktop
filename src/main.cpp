@@ -6,6 +6,7 @@
 // 自检存在的理由：容器里没有显示，界面层的代码否则无法被验证。走的是与窗口完全相同的代码路径。
 #include "qt/JmClient.h"
 #include "qt/Theme.h"
+#include "qt/StartupInfo.h"
 #include "qt/MainWindow.h"
 
 #include <QApplication>
@@ -28,6 +29,10 @@ int main(int argc, char** argv) {
         app.setProperty("jmDark", !light);        // 供界面切换风格时判断深/浅
         jmnext::qt::saveStyle(style);            // 记住选择（下次启动沿用）
         jmnext::qt::saveDark(!light);
+        bool verbose = false;
+        for (int i = 1; i < argc; ++i) if (std::string(argv[i]) == "--verbose") verbose = true;
+        app.setProperty("jmVerbose", verbose);
+        qInfo().noquote() << jmnext::qt::startupEnvSummary();
         std::printf("主题：%s（%s）\n", jmnext::qt::styleName(style), light ? "浅色" : "深色");
         std::printf("  实际配色：%s\n", jmnext::qt::styleSummary(style, !light).toUtf8().constData());
     }

@@ -465,6 +465,13 @@ void MainWindow::unscrambleNow() {
 }
 
 void MainWindow::log(const QString& line) {
+    // 精简冗余日志（issue #9）：预取属于调试信息，默认不刷屏；--verbose 或 JMNEXT_VERBOSE=1 才显示。
+    // 说明：这是一个**按内容前缀**的过滤，不是完整的日志级别系统 —— 如实标注。
+    {
+        static const bool verbose = qApp && (qApp->property("jmVerbose").toBool()
+                                             || qEnvironmentVariableIsSet("JMNEXT_VERBOSE"));
+        if (!verbose && line.startsWith(QStringLiteral("已预取"))) return;
+    }
     // 加一个自启动以来的毫秒时间戳：这样日志能直接看出"加载一页要多久""缓存命中快多少"，
     // 而不只是"感觉卡/不卡"。
     static const qint64 startMs = QDateTime::currentMSecsSinceEpoch();
