@@ -16,12 +16,16 @@ ApplicationWindow {
     ListModel { id: listModel }
 
     RowLayout {
+        id: rootLayout
         anchors.fill: parent
         spacing: 0
 
         // 左栏：作品列表
         ColumnLayout {
+            id: leftColumn
             Layout.preferredWidth: 380
+            Layout.minimumWidth: 380
+            Layout.maximumWidth: 380
             Layout.fillHeight: true
             spacing: 6
 
@@ -135,6 +139,7 @@ ApplicationWindow {
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
         Rectangle {
             visible: !root.reading
+            id: rightPane
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: darkTheme ? "#141517" : "#ffffff"
@@ -214,6 +219,15 @@ ApplicationWindow {
 
     // 状态行（后端 status 信号）
     property string pageStatus: ""
+    // 临时布局探针：启动 3 秒后打印各层宽度（不需要页面，避免网络波动影响测量）
+    Timer {
+        interval: 3000; running: true; repeat: false
+        onTriggered: console.log("布局探针：窗口 " + Math.round(root.width) + "x" + Math.round(root.height)
+                                 + "，RowLayout " + Math.round(rootLayout.width) + "x" + Math.round(rootLayout.height)
+                                 + "，左栏 " + Math.round(leftColumn.width)
+                                 + "，右栏 " + Math.round(rightPane.width) + "x" + Math.round(rightPane.height)
+                                 + "（右栏可见=" + rightPane.visible + "）")
+    }
     // 阅读器状态：**不在绑定里直接读 context property**（编译后的 QML 绑定看不到它们，会当 null），
     // 改由 Connections 的 onPageChanged 计算后赋给根属性，绑定只读根属性。
     property bool reading: false
