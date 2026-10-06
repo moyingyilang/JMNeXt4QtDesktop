@@ -7,6 +7,9 @@
 #pragma once
 #include <QString>
 #include "qt/ThemeTokens.h"
+#include <QDir>
+#include <QFile>
+#include <QStandardPaths>
 
 namespace jmnext::qt {
 
@@ -172,4 +175,25 @@ inline QString styleSummary(Style style, bool dark) {
 inline QString themeQss(Style style, bool dark) {
     return (dark ? darkThemeQss() : lightThemeQss()) + styleOverrideQss(style, dark);
 }
+// ---------------------------------------------------------------------------
+// 风格偏好的持久化：与 host.txt / progress.txt 一样放 AppDataLocation，纯文本一行。
+// 读不出来或名字不认识就当没保存（回落 windowGlass）—— 不因为一个脏值让程序表现异常。
+// ---------------------------------------------------------------------------
+inline QString stylePrefPath() {
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir().mkpath(dir);
+    return dir + "/style.txt";
+}
+
+inline Style loadSavedStyle() {
+    QFile f(stylePrefPath());
+    if (!f.open(QIODevice::ReadOnly)) return Style::WindowGlass;
+    return styleFromName(QString::fromUtf8(f.readAll()).trimmed());
+}
+
+inline void saveStyle(Style s) {
+    QFile f(stylePrefPath());
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) f.write(styleName(s));
+}
+
 }  // namespace jmnext::qt

@@ -261,13 +261,15 @@ void MainWindow::setupUi() {
         styleBox_ = new QComboBox();
         styleBox_->addItems({QStringLiteral("windowGlass"), QStringLiteral("translucent"),
                              QStringLiteral("flatBlur"), QStringLiteral("miuix")});
-        styleBox_->setCurrentIndex(0);            // 默认 windowGlass（与主项目一致）
+        styleBox_->setCurrentIndex(styleBox_->findText(QString::fromLatin1(styleName(loadSavedStyle()))));
+        if (styleBox_->currentIndex() < 0) styleBox_->setCurrentIndex(0);   // 默认 windowGlass
         styleRow->addWidget(styleBox_, 1);
         leftCol->addLayout(styleRow);
         connect(styleBox_, &QComboBox::currentTextChanged, this, [this](const QString& name) {
             if (!qApp) return;
             const bool dark = qApp->property("jmDark").toBool();
             qApp->setStyleSheet(themeQss(styleFromName(name), dark));
+            saveStyle(styleFromName(name));   // 记住选择
             log(QStringLiteral("已切换风格：%1").arg(name));
         });
     }

@@ -20,12 +20,13 @@ int main(int argc, char** argv) {
     // 界面主题：默认深色；--light 用浅色。先把"Qt 系统默认观感"换掉（第 (a) 步）
     {
         bool light = false;
-        jmnext::qt::Style style = jmnext::qt::Style::WindowGlass;   // 默认风格与主项目一致
+        jmnext::qt::Style style = jmnext::qt::loadSavedStyle();   // 沿用上次选择；没有则 windowGlass
         for (int i = 1; i + 1 < argc; ++i)
             if (std::string(argv[i]) == "--theme") style = jmnext::qt::styleFromName(QString::fromUtf8(argv[i + 1]));
         for (int i = 1; i < argc; ++i) if (std::string(argv[i]) == "--light") light = true;
         app.setStyleSheet(jmnext::qt::themeQss(style, !light));
         app.setProperty("jmDark", !light);        // 供界面切换风格时判断深/浅
+        jmnext::qt::saveStyle(style);            // 记住选择（下次启动沿用）
         std::printf("主题：%s（%s）\n", jmnext::qt::styleName(style), light ? "浅色" : "深色");
         std::printf("  实际配色：%s\n", jmnext::qt::styleSummary(style, !light).toUtf8().constData());
     }
