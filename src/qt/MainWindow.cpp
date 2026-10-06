@@ -230,15 +230,18 @@ void MainWindow::setupUi() {
     rightCol->addLayout(form);
 
     auto* buttons = new QHBoxLayout();
+    auto* buttons2 = new QHBoxLayout();      // 第二行按钮（避开一行塞 6 个）
+    buttons2->setSpacing(6);
     buttons->setSpacing(6);                    // 8 个按钮挤在一行时更要留缝
     auto* openBtn = new QPushButton(QStringLiteral("打开图片…"));
     auto* zoomBtn = new QPushButton(QStringLiteral("适应窗口 / 100%"));
     buttons->addWidget(zoomBtn);
     auto* unscrambleBtn = new QPushButton(QStringLiteral("还原"));
-    buttons->addWidget(openBtn);
-    buttons->addWidget(unscrambleBtn);
+    buttons2->addWidget(openBtn);
+    buttons2->addWidget(unscrambleBtn);
     rightCol->addLayout(buttons);
 
+    rightCol->addLayout(buttons2);            // 第二行：本地图片工具（与阅读控制分开）
     log(QStringLiteral("快捷键：← / PageUp 上一页，→ / PageDown / 空格 / 滚轮 下一页；章节用左侧列表点选切换"));
     logView_ = new QPlainTextEdit();
     logView_->setReadOnly(true);
