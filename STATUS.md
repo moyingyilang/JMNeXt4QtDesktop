@@ -192,3 +192,45 @@ ctest --test-dir build                      # 期望 15/15
 - **`git add -A`**（三次）：误收截图、垃圾文件 `=`、临时脚本。
 
 这些都已写进各自的提交信息；`STATUS.md` 末尾的"给接手者的提醒"里保留了可操作的规则。
+
+## QML 前端推进状态（本轮更新）
+
+用户已决定：**一对一复刻 Kotlin(Compose) 版界面**，UI 层走 **Qt Quick / QML**；
+第一步范围 = **核心阅读路径**（首页列表 / 详情 / 阅读器 / 章节选择 / 搜索）。
+后来又追加为**混合方案**：Widgets 主体 + 局部嵌 QML（弹簧按压、胶囊吸附、列表条目位移这四项只有 QML 原生）。
+
+| 阶段 | 状态 | 证据 |
+| --- | --- | --- |
+| P0 Qt Quick 可用 | **完成** | 容器内装齐 `qt6-declarative-dev` 与一批 `qml6-module-*`；`jmnext4qml` 能起窗口并截图（900x600） |
+| 共用层抽取 | **完成** | 新增静态库 `jmnext_qtlayer`（JmClient/QtHttpClient/ImageCache/ImageCodec/JmWorker），widget 与 QML 都链它 |
+| P1b 后端桥 | **完成** | `src/qml/JmBackend.{h,cpp}` 把共用 `JmWorker` 放工作线程、用 `Q_INVOKABLE` 暴露给 QML；`--selftest` 实测拿到**列表 80 条**与**真实一页图 852x1280** |
+| P1c 图片提供器 | **未开始（有坑，见下）** | —— |
+| P2 五屏 1:1 | 未开始 | 已有 `docs/ui-inventory/01..04` 四份清点文档作依据 |
+| P3 主题与效果 | 未开始 | 配色与圆角已由 `tools/gen-theme-tokens.sh` 生成；Qt 6.4 无 `MultiEffect`，模糊/颗粒需 compat 或自写 shader |
+
+### P1c 的已知坑（下次动手前必读）
+
+`QQuickImageProvider::requestImage` 在 **Qt Quick 渲染线程**里被调用，因此：
+
+1. **不能**直接用 widget 侧那个 `JmClient` 实例：它的 `QNetworkAccessManager` 有线程归属（必须在创建它的线程使用）；
+2. `ImageCache` 的内存 LRU **不是线程安全的**；
+3. 可行方向（任选其一，动手前先确认 API）：
+   - 提供器只做**磁盘缓存读取**（自己的 `ImageCache` 实例或直接读缓存目录），网络一律由后端在 worker 线程完成；
+   - 或让后端在取到图后**主动推给 QML**（不走 ImageProvider），QML 侧用 `Image` 的 `source` 指向一个本地临时文件；
+4. 无论选哪种，都要有一句"缓存未命中时返回占位图而不是空图"的降级逻辑，否则 QML 侧会显示空白且无提示。
+
+### 当前可核对的自检命令（都在容器内）
+
+```sh
+# widget 版真实数据
+QT_QPA_PLATFORM=offscreen ./build/jmnext4desktop --list          # 期望：列表条数 80 -> 加载更多 160
+QT_QPA_PLATFORM=offscreen ./build/jmnext4desktop --chapters 209827   # 期望：章节列表项数 159
+# QML 前端：环境摘要 + 后端真实链路 + 截图
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software ./build/jmnext4qml --selftest
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software ./build/jmnext4qml --shot /tmp/qml.png
+# 测试
+ctest --test-dir build      # 期望 16/16
+```
+
+注意：**模式参数必须是第一个参数**（`--selftest` / `--shot <png>` / `--list` …）；
+`--theme` / `--light` / `--verbose` 可以放后面，放前面会被当成"无模式"而启动 GUI 常驻。
