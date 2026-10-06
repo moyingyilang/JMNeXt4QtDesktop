@@ -594,17 +594,31 @@ namespace jmnext::qt {
 int MainWindow::requestChapterPickAndWait(const QString& aid, int index, int timeoutMs) {
     if (!worker_) return -1;
     int chapterCount = 0, pages = 0;
+    bool chaptersArrived = false;          // 区分"还没收到章节表"与"收到了但表是空的"
     QTimer timer;
     timer.setSingleShot(true);
     timer.start(timeoutMs);
     auto c1 = connect(worker_, &JmWorker::chaptersReady, this,
-                      [&chapterCount](const QStringList& names, const QStringList&) { chapterCount = names.size(); });
+                      [&chapterCount, &chaptersArrived](const QStringList& names, const QStringList&) {
+                          chapterCount = names.size();
+                          chaptersArrived = true;
+                      });
     auto c2 = connect(worker_, &JmWorker::pageReady, this,
                       [&pages](const QImage&, const QString&) { ++pages; });
     worker_->openChapter(aid, 0);
-    while (chapterCount == 0 && timer.remainingTime() > 0)
+    // 等"信号到达"，而不是等"章节数大于 0"：单本作品的 series 本来就是空的，
+    // 旧写法会把这种正常情况一路等到超时、报成失败。
+    while (!chaptersArrived && timer.remainingTime() > 0)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    if (chapterCount == 0) { disconnect(c1); disconnect(c2); return -1; }
+    if (!chaptersArrived) { disconnect(c1); disconnect(c2); return -1; }
+    if (chapterCount == 0) {
+        // 单本：章节表为空，但第一话可以直接用 aid 读 —— 只要页面出来了就算通过
+        while (pages == 0 && timer.remainingTime() > 0)
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        disconnect(c1);
+        disconnect(c2);
+        return pages > 0 ? 0 : -1;
+    }
     if (index >= 0 && index < chapterCount) {
         const int before = pages;
         if (!chapterList_ || !chapterList_->item(index)) return -1;   // 列表未就绪：明确失败，别解引用空指针
