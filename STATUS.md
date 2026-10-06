@@ -234,3 +234,30 @@ ctest --test-dir build      # 期望 16/16
 
 注意：**模式参数必须是第一个参数**（`--selftest` / `--shot <png>` / `--list` …）；
 `--theme` / `--light` / `--verbose` 可以放后面，放前面会被当成"无模式"而启动 GUI 常驻。
+
+## P1c 设计已定案（下次一次性实现，别再重新推）
+
+**目标**：让 QML 能显示封面与阅读页。**关键约束**：`ImageCache` 的磁盘缓存键就是**完整 URL**
+（`<imageBase>/media/albums/<id>_3x4.jpg?v=<updateAt>`，见 `core/JmUrls.cpp:19-31`），
+所以提供器必须算出与 worker **完全一致**的 URL 才能命中同一份磁盘缓存。
+
+由此得到三条硬结论：
+
+1. **不能**只加一个 `QQuickImageProvider` 就完事 —— `?v=` 来自列表条目的 `updateAt`，
+   而当前后端只把 `listReady(titles, ids)` 转出去（**没有 updateAt**）。必须先让后端把
+   `updateAt`（或直接给出**完整封面 URL**）暴露给 QML；
+2. **不能**把 `?v=` 从缓存键里去掉来"省事"：那个版本号就是用来让封面在服务端更新后失效的，
+   去掉会让用户长期看到旧封面（**这是行为回退，不是优化**）；
+3. 提供器在 **Qt Quick 渲染线程**被调用，因此**不能**用 widget 侧那个 `JmClient`
+   （`QNetworkAccessManager` 有线程归属），`ImageCache` 的内存 LRU 也不是线程安全的。
+   安全做法：提供器**只用磁盘缓存**（自己的 `ImageCache` 实例，只调 `hasRaw/raw/putRaw`），
+   解码用 `ImageCodec`；缓存未命中时返回**占位图**（纯色），不要返回空图。
+
+**建议的 id 形式**（把 URL 需要的信息全带上，提供器自身无状态）：
+`cover/<aid>/<updateAt>`（`updateAt` 可为空，表示不带 `?v=`）
+页图另议：页 URL 来自章节数据，若也要走提供器，则 id 直接带**完整 URL**更省事。
+
+**验证方式（下次照做）**：
+1. 后端自检里先让 worker 取一张封面（`loadCovers(1)` 会触发 `coverReady`）；
+2. 再用**同一个 URL** 向提供器请求一次，打印命中与尺寸 —— 命中即证明"worker 写盘、提供器读盘"跨实例生效；
+3. 另请求一个不存在的 id，确认返回的是**占位图**（不是空图、不崩溃）。
