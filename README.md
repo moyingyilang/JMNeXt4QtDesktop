@@ -250,3 +250,10 @@ rm ~/.local/share/jmnext4desktop/style.txt ~/.local/share/jmnext4desktop/dark.tx
 
 换句话说：目前是"**四套具名风格 + 能落地的子集**"，而不是忠实复刻五套表面工艺。
 不做成"五个只有名字不同、看起来一样的主题"是有意的 —— 主项目注释里就批评过那种做法。
+
+## 许可证
+
+本项目以 **GNU Affero General Public License v3.0（AGPL-3.0）** 发布，全文见 [LICENSE](LICENSE)。
+
+与主项目 JMNeXt 使用同一许可证：AGPL 要求派生作品同样以 AGPL 开放，
+因此任何基于本项目的分发（包括以网络服务形式提供）都必须附带完整源码。
