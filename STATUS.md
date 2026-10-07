@@ -8,7 +8,7 @@
 ```sh
 apt-get install -y cmake g++ qt6-base-dev qt6-image-formats-plugins   # 后者不能省（真实图是 WebP）
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j2
-ctest --test-dir build                      # 期望 15/15
+ctest --test-dir build                      # 期望 16/16
 ./build/jmnext4net discover                 # 真实网络：主机发现（期望打印一个 https:// 主机）
 ./build/jmnext4desktop --list               # 界面自检：期望"列表已加载：80 条"+"加载更多之后：160 条"
 ./build/jmnext4desktop --chapters 209827    # 期望 章节列表项数：159、封面 400x533、恢复/显示某页
@@ -47,8 +47,10 @@ ctest --test-dir build                      # 期望 15/15
 
 ## 已知问题 / 限制
 
-- **历史提交里含敏感截图**（`.work-shots/C-真实阅读页.png` 等，由 `19e3939`/`cb24755` 引入）。
-  最新提交已移除，但历史里仍在；彻底清除需重写历史 + 强推（未做，等用户决定）；
+- ~~**历史提交里含敏感截图**~~：**这条记录不成立，已作废（2026-10-07 复核）**。
+  全历史对象里没有任何 png/jpg/webp（`git rev-list --all --objects` 过滤图片扩展名为 0 条），
+  也不存在 `19e3939` / `cb24755` 这两个提交号；`.work-shots/` 已被 `.gitignore` 排除且从未被跟踪。
+  原记录写错了，保留在此以免后来者再去"清历史"；
 - **截图模式是定时拍照**（`--screenshot`，带子参数等 45 秒），对阅读页存在 race：
   空窗口约 37 KB、真实阅读页 135 KB 以上，**拿到小文件就重拍**；
 - **在线更新检查未验证**：开发环境到 `api.github.com` 的 HTTPS 不通（`HTTP 0`）；
@@ -204,9 +206,11 @@ ctest --test-dir build                      # 期望 15/15
 | P0 Qt Quick 可用 | **完成** | 容器内装齐 `qt6-declarative-dev` 与一批 `qml6-module-*`；`jmnext4qml` 能起窗口并截图（900x600） |
 | 共用层抽取 | **完成** | 新增静态库 `jmnext_qtlayer`（JmClient/QtHttpClient/ImageCache/ImageCodec/JmWorker），widget 与 QML 都链它 |
 | P1b 后端桥 | **完成** | `src/qml/JmBackend.{h,cpp}` 把共用 `JmWorker` 放工作线程、用 `Q_INVOKABLE` 暴露给 QML；`--selftest` 实测拿到**列表 80 条**与**真实一页图 852x1280** |
-| P1c 图片提供器 | **未开始（有坑，见下）** | —— |
-| P2 五屏 1:1 | 未开始 | 已有 `docs/ui-inventory/01..04` 四份清点文档作依据 |
-| P3 主题与效果 | 未开始 | 配色与圆角已由 `tools/gen-theme-tokens.sh` 生成；Qt 6.4 无 `MultiEffect`，模糊/颗粒需 compat 或自写 shader |
+| P1c 图片提供器 | **完成**（下表"已知坑"仍适用） | 提交 `cd18c89`：`src/qml/JmImageProvider.*` 让 QML 显示封面，跨实例命中磁盘缓存已验证 |
+| P2 五屏 1:1 | **进行中：四屏已落地**（首页列表、详情、阅读器、搜索） | 提交 `0642968` / `29d2e92` / `6cf7850` / `86c5421`；依据是 `docs/ui-inventory/01..04` |
+| P3 主题与效果 | **进行中** | 提交 `67aa3d3` 把主题 token 接进 QML（四套风格可切换并各自生效）、`6d614a1` 加列表悬停过渡与按压弹性；Qt 6.4 无 `MultiEffect`，模糊/颗粒需 compat 或自写 shader |
+
+> 上表原记「P1c 未开始、P2/P3 未开始」，与提交 `cd18c89` 起的实际进度不符，2026-10-07 核对后按提交修正。
 
 ### P1c 的已知坑（下次动手前必读）
 
@@ -308,8 +312,9 @@ QML 阅读页已显示：源 852x1280，实际绘制 0x0，阅读器可见=true 
 - 再考虑用 `StackLayout`（显式 `currentIndex`，不依赖可见性）或给右栏显式 `Layout.preferredWidth`
   来绕开这一层。
 
-**当前状态**：本轮改动已全部撤回（未提交），仓库停在 `d5005aa`（阅读器实现 + 条件等待截图）。
-即"阅读器代码在、但页面显示不出来"。
+**当时状态（历史记录，问题已在下一节修好）**：那一轮改动全部撤回（未提交），仓库停在 `d5005aa`
+（阅读器实现 + 条件等待截图），即"阅读器代码在、但页面显示不出来"。
+当前 HEAD 已远在该提交之后，本节仅作排查过程留档。
 
 ### P2 阅读器布局问题：**已定位并修好**（2026-10-06）
 
