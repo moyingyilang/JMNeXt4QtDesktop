@@ -25,6 +25,9 @@ Rectangle {
     signal closeRequested()
     signal tagClicked(string tag)
 
+    property string activeTag: ""
+    property int resultCount: 0
+
     color: category.surfaceColor
     border.color: category.strokeColor
     border.width: 1
@@ -70,7 +73,10 @@ Rectangle {
                     anchors.fill: parent; hoverEnabled: true
                     onClicked: {
                         console.log("QML 点击分类标签：" + name)
+                        category.activeTag = name
                         category.tagClicked(name)
+                        // 真的取筛选结果（数据链路已由 --category-filter 自检验证）
+                        backend.categoryFilter(name, 1)
                     }
                 }
             }
@@ -79,6 +85,8 @@ Rectangle {
         Text {
             id: hint
             text: "共 " + tagModel.count + " 个标签"
+                  + (category.activeTag.length > 0
+                     ? "；分类「" + category.activeTag + "」：" + category.resultCount + " 条" : "")
             color: category.bodyColor; font.pixelSize: 12
             Layout.fillWidth: true
         }
@@ -91,6 +99,13 @@ Rectangle {
 
     Connections {
         target: backend
+
+        // 分类筛选结果（第 52 轮接通；界面列表下一步再画，先保证数据到位且有日志证据）
+        function onCategoryReady(titles, ids) {
+            category.resultCount = titles.length
+            console.log("QML 分类筛选已收到：" + titles.length + " 条（标签：" + category.activeTag + "）"
+                        + (titles.length > 0 ? "，首条：" + titles[0].split("\n")[0] : ""))
+        }
 
         function onHotTagsReady(tags) {
             tagModel.clear()

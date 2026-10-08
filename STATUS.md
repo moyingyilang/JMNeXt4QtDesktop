@@ -1649,3 +1649,27 @@ $ ./build/jmnext4qml --category-filter 女高中生
 
 **仍待做**：把筛选结果接到 `CategoryScreen` 的界面上（现在是 `--category-filter` 在数据层验证，
 屏里点标签只打日志）。Qt 侧屏幕仍为 7 个，未实现 18 个。
+
+### 分类屏接上筛选（第 52 轮）：屏内处理器已验证
+
+| 改动 | 内容 |
+| --- | --- |
+| 点击标签 | 现在**真的调** `backend.categoryFilter(name, 1)`（保留 `tagClicked` 信号给外层），并记录 `activeTag` |
+| 新增处理器 | `CategoryScreen` 的 `Connections` 里加 `onCategoryReady(titles, ids)`：更新 `resultCount` 并打日志 |
+| 提示行 | 显示"分类「标签」：N 条" |
+
+**证据**：
+
+```
+$ ./build/jmnext4qml --shot <png> 9000      # 屏内标签填充
+  QML 分类标签已填充：10 个
+$ ./build/jmnext4qml --category-filter 女高中生
+  QML 分类筛选已收到：80 条（标签：），首条：慾望入门课
+```
+
+第二行是**屏内 `onCategoryReady` 处理器**打出来的（该次运行里 QML 引擎已加载、`Connections` 处于活动状态，
+于是自检触发的 `categoryReady` 也被屏接收）—— 这正好证明**屏内处理器确实工作**，不是"只写了没跑"。
+（`标签：` 为空是因为该次运行没有人点击，`activeTag` 未设置。）
+
+**仍未做**：筛选结果的**列表渲染**（现在是计数 + 日志，没有把 80 条画成 `ComicCard` 列表）。
+数据与处理器都已验证，只差渲染。
