@@ -16,6 +16,7 @@ Rectangle {
     id: detail
 
     property string albumAid: ""
+    // 以下三项由 onAlbumReady 填充（第 34 轮下沉）：原先在 Main.qml 再注入，属于"两个地方都以为在管"
     property string albumName: ""
     property string albumAuthor: ""
     property string albumTags: ""
@@ -105,6 +106,19 @@ Rectangle {
             text: detail.pageStatus
             color: detail.statusColor; font.pixelSize: 12
             Layout.fillWidth: true; elide: Text.ElideRight
+        }
+    }
+
+    // 详情文本的后端回调在此收口（第 34 轮下沉）。
+    // albumAid 仍由外层传入 —— 它来自"点击卡片"这一路由动作，不属于本屏逻辑。
+    Connections {
+        target: backend
+
+        function onAlbumReady(name, author, tags) {
+            detail.albumName = name
+            detail.albumAuthor = author
+            detail.albumTags = "标签：" + tags.join("、")
+            console.log("QML 收到详情：" + name + "（标签 " + tags.length + "）")
         }
     }
 }

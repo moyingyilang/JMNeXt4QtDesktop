@@ -78,9 +78,6 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             albumAid: root.albumAid
-            albumName: root.albumName
-            albumAuthor: root.albumAuthor
-            albumTags: root.albumTags
             pageStatus: root.pageStatus
             chapterModel: chapterModel
             surfaceColor: root.cSurface1
@@ -123,20 +120,11 @@ ApplicationWindow {
                                 + "，绘制 " + Math.round(pageImage.paintedWidth) + "x" + Math.round(pageImage.paintedHeight))
     }
     property string pageUrl: ""
-    property string albumName: ""
-    property string albumAuthor: ""
-    property string albumTags: ""
     property string albumAid: ""
     ListModel { id: chapterModel }
 
     Connections {
         target: backend
-
-        function onAlbumReady(name, author, tags) {
-            root.albumName = name; root.albumAuthor = author
-            root.albumTags = "标签：" + tags.join("、")
-            console.log("QML 收到详情：" + name + "（标签 " + tags.length + "）")
-        }
 
         function onChaptersReady(names, ids) {
             chapterModel.clear()

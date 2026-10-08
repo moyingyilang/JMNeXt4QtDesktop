@@ -1242,3 +1242,31 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **下一层**：`onAlbumReady` / `onChaptersReady` / `onCurrentAidChanged` → `DetailScreen`；
 `onPageReady` / `onPageChanged` → `ReaderScreen`；`onStatus` / `onFailed` 留在 `Main`（跨屏状态栏）。
+
+### `Connections` 下沉第三个（第 34 轮）：`onAlbumReady` 归 `DetailScreen`
+
+| 项 | 结果 |
+| --- | --- |
+| `Main.qml` | 删除 `onAlbumReady`；同时删掉 `albumName`/`albumAuthor`/`albumTags` 三个属性与给 `DetailScreen` 的绑定（残留 0） |
+| `DetailScreen.qml` | 新增 `Connections { target: backend; function onAlbumReady(...) }`，三个字段改为组件自有 |
+| 列表路径验证 | `列表已填充：80 条` + 截图 1180x780 |
+| **详情路径验证** | `--shot <png> 12000 --open 209827` → **`详情封面已加载：400x533`** + **`QML 收到详情：魔都精兵的奴隶…（标签 5）`** + 截图 1180x780 |
+| 交互自检 / 单测 | `listAppended 追加 80 条，增长：通过` / `ctest` 16/16 |
+
+**本轮新发现一条验证路径**：`--shot <png> <ms> --open <aid>` 能直接开详情屏并抓图，
+于是"详情屏的回调是否真的工作"可以带**真实数据**验证（上表第三行就是证据），
+不必只靠"能加载"这种弱证据。
+
+### 本轮同时否掉了三个不该下沉的回调（先量后改）
+
+| 回调 | 为什么不沉 |
+| --- | --- |
+| `onCurrentAidChanged` | `albumAid` 是**卡片点击**这一路由动作设置的（`HomeScreen.onCardClicked` → `Main` → `DetailScreen`），属于外层状态；下沉会导致点击路径无法传达 aid |
+| `onStatus` / `onFailed` / `onPageReady` | 三者都写同一个 `pageStatus`，是**跨屏状态栏**，不属于任何单屏 |
+| `onPageChanged` | 它设置 `reading`，决定**显示哪个视图**，属于路由 |
+
+**结论**：`Connections` 下沉不是"全搬走"，而是**按归属搬**。`Main.qml` 最终应剩：
+路由（`reading`）、外层状态（`albumAid`、`pageUrl`）、跨屏状态栏（`pageStatus`）、源切换。
+
+**下一层**：`onChaptersReady` → `DetailScreen`（需把 `chapterModel` 一起搬进去）；
+再之后 `onPageReady`/`onPageChanged` 视路由设计而定。
