@@ -1137,3 +1137,26 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 **下一步**：把 `Main.qml` 的 `Connections`（`onListReady` / `onListAppended` / `onCoverUrlReady` /
 `onPageReady` / `onStatus` / `onFailed` / `onCurrentAidChanged`）按归属下沉到各屏 ——
 否则 `Main.qml` 永远是"薄不了"的中枢。这是本目标后半段的重点。
+
+### `Connections` 下沉的设计（第 29 轮定稿，下一步照此执行）
+
+`Main.qml` 现在仍持有**全部**后端回调。不把它们按归属下沉，`Main.qml` 就永远是"什么都管"的中枢，
+前四轮抽出去的屏也只是"渲染搬走了、逻辑没走"。本轮把归属与状态改动定清楚：
+
+| 回调 / 状态 | 应归属 | 下沉要点 |
+| --- | --- | --- |
+| `onListReady`（填充列表 + `loadCovers(20)`） | **HomeScreen** | 组件内 `Connections { target: backend }`；`listModel` 已是组件属性，可直接 append |
+| `onListAppended`（追加 + 复位 loading + 请求封面） | **HomeScreen** | 同上 |
+| `onCoverUrlReady(index, url)`（回填封面） | **HomeScreen** | 同上（纯模型改动） |
+| `listLoading` / `listExhausted` / `lastListCount` | **HomeScreen 内部状态** | 现在是 `Main` 的属性、再注入组件 —— 下沉后改由组件自己维护（`LoadMoreFooter` 本来就在组件里，不需要跨层） |
+| `onPageReady(image, statusText)` | **ReaderScreen** | 组件内维护 `pageUrl` 与状态行；`Main` 只需传入"是否在阅读" |
+| `onCurrentAidChanged` | **DetailScreen** | 组件接收 `albumAid`；`Main` 不再中转 |
+| `onStatus(text)` / `onFailed(text)` | **各屏自取** | 这两条是全局提示。**建议保留在 `Main`**（做成一条状态栏），因为它跨屏；若将来 Qt 侧也有 `FloatingBottomBar` 之类的全局区，就放那里 |
+| `onListReady` 的**搜索**语义（替换列表） | **SearchScreen** | 注意：搜索结果走的是 `listReady`（**替换**），首页走 `listReady`（首屏）+ `listAppended`（追加）—— 下沉时要按"当前是哪一屏发起"分派，不能只看信号名 |
+
+**状态归属的这条最关键**：`listLoading` / `listExhausted` / `lastListCount` 下沉后，
+`Main.qml` 里对它们的引用（给 `HomeScreen` 的属性绑定）要**一并删掉**，否则会出现"两个地方都以为自己在管这个状态"。
+这也是前四轮抽取时我特意**没有**动回调的原因 —— 回调与状态是绑在一起改的，必须一次改一处、改完立刻验证。
+
+**验收方式（不变）**：`--shot`（界面仍出图）+ `--ui-selftest`（`listAppended 追加 80 条，增长：通过` 必须仍然成立 ——
+它正是"下沉后加载更多还在工作"的证据；加 `ctest`。
