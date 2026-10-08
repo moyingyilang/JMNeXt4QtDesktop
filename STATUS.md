@@ -1008,3 +1008,29 @@ QML 加载失败
 5. 任何一步不过 → `git checkout -- src/qml/Main.qml && rm src/qml/HomeScreen.qml` 并撤销登记（本轮已验证这条回滚路径可用）。
 
 **再下一轮**才把 `Connections` 与回调搬进组件 —— 一次只搬一层，每层都有验证。
+
+### 读原文后的精确改写清单（第 24 轮，修正上一轮计划的过度设计）
+
+已把 `Main.qml` 的列表区（57–106 行，共 50 行）逐行读过。**真实需要改写的点比上一轮设想的少得多**：
+
+| 原文里的写法 | 抽取后 | 数量 |
+| --- | --- | --- |
+| `model.title` / `model.aid` / `model.coverUrl` | **原样不动** | 3 处（delegate 里已是 `model.` 角色名，**不需要**把 `listModel` 改名） |
+| `listModel.count` | `listModel.count`（属性名由调用方传入） | 3 处 |
+| `root.cSurface2` / `root.cText` / `root.radiusMd` / `root.cTextSecondary` | `hoverColor` / `textColor` / `cardRadius` / `secondaryColor` | 7 处 |
+| `root.pageStatus` | `pageStatus` | 3 处 |
+| `root.listLoading` / `root.listExhausted` | `loading` / `exhausted` | 2 处 |
+| `root.albumAid = aid` + `backend.loadAlbum(aid)` | → **一个信号** `cardClicked(aid)`，处理留在 `Main.qml` | 2 行 |
+| `backend.loadList()`（StateBox 重试） | → 信号 `retryClicked()` | 1 行 |
+| `backend.loadMore()` + `root.listLoading = true` | → 信号 `moreClicked()`，处理留在 `Main.qml` | 2 行 |
+| `Layout.fillWidth/fillHeight`（ListView） | `anchors.fill: parent`（组件根是 Item，内部不用 Layout 附加属性） | 2 处 |
+| `Layout.fillWidth`（LoadMoreFooter） | `width: parent.width` | 1 处 |
+| `anchors.fill: listView`（StateBox） | **原样**（`listView` 的 id 一起搬进组件） | 1 处 |
+
+**上一轮的过度设计**：我打算把 `backend.loadAlbum/loadMore/loadList` 全改成信号并顺带改 delegate 结构 ——
+其实只需要 **3 个信号**（`cardClicked` / `retryClicked` / `moreClicked`），delegate 内部结构一行都不用动。
+
+**组件根用 `Item` + 在 `Main.qml` 里以 `HomeScreen { Layout.fillWidth: true; Layout.fillHeight: true; … }`
+实例化**（`Layout.*` 附加属性对实例化对象有效，这是 Qt 的标准写法）。
+
+**下一步就是按这张表逐点改**（每个改动点都有明确的行与目标写法），改完跑四项验证；不过就按第 23 轮记的回滚命令退回。
