@@ -1428,3 +1428,23 @@ SettingsScreen.qml:28:12: Duplicate signal name: invalid override of property ch
 
 **关于节奏的如实说明**：第 40、41 两轮都是"读代码定位"，没有产出功能。这是必要的（前面几次失败都源于没看清结构），
 但也确实慢了。下一步将**连续实施**这四步，做完即验证。
+
+### 重要发现：Kotlin 侧的数据源在 `shared` 模块（第 42 轮）
+
+Qt 侧此前的参照只看了 `app/src/main/kotlin`，**漏了 `shared`** —— 而剩下那些屏的数据模型与调用**全在这里**：
+
+| 文件 | 对应未实现的屏 |
+| --- | --- |
+| `shared/data/remote/dto/Models.kt` | 所有 DTO（如 `CategoryNode` 在 **:210**） |
+| `shared/data/JmRepository.kt` | 各接口的调用（分类/收藏/评论/签到…） |
+| `shared/data/RandomRanking.kt` | **随机** |
+| `shared/data/Daily.kt` | **周更 / 每日** |
+| `shared/data/FavoriteTags.kt` | **收藏标签** |
+| `shared/data/BlockRules.kt` | 屏蔽（Qt 侧已有 `core/BlockRules.h`） |
+
+**这条发现的价值**：后面每做一屏，都能直接在 `shared` 里找到**权威的模型字段与调用方式**，
+不必再靠猜或探接口 —— 这正是"以 JMNeXt 为唯一参照"的正确入口。
+
+**分类的具体形状已读到**（`Models.kt` 第 205–224 行），下一轮据此写
+`parseCategories`（照 `parseLatestList` 的手写扫描套路）+ `JmClient::categories`，
+再走 worker / backend / QML 四层。
