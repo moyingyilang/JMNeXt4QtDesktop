@@ -1779,3 +1779,68 @@ ctest --test-dir build                                   # 数据层 16 项单�
 | 设置屏两条链路（`setTwoPage`/`setBlockWords`）的点击验证 | 缺自动触发路径（第 39 轮记） |
 | 分类屏观感（布局占比） | 无法看图，需人工确认（第 54 轮记） |
 | 图片质量档位 / 默认图源 | Qt 侧数据层尚无对应能力 |
+
+---
+
+## 附：完成度审计的原始数据（第 56 轮采集，供逐项对照）
+
+**Kotlin 侧屏幕文件（`app/src/main/kotlin/com/jmnext/ui/screens/`）**：
+
+```
+about/AboutScreen.kt
+auth/AuthScreen.kt
+category/CategoryScreen.kt
+comments/CommentsScreen.kt
+creator/CreatorScreen.kt
+creator/CreatorWorkScreen.kt
+detail/DetailScreen.kt
+favorites/FavoritesScreen.kt
+favorites/FolderDialogs.kt
+home/HomeScreen.kt
+home/HomeViewModel.kt
+home/RandomFab.kt
+more/MoreListScreen.kt
+notifications/NotificationsScreen.kt
+profile/DailyHistorySection.kt
+profile/ProfileScreen.kt
+random/RandomListScreen.kt
+reader/ChapterPickerDialog.kt
+reader/PageRatio.kt
+reader/ReaderScreen.kt
+search/SearchFilters.kt
+search/SearchScreen.kt
+settings/BlockSettingsScreen.kt
+tags/TagFavoritesScreen.kt
+week/WeekScreen.kt
+```
+
+**Kotlin 侧组件文件（`ui/components/`）**：
+
+```
+AmbientBackdrop.kt
+ComicCard.kt
+FloatingBottomBar.kt
+Glass.kt
+GlassTopBar.kt
+ItemMotion.kt
+LoadMoreFooter.kt
+StateBox.kt
+```
+
+**Qt 侧 QML 文件（`src/qml/`）**：
+
+```
+AboutScreen.qml
+CategoryScreen.qml
+ComicCard.qml
+DetailScreen.qml
+HomeScreen.qml
+LoadMoreFooter.qml
+Main.qml
+ReaderScreen.qml
+SearchScreen.qml
+SettingsScreen.qml
+StateBox.qml
+```
+
+> 注：本清单只列**文件存在性**，不等于已对齐 —— 逐项状态判定在下一轮按此数据给出。
