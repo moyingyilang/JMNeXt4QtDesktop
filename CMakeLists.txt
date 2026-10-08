@@ -140,5 +140,5 @@ qt_add_qml_module(jmnext4qml
     VERSION 1.0
     QML_FILES
         src/qml/Main.qml
-        src/qml/components/ComicCard.qml
+        src/qml/ComicCard.qml
 )
