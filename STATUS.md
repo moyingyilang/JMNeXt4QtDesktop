@@ -837,3 +837,24 @@ QML 侧只是接线正确、能加载。两条可选做法（下一步择一）�
 3. `--ui-selftest`：改接 `listAppended` 来断言"新增了多少条"，而不是接 `listReady`。
 
 **验收标准不变**：改完后 `--ui-selftest` 应打印"增长：通过"，并且 `--shot` 出的图里列表条数变为 160。
+
+#### 更正（同一轮内）：缺口**只在 `Main.qml`**，后端那一层是接好的
+
+上一条我写"QML 侧（`src/qml/`）没有任何 `listAppended`"是**不准确的**。复核后：
+
+```
+src/qml/JmBackend.h:41    void listAppended(const QStringList& titles, const QStringList& ids);
+src/qml/JmBackend.cpp:17  connect(worker_, &JmWorker::listAppended, this, &JmBackend::listAppended);
+```
+
+**信号已经从 worker 转发到了 QML 可见的后端层**，缺的只是 **`Main.qml` 里没有一个 `onListAppended` 处理函数**
+（所以在 QML 里"发出来的信号没人听"）。于是修法缩小为**两处**，而不是三处：
+
+1. `Main.qml`：新增 `function onListAppended(titles, ids)` —— 把新条目**追加**进 `listModel`
+   （**不要**像 `onListReady` 那样先 `clear()`；追加后按新索引请求封面）；
+2. `--ui-selftest`：改接 `listAppended` 来断言"新增了多少条"。
+
+**验收标准不变**：`--ui-selftest` 打印"增长：通过"，且 `--shot` 的图里条数变为 160。
+
+**这也是一处教训**：我上一条把"我 grep 的范围"当成了"整个 QML 层"，于是把 1 处的缺口写成了 3 处。
+正确做法是像这次一样**逐层确认信号链的每一跳**（worker → JmBackend → Main.qml），而不是只看一层就下结论。
