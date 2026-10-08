@@ -776,3 +776,37 @@ QML 侧只是接线正确、能加载。两条可选做法（下一步择一）�
 （候选：`loadMore` 只是重发第一页 / 页码状态没维护 / signal 没接），修好后 `--ui-selftest` 应打印"增长：通过"。
 
 **其它证据**：`ctest` 仍 **16/16 通过**（本轮 C++ 改动未影响既有测试）。
+
+### 排查记录：为什么 QML 的"加载更多"没增长（本轮否掉一个假设）
+
+**先对比两端写法**：
+
+| 端 | 调用方式 | 结果 |
+| --- | --- | --- |
+| widget（`src/qt/MainWindow.cpp:222`） | `worker_->loadMore()` **直接调** | 有效（80 → 160） |
+| QML（`src/qml/JmBackend.cpp:44`） | `invoke("loadMore")` 元对象调用 | **无效**（80 → 80） |
+
+**假设一（本轮否掉）**：`invoke` 走元对象，若 `loadMore` 不是 `Q_INVOKABLE`/slot 就会**静默失败**。
+查证 `src/qt/JmWorker.h`：
+
+```
+25: class JmWorker : public QObject {
+31: public slots:
+35:     void loadList();
+45:     void loadMore();
+```
+
+`loadMore` **就在 `public slots:` 之下**，元对象可调用；而且同一个 `invoke` 通道上的 `loadList`
+在 QML 侧**是工作的**（首页能出 80 条与封面）。**所以"不是 slot"这个解释不成立。**
+
+**剩下的嫌疑（按可能性排序，下一步逐个查）**：
+
+1. **`JmBackend::invoke` 的连接方式与参数**：它对不同方法是否用了不同的连接类型/是否要求参数匹配
+   （`loadMore` 无参，而 `search` 带参 —— 若模板对无参情形处理特殊，可能出问题）；
+2. **`JmWorker::loadMore()` 自身的实现**：是否维护了"当前页"状态、是否真的请求下一页并**追加**
+   （widget 能工作说明它至少有可用路径，但 QML 侧进入它时机的差异可能让状态没准备好）；
+3. **`listReady` 的语义**：QML 侧两次都收到 80 条 —— 也可能是 `loadMore` 真的请求了第二页，
+   但 worker 发回来的仍是第一页（例如"当前页"没自增）。
+
+**下一步**：读 `JmWorker::loadMore()` 实现与 `JmBackend::invoke` 模板（两者都不长），
+定位后修好，届时 `--ui-selftest` 应从"未增长：失败"变为"增长：通过"。
