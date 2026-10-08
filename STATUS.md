@@ -1109,3 +1109,31 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **下一屏**：详情视图（`Main.qml` 107 行起，约 95 行 —— 比前三屏都大，是封面 + 标题 + 作者 + 标签 +
 章节 `ListView` 的组合）。套路相同：先读原文 → 只搬纯渲染 → 信号回传 → 四项验证。
+
+### 第四屏抽出：`DetailScreen.qml`（详情：封面 + 标题/作者/标签 + 章节列表）
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/DetailScreen.qml`（约 120 行，`Rectangle` 根：封面 `Image` + 三段文字 + 章节 `ListView` + 状态行） |
+| 改写点 | `root.albumAid/albumName/albumAuthor/albumTags/pageStatus` → 属性；**`chapterModel`（块外 id）→ 属性传入**；`backend.openChapterId(cid,0)` → 信号 `chapterClicked(cid)`；`root.cSurface1/cStroke` 与 7 处硬编码色 → 注入属性；`visible: !root.reading` 移到实例 |
+| 四项验证 | 构建 0 错误 / `--shot` 退出码 0 且 80 条 + 截图 1180x780 / `--ui-selftest` **增长：通过** / `ctest` **16/16** |
+
+**`src/qml/` 结构（四屏 + 三组件）**：
+
+```
+Main.qml            主页/路由（+ 全局状态 + Connections）
+HomeScreen.qml      首页
+SearchScreen.qml    搜索
+ReaderScreen.qml    阅读器
+DetailScreen.qml    详情
+ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
+```
+
+**Qt 侧已存在的四个屏（首页/搜索/详情/阅读器）现在全部独立成文件** ——
+这是与 Kotlin 版 `ui/screens/` 对齐的第一块结构性成果。
+剩余 21 屏（收藏/分类/画师/评论/随机/我的/登录/屏蔽设置/标签/周更/通知/更多列表等）Qt 侧**尚未实现**，
+不在"抽取"范畴，而是**新建**。
+
+**下一步**：把 `Main.qml` 的 `Connections`（`onListReady` / `onListAppended` / `onCoverUrlReady` /
+`onPageReady` / `onStatus` / `onFailed` / `onCurrentAidChanged`）按归属下沉到各屏 ——
+否则 `Main.qml` 永远是"薄不了"的中枢。这是本目标后半段的重点。

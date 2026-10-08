@@ -75,85 +75,20 @@ ApplicationWindow {
         }
 
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
-        Rectangle {
-            visible: !root.reading
+        DetailScreen {
             id: rightPane
+            visible: !root.reading
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: root.cSurface1
-            border.color: root.cStroke
-            border.width: 1
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 14
-                spacing: 8
-
-                Image {
-                    id: detailCover
-                    Layout.preferredWidth: 120
-                    Layout.preferredHeight: 160
-                    fillMode: Image.PreserveAspectCrop
-                    source: root.albumAid.length > 0 ? "image://jm/albumcover?" + root.albumAid : ""
-                    onStatusChanged: if (status === Image.Ready)
-                        console.log("QML 详情封面已加载：" + sourceSize.width + "x" + sourceSize.height)
-                    Rectangle {
-                        anchors.fill: parent; color: "#2b2d31"
-                        border.color: "#3a3d43"; border.width: 1
-                        visible: parent.status !== Image.Ready
-                    }
-                }
-                Text {
-                    text: root.albumName.length > 0 ? root.albumName : "（从左侧选一个作品）"
-                    color: "#e6e6e6"; font.pixelSize: 18; wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: root.albumAuthor
-                    color: "#b9bcc2"; font.pixelSize: 13
-                }
-                Text {
-                    text: root.albumTags
-                    color: "#9aa0a8"; font.pixelSize: 12; wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: "章节（" + chapterModel.count + "）"
-                    color: "#9aa0a8"; font.pixelSize: 12
-                    Layout.topMargin: 6
-                }
-                ListView {
-                    id: chapterView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-                    model: chapterModel
-                    spacing: 2
-                    delegate: Rectangle {
-                        width: ListView.view.width; height: 30
-                        color: chapterMouse.containsMouse ? "#26282c" : "transparent"
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left; anchors.leftMargin: 6
-                            text: (index + 1) + ". " + name
-                            color: "#e6e6e6"; font.pixelSize: 13
-                        }
-                        MouseArea {
-                            id: chapterMouse
-                            anchors.fill: parent; hoverEnabled: true
-                            onClicked: {
-                                console.log("QML 点击章节 index=" + index + " id=" + cid)
-                                backend.openChapterId(cid, 0)
-                            }
-                        }
-                    }
-                }
-                Text {
-                    text: pageStatus
-                    color: "#8a8f98"; font.pixelSize: 12
-                    Layout.fillWidth: true; elide: Text.ElideRight
-                }
-            }
+            albumAid: root.albumAid
+            albumName: root.albumName
+            albumAuthor: root.albumAuthor
+            albumTags: root.albumTags
+            pageStatus: root.pageStatus
+            chapterModel: chapterModel
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            onChapterClicked: (cid) => backend.openChapterId(cid, 0)
         }
     }
 
