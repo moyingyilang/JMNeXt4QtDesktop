@@ -230,19 +230,25 @@ int main(int argc, char** argv) {
                                  backend.loadMore();
                                  return;
                              }
-                             const int secondCount = titles.size();
-                             qInfo().noquote()
-                                 << QStringLiteral("界面自检：第二页累计 %1 条（第一页 %2 条，%3）")
-                                        .arg(secondCount)
-                                        .arg(firstCount)
-                                        .arg(secondCount > firstCount ? QStringLiteral("增长：通过")
-                                                                      : QStringLiteral("未增长：失败"));
-                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                             // 第二次 listReady 不作断言：loadMore 的产出走 listAppended（见下面的连接）。
+                             // 这里只提示一句，避免与 listAppended 的结论混在一起造成误读。
+                             qInfo().noquote() << QStringLiteral("界面自检：又收到一次 listReady（%1 条），忽略")
+                                                      .arg(titles.size());
                          });
         QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
             qInfo().noquote() << QStringLiteral("界面自检失败：%1").arg(e);
             QTimer::singleShot(100, &app, &QCoreApplication::quit);
         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::listAppended, &app,
+                         [&app, &firstCount](const QStringList& added, const QStringList&) {
+                             qInfo().noquote()
+                                 << QStringLiteral("界面自检：listAppended 追加 %1 条（第一页 %2 条，%3）")
+                                        .arg(added.size())
+                                        .arg(firstCount)
+                                        .arg(added.isEmpty() ? QStringLiteral("未追加：失败")
+                                                             : QStringLiteral("增长：通过"));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
         QTimer::singleShot(0, &backend, [&backend] { backend.loadList(); });
         QTimer::singleShot(120000, &app, [&app] {
             qInfo().noquote() << QStringLiteral("界面自检超时（120 秒）");

@@ -291,6 +291,16 @@ ApplicationWindow {
             backend.loadCovers(20)          // 让前 20 条的封面 URL 与图片就位
         }
 
+        // 加载更多的结果走 listAppended（worker 侧已拼接好，这里只做"追加"）——
+        // 注意**不能**像 onListReady 那样先 clear()，否则会把已有列表清掉。
+        function onListAppended(titles, ids) {
+            for (var j = 0; j < titles.length; ++j)
+                listModel.append({ "title": titles[j], "aid": ids[j], "coverUrl": "" })
+            root.listLoading = false
+            console.log("QML 追加 " + titles.length + " 条，当前共 " + listModel.count + " 条")
+            backend.loadCovers(20)
+        }
+
         function onCoverUrlReady(index, url) {
             if (index >= 0 && index < listModel.count) {
                 listModel.setProperty(index, "coverUrl", url)
