@@ -1059,3 +1059,27 @@ QML 加载失败
 
 **下一步**：按同样套路抽 `SearchScreen.qml`（搜索行 + 结果列表），然后把两屏的 `Connections`
 也逐步搬进各自屏幕（一次一层，每层验证）。
+
+### 第二屏抽出：`SearchScreen.qml`（同一套两步法，一次通过）
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/SearchScreen.qml`（49 行：搜索行 `RowLayout` + "作品列表（N 条）" `Text`） |
+| 改写点 | **只有两处**：`backend.search(...)` → 信号 `searchRequested(word)`（2 处）；标题硬编码色 → 属性 `secondaryColor` |
+| 无需改名的原因 | `initialSearch` 是上下文属性（QML 全可见）；数据以**同名** `property var listModel` 接收，故 `listModel.count` 原样可用 |
+| 四项验证 | 构建 0 错误 / `--shot` 退出码 0 且 80 条 + 截图 1180x780 / `--ui-selftest` 增长通过 / `ctest` 通过 |
+
+**至此 `src/qml/` 的结构**：
+
+```
+Main.qml            主页（路由 + 全局状态 + Connections）
+HomeScreen.qml      首页（列表视图 + StateBox + LoadMoreFooter）
+SearchScreen.qml    搜索（搜索行 + 条数标题）
+ComicCard.qml       组件（列表卡片，含悬停/弹性动效）
+StateBox.qml        组件（空/失败态 + 重试）
+LoadMoreFooter.qml  组件（分页页脚）
+```
+
+**下一步（按同一套路）**：把 `Main.qml` 里剩下的部分继续分出去 ——
+详情视图与阅读器视图（现在是 `root.reading` 切换的两块），
+以及把 `Connections` 里的回调逐步下沉到各屏（一次一层）。
