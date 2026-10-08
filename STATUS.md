@@ -1578,3 +1578,33 @@ std::optional<std::vector<std::string>> JmClient::hotTags() {
 1. 在 `--selftest` 里 `backend.loadHotTags()` 并**断言标签数量大于 0**（第一次真正验证这条链路）；
 2. 写 `CategoryScreen.qml`：左侧/上方标签列表（`hotTagsReady` 填充），点标签后调
    `categories/filter`（**注意 `c` 为空时必须省略参数**，见第 43 轮记的协议陷阱）取作品列表并复用 `ComicCard`。
+
+### 分类切片第四步（第 48 轮）：热标签链路**实测取到真实数据**
+
+新增 `--hot-tags` 自检（与 `--ui-selftest` 同一套路：走真实网络、把结果打到日志），首次运行即通过：
+
+```
+$ ./build/jmnext4qml --hot-tags
+热标签自检：10 个，前三个：超長篇 / 觀淫 / 豐滿
+```
+
+| 层 | 状态 | 证据 |
+| --- | --- | --- |
+| `JmParse::parseHotTags` | **已验证** | 取回 10 个标签（解析正确） |
+| `JmClient::hotTags` | **已验证** | 同上（真实网络请求成功） |
+| `JmWorker::loadHotTags` | **已验证** | 信号按预期发出 |
+| `JmBackend::hotTagsReady` | **已验证** | QML 侧自检收到并打印 |
+| `CategoryScreen.qml` | **未做** | 屏还没写；这层数据链路已可供其使用 |
+
+**这条验证的意义**：第 45–47 轮三次提交都只能说"能编译、不破坏既有测试"，
+本轮第一次有了**"真的取到数据"**的证据 —— 而且它以后每轮都能自动重跑。
+
+**验证手段又添一条**（现有四条）：
+
+| 命令 | 覆盖 |
+| --- | --- |
+| `ctest --test-dir build` | 数据层既有单测（16 项） |
+| `./build/jmnext4desktop --list` / `--chapters <aid>` | widget 路径 |
+| `./build/jmnext4qml --shot <png> <ms> [--open <aid>]` | QML 渲染（静态） |
+| `./build/jmnext4qml --ui-selftest` | QML 交互（加载更多） |
+| **`./build/jmnext4qml --hot-tags`** | **分类数据链路（本轮新增）** |

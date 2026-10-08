@@ -256,6 +256,28 @@ int main(int argc, char** argv) {
         });
         return app.exec();
     }
+    // --hot-tags：验证分类屏的数据链路（JmParse::parseHotTags -> JmClient::hotTags
+    // -> JmWorker::loadHotTags -> JmBackend::hotTagsReady）。与 --ui-selftest 同一套路：
+    // 走真实网络、把结果打到日志，用于回答"热标签到底取到没有"。
+    if (argc >= 2 && std::string(argv[1]) == "--hot-tags") {
+        QObject::connect(&backend, &jmnext::qt::JmBackend::hotTagsReady, &app,
+                         [&app](const QStringList& tags) {
+                             qInfo().noquote() << QStringLiteral("热标签自检：%1 个，前三个：%2")
+                                                      .arg(tags.size())
+                                                      .arg(tags.mid(0, 3).join(QStringLiteral(" / ")));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("热标签自检失败：%1").arg(e);
+            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend] { backend.loadHotTags(); });
+        QTimer::singleShot(60000, &app, [&app] {
+            qInfo().noquote() << QStringLiteral("热标签自检超时（60 秒）");
+            app.quit();
+        });
+        return app.exec();
+    }
     // --open <aid>：启动后直接打开某作品的详情页（无头验证用：点不了鼠标，但要能拍到详情屏）
     for (int i = 1; i + 1 < argc; ++i) {
         if (std::string(argv[i]) == "--open") {
