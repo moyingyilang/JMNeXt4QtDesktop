@@ -536,3 +536,32 @@ QML 加载失败
 2. **截图不作为仓库内容**（输出到仓库外，只把路径与尺寸写进本文档）——
    `STATUS.md` 旧记录里已经有"`git add -A` 三次误收截图"的教训；
 3. 截图模式是 `--shot <path>`（**不是** `--screenshot`；后者可能是 widget 版的旧写法）。
+
+### 结构决策：UI 文件先保持**扁平**在 `src/qml/`（有实测依据）
+
+第 7 轮已证实：`qt_add_qml_module` 的模块根是 `src/qml/`，**放在子目录里的 QML 不会被暴露为该模块的类型**
+（`Main.qml` 报 `ComicCard is not a type`，界面起不来，而 C++ 构建照样通过）。
+
+要让文件分目录，需要额外配置：要么给子目录建**子模块**（`URI JMNeXt.components` + 把模块链进目标），
+要么给源文件设**资源别名**。这两种都要动 CMake 结构，且都属于"改完必须跑 `jmnext4qml` 才能确认"的改动。
+
+**本轮决策**：UI 文件先**扁平**放在 `src/qml/`，用**文件名**对齐 Kotlin 的屏幕名
+（`HomeScreen.qml` / `SearchScreen.qml` / `DetailScreen.qml` / `ReaderScreen.qml` / `ComicCard.qml` …）。
+理由：先拿到"每屏一个文件"这个**最关键的组织收益**，且**已验证可用**；目录分层的收益小、风险大，
+留作后续单独立项（届时用子模块方式正规化）。
+
+### 抽取 `HomeScreen.qml` 时必须一起搬的东西（本轮查清）
+
+`Main.qml` 里与首页列表耦合的部分（行号为当前版本）：
+
+| 项 | 位置 | 为什么必须一起搬 |
+| --- | --- | --- |
+| `ListModel { id: listModel }` | 16 | 列表数据本体 |
+| 列表视图（含刚刚换成的 `ComicCard` delegate） | 57–117 | 首页主体 |
+| `onListReady(titles, ids)` | 288–291 | 后端回调，往里 `append({title, aid, coverUrl})` |
+| `coverUrlReady` 等封面回填 | 待核 | 封面是异步到的，回填逻辑与列表同源 |
+| "加载更多"入口 | 待核 | 与列表分页同源 |
+
+**做法**：把上述几项作为一个整体迁进 `HomeScreen.qml`，主页只保留一个实例与到后端的连接；
+迁完**必须**跑 `./build/jmnext4qml --shot <path>`（第 7 轮的规矩：改 QML 必须跑 QML 程序），
+并确认 `--list` 那条 widget 路径仍 80 条。
