@@ -23,6 +23,8 @@ ColumnLayout {
     signal searchRequested(string word)
     /// 打开"关于"屏（第 37 轮新增，零数据层成本的入口）
     signal aboutRequested()
+    /// 打开设置屏（第 39 轮）
+    signal settingsRequested()
 
     // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
     RowLayout {
@@ -44,6 +46,10 @@ ColumnLayout {
         Button {
             text: "关于"
             onClicked: search.aboutRequested()
+        }
+        Button {
+            text: "设置"
+            onClicked: search.settingsRequested()
         }
     }
 

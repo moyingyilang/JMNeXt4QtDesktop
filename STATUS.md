@@ -1370,3 +1370,22 @@ SettingsScreen.qml:28:12: Duplicate signal name: invalid override of property ch
 > 同理，属性名也不能与 `Rectangle`/`Item` 的内置属性重名（第 5 轮踩过 `radius`）。
 
 **下一步**：按上述两处改名重做设置屏（QML 文件可原样复用，只改信号名与实例上的处理器名）。
+
+### 新建屏第二例（第 39 轮）：`SettingsScreen.qml`（用后端已有能力）
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/SettingsScreen.qml`（101 行：双页模式勾选 + 屏蔽词输入 + 提示行 + 关闭） |
+| 数据层 | **零改动** —— 用的是后端**已有**的 `setTwoPage(bool)` 与 `setBlockWords(QStringList)` |
+| 接线 | `SearchScreen` 加"设置"按钮 → `signal settingsRequested()` → `Main.showSettings` → 屏实例；`onTwoPageToggled` 调 `backend.setTwoPage`，`onBlockWordsChanged` 调 `backend.setBlockWords` |
+| 命名 | 自定义信号用 `twoPageToggled`（避开 `property bool twoPage` 的自动变化信号 `twoPageChanged`）—— 这正是第 38 轮的失败根因 |
+| 验证 | 构建 0 错误 / QML 运行 `列表已填充：80 条` + 截图 1180x780（无回归）/ `--ui-selftest` 增长通过 / `ctest` 16/16 |
+
+**如实标注**：
+1. 该屏外观**没有被截图覆盖**（初始不可见，`--shot` 点不了鼠标）；
+2. `twoPageToggled` / `blockWordsChanged` 两条链路**只是接好了，没有被点击验证** ——
+   要证明"勾选后后端真的收到 setTwoPage"，需要一条可自动触发的自检路径（与 `--ui-selftest` 同类），
+   目前**没有**。列为未验证项。
+
+**至此 Qt 侧屏幕清单**：Home / Search / Reader / Detail（抽取）、**About / Settings（新建）**，
+共 6 屏；剩余 19 屏（收藏/分类/画师/评论/随机/我的/登录/屏蔽设置页/标签/周更/通知/更多列表等）尚未实现。
