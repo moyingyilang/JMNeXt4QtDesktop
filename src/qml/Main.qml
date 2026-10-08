@@ -162,13 +162,6 @@ ApplicationWindow {
             backend.loadCovers(20)
         }
 
-        function onCoverUrlReady(index, url) {
-            if (index >= 0 && index < listModel.count) {
-                listModel.setProperty(index, "coverUrl", url)
-                if (index === 0) console.log("QML 收到封面 URL：index 0")
-            }
-        }
-
         function onAlbumReady(name, author, tags) {
             root.albumName = name; root.albumAuthor = author
             root.albumTags = "标签：" + tags.join("、")

@@ -82,4 +82,17 @@ ColumnLayout {
             home.moreClicked()
         }
     }
+
+    // 封面 URL 回填：数据在本组件手里，所以这条回调归它管（第 31 轮下沉的第一个函数）。
+    // 注意：必须放在根对象（ColumnLayout）**内部** —— 追加到文件末尾会变成第二个根对象，QML 直接语法报错。
+    Connections {
+        target: backend
+
+        function onCoverUrlReady(index, url) {
+            if (index >= 0 && index < home.listModel.count) {
+                home.listModel.setProperty(index, "coverUrl", url)
+                if (index === 0) console.log("QML 收到封面 URL：index 0")
+            }
+        }
+    }
 }

@@ -1182,3 +1182,25 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **下一步**：按第 1 条取边界（`onListReady` 起点 → 下一个非本组函数头之前），
 并把 `Main.qml` 的状态属性删除与 `HomeScreen` 的 `Connections` 新增**分两步**做、每步各自验证。
+
+### `Connections` 下沉成功第一个（第 31 轮）：`onCoverUrlReady` 归 `HomeScreen`
+
+| 项 | 结果 |
+| --- | --- |
+| `Main.qml` | 删除 `onCoverUrlReady`（精确文本替换 `perl -0pi -e "s#\Q…\E##s"`，不用行号区间） |
+| `HomeScreen.qml` | 新增 `Connections { target: backend; function onCoverUrlReady(...) }`，改自己那份 `listModel` |
+| 四项验证 | 构建 0 错误 / `--shot` 退出码 0 + **`QML 收到封面 URL：index 0`** + 截图 1180x780 / `--ui-selftest` **增长：通过** / `ctest` **16/16** |
+
+**本轮踩到的两个坑（都记下）**：
+
+1. **把 `Connections` 追加到 `HomeScreen.qml` 文件末尾** → `HomeScreen.qml:88:1 Syntax error`：
+   根对象（`ColumnLayout`）已在上一行闭合，追加等于**第二个根对象**。必须放在根对象**内部**。
+   这与我在 `Main.qml` 里插 `HomeScreen{}` 的做法相同（那次是对的，这次手滑）。
+2. **差点被"看起来成功"的日志骗过**：第一次尝试时 C++ 构建**报错失败**，我仍跑 `--shot`，
+   它用的是**上一次的二进制**（QML 编译进资源，旧二进制跑旧 QML），却照样打印
+   `收到封面 URL：index 0` —— **那行日志不能证明新代码生效**。
+   正确做法：**先确认构建成功，再跑 QML 程序**，否则证据无效。这条与第 7 轮的"假通过"同源，
+   但这次是"旧二进制的假证据"，比上次更隐蔽。
+
+**下一步**：同法下沉 `onListAppended`（加载更多的追加），再下沉 `onListReady` + 三个列表状态
+（`lastListCount` / `listExhausted` / `listLoading`）—— **一次一个，各自验证**。
