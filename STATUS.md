@@ -966,3 +966,45 @@ src/qml/JmBackend.cpp:17  connect(worker_, &JmWorker::listAppended, this, &JmBac
 3. 搬完**必须跑 `jmnext4qml --shot`**（第 7 轮的假通过教训）+ `--ui-selftest`（确认"增长：通过"仍在）。
 
 **回退点**：本轮已打 tag `port-20`，可整体回退到"组件层完成、加载更多修通"的状态。
+
+### 抽取 HomeScreen 的失败记录与修正后的做法（第 23 轮）
+
+**失败现象**（`--shot` 时）：
+
+```
+Main.qml:57:13: Type HomeScreen unavailable
+HomeScreen.qml:33:21: Non-existent attached object
+QML 加载失败
+```
+
+**失败原因（是我方法上的错，不是手滑）**：我用 sed 对搬出来的 50 行做"机械改写"，其中这几条
+**破坏了语句结构**：
+
+| 我的改写 | 造成的后果 |
+| --- | --- |
+| `s/root.albumAid = aid//g` | **把一行挖空**，留下残骸 → 就是第 33 行"不存在的附加对象"的来源 |
+| `s/backend.loadAlbum(aid)/cardOpenClicked(aid)/g` | 前半句删掉、后半句改名，该行结构不完整 |
+| `s/\blistModel\b/model/g; s/root\.cText/textColor/g; …` | 正则扫描**无法区分"引用"与"声明"**，也无法处理跨行语义 |
+
+**结论**：**"机械搬运 + 正则改写"对互相咬合的代码不可靠**。已在同一轮回滚（`Main.qml` 恢复、新文件删除、登记撤销），
+回滚后实测：构建 0 错误、`列表已填充：80 条`、截图 1180x780、`git status` 干净 —— 未造成任何残留。
+
+### 修正后的做法（下一轮照此执行，不要再走 sed 改写的老路）
+
+**第一刀只搬"纯渲染"，不碰任何回调**：
+
+1. 先 **`sed -n '<A>,<B>p'` 把要搬的原文打印出来读一遍**（约 50 行，值得花这一次上下文）；
+2. 新文件 `src/qml/HomeScreen.qml` 的结构**只有**：
+   - `property var model`（数据由调用方传入）
+   - 主题色属性（`textColor` / `secondaryColor` / `accentColor` / `cardRadius`）
+   - 两个信号：`requestMore()` / `requestReload()`
+   - **原样照抄**的 `ListView`（delegate 里对 `model.xxx` 的引用**只把 `listModel` 换成 `model`**，
+     点击处理**不改成信号**，而是让组件暴露一个 `property var onCardClicked: function(aid) {}` 之类的最小挂钩，
+     或干脆**先不搬 delegate**）；
+   - `StateBox` 与 `LoadMoreFooter`：**原样照抄**，只把 `root.cText` 之类换成组件属性；
+3. `Main.qml` 里：原区间删掉，换成 `HomeScreen { model: listModel; … }`，
+   **全部 `Connections` 与 `backend.*` 调用留在 `Main.qml` 原地不动**（这一刀不动它们）；
+4. 登记 `CMakeLists.txt`（用 `\(\s*\)` 匹配缩进）→ 构建 → **必须跑 `--shot` 与 `--ui-selftest`**；
+5. 任何一步不过 → `git checkout -- src/qml/Main.qml && rm src/qml/HomeScreen.qml` 并撤销登记（本轮已验证这条回滚路径可用）。
+
+**再下一轮**才把 `Connections` 与回调搬进组件 —— 一次只搬一层，每层都有验证。
