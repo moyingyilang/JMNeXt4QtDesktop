@@ -414,3 +414,33 @@ jmnext4qml --page <png> --shot out.png 9000
 
 **验证**：配置输出确认自动生效（`检测到 ccache，已启用…`）；`ctest` 16/16 通过。
 **诚实说明**：只在首次变慢，之后每次清空重建都省约 60 秒；如果某台机器只做一次构建，它反而略慢。
+
+---
+
+## 基准验证（2026-10-07，本轮实测，作为移植工作的起点）
+
+移植 Qt 版之前先钉死"底座能不能跑"。以下**都是本轮在容器内实测**的输出，不是转述旧记录：
+
+| 步骤 | 命令 | 实测结果 |
+| --- | --- | --- |
+| 配置 | `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release` | 退出码 0 |
+| 构建 | `cmake --build build -j2` | 退出码 0，**错误行数 0**；`jmnext4qml` 目标已生成 |
+| 单测 | `ctest --test-dir build` | **16/16 通过**（0.19 秒） |
+| 界面自检 | `./build/jmnext4desktop --list`（`QT_QPA_PLATFORM=offscreen`） | **列表已加载：80 条**；封面 **400x533** 连续显示多张 |
+| 真实网络 | `./build/jmnext4net discover` | 候选主机 4 个，**发现 `https://www.cdnhjk.net/`** |
+
+**结论**：数据层与构建链是**真实可用**的（不是空壳）：真主机发现、真列表、真封面解码。
+所以移植工作的性质是"**在可用底座上补齐界面与业务**"，不是"从不毛之地开始"。
+
+### 与 Kotlin 版的结构差距（本轮的量化结论）
+
+| 维度 | Kotlin 版 | Qt 版现状 |
+| --- | --- | --- |
+| 屏幕组织 | `ui/screens/` **25 个文件、10,903 行**，每屏一个文件 | 整个界面在 `src/qml/Main.qml`，**352 行** |
+| 通用组件 | `ui/components/` **8 个文件、1,424 行** | 未见对应实现 |
+| 导航 | `JmNavHost` 统一路由与转场 | 目前是 `visible: root.reading` 在两个视图间切换 |
+| 颜色 | 主题 token 与四套风格 | `Main.qml` 里仍写死一组颜色常量 |
+
+清单详见 `docs/ui-inventory/05-gap-vs-kotlin.md`。
+**下一步（本目标第 1 步）**：把 `Main.qml` 按屏拆分（新增 QML 需登记进
+`CMakeLists.txt` 的 `qt_add_qml_module(... QML_FILES ...)`），并落第一个 `components/*.qml`。
