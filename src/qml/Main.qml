@@ -62,45 +62,16 @@ ApplicationWindow {
         }
 
         // 右栏：阅读器（有页面后覆盖详情视图）
-        Rectangle {
+        ReaderScreen {
             id: readerPane
             visible: root.reading
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: root.cBg
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 8
-                spacing: 6
-
-                Image {
-                    id: pageImage
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    fillMode: Image.PreserveAspectFit
-                    source: root.pageUrl
-                    onStatusChanged: if (status === Image.Ready) {
-                        geomProbe.restart()
-                        console.log("QML 阅读页已显示：源 " + sourceSize.width + "x" + sourceSize.height
-                                    + "，实际绘制 " + Math.round(paintedWidth) + "x" + Math.round(paintedHeight)
-                                    + "，阅读器可见=" + root.reading)
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Button { text: "上一页"; onClicked: backend.step(-1) }
-                    Button { text: "下一页"; onClicked: backend.step(1) }
-                    Text {
-                        Layout.fillWidth: true
-                        text: root.pageStatus
-                        color: root.cTextSecondary; font.pixelSize: 12
-                        elide: Text.ElideRight
-                    }
-                }
-            }
+            pageUrl: root.pageUrl
+            pageStatus: root.pageStatus
+            bgColor: root.cBg
+            secondaryColor: root.cTextSecondary
+            onStepRequested: (delta) => backend.step(delta)
         }
 
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）

@@ -1083,3 +1083,29 @@ LoadMoreFooter.qml  组件（分页页脚）
 **下一步（按同一套路）**：把 `Main.qml` 里剩下的部分继续分出去 ——
 详情视图与阅读器视图（现在是 `root.reading` 切换的两块），
 以及把 `Connections` 里的回调逐步下沉到各屏（一次一层）。
+
+### 第三屏抽出：`ReaderScreen.qml`（阅读器）
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/ReaderScreen.qml`（55 行：翻页图 + 上一页/下一页 + 状态行） |
+| 改写点 | `root.pageUrl/pageStatus/cBg/cTextSecondary` → 组件属性；`backend.step(±1)` → 信号 `stepRequested(delta)`；`visible: root.reading` 移到实例上 |
+| 四项验证 | 构建 0 错误 / `--shot` 退出码 0 + 截图 1180x780 / `--ui-selftest` 仍在跑 / `ctest` 16/16 |
+| `Main.qml` | 进一步变短（315 → 约 300 行） |
+
+**一处有意的删减（不当作"已对齐"）**：原文 `onStatusChanged` 里调用了块外的 `geomProbe.restart()`
+（一个诊断 Timer，定义在 `Main.qml` 内、组件里不可见）。本轮**去掉了这一行**，保留了同处的绘制尺寸日志。
+要恢复它，应把那个 Timer 一并搬进 `ReaderScreen.qml`（或改成信号）——列为本目标内的一项。
+
+**至此 `src/qml/` 的结构**：
+
+```
+Main.qml            主页/路由（+ 详情视图、全局状态、Connections）
+HomeScreen.qml      首页
+SearchScreen.qml    搜索
+ReaderScreen.qml    阅读器
+ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
+```
+
+**下一屏**：详情视图（`Main.qml` 107 行起，约 95 行 —— 比前三屏都大，是封面 + 标题 + 作者 + 标签 +
+章节 `ListView` 的组合）。套路相同：先读原文 → 只搬纯渲染 → 信号回传 → 四项验证。

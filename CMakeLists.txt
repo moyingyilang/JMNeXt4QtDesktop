@@ -145,4 +145,5 @@ qt_add_qml_module(jmnext4qml
         src/qml/LoadMoreFooter.qml
         src/qml/HomeScreen.qml
         src/qml/SearchScreen.qml
+        src/qml/ReaderScreen.qml
 )
