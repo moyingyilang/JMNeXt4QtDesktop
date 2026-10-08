@@ -444,3 +444,19 @@ jmnext4qml --page <png> --shot out.png 9000
 清单详见 `docs/ui-inventory/05-gap-vs-kotlin.md`。
 **下一步（本目标第 1 步）**：把 `Main.qml` 按屏拆分（新增 QML 需登记进
 `CMakeLists.txt` 的 `qt_add_qml_module(... QML_FILES ...)`），并落第一个 `components/*.qml`。
+
+### 新增一个 QML 文件的正确姿势（本轮实测跑通，照这个做）
+
+1. 把文件放进 `src/qml/`（屏幕放 `src/qml/screens/`，组件放 `src/qml/components/`）；
+2. **必须登记进 `CMakeLists.txt` 的 `QML_FILES` 列表** —— 该行缩进是 **4 个空格**
+   （`    QML_FILES src/qml/Main.qml`），登记后写成多行，每项 8 空格缩进；
+3. 重新 `cmake -S . -B build ... && cmake --build build -j2`；
+4. **验证方式（不要只看构建退出码）**：
+   - 构建产物里应出现该文件：`find build -name 'ComicCard.qml'` →
+     期望 `build/JMNeXt/src/qml/components/ComicCard.qml`；
+   - 模块的类型清单里应出现该类型：`grep ComicCard build/JMNeXt/qmldir`。
+
+本轮按此新建了 `src/qml/components/ComicCard.qml`（65 行，对应 Kotlin 的
+`ui/components/ComicCard.kt`：只暴露 title/author/coverUrl 与 `clicked()` 信号），
+两项验证都通过。**注意**：它目前**尚未在 `Main.qml` 里使用**（本轮只跑通"新增即登记即可加载"的链路），
+因此"能加载"已验证、"已被界面使用"未验证。

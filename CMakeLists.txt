@@ -138,5 +138,7 @@ target_link_libraries(jmnext4qml PRIVATE jmnext_qtlayer Qt6::Quick Qt6::Qml Qt6:
 qt_add_qml_module(jmnext4qml
     URI JMNeXt
     VERSION 1.0
-    QML_FILES src/qml/Main.qml
+    QML_FILES
+        src/qml/Main.qml
+        src/qml/components/ComicCard.qml
 )
