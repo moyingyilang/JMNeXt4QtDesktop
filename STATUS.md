@@ -1389,3 +1389,23 @@ SettingsScreen.qml:28:12: Duplicate signal name: invalid override of property ch
 
 **至此 Qt 侧屏幕清单**：Home / Search / Reader / Detail（抽取）、**About / Settings（新建）**，
 共 6 屏；剩余 19 屏（收藏/分类/画师/评论/随机/我的/登录/屏蔽设置页/标签/周更/通知/更多列表等）尚未实现。
+
+### 分类屏（第 40 轮）：数据层接口的位置已探明
+
+本轮先做"先量后改"的定位，结论如下（供下一步直接动手）：
+
+| 问题 | 结论 |
+| --- | --- |
+| 谁在发请求？ | `core::JmApi` 只提供底层 `request(path, query)` / `requestPath(...)` / `doRequest(...)` |
+| `latest` / `search` / `album` 在哪？ | 不在 `JmApi.h` —— 由上层封装提供（`JmWorker` 通过 `client()` 调用） |
+| 解析入口在哪？ | `core/JmParse.h`：`ListEntry` / `SeriesEntry` / `AlbumInfo` / `PageImage` / `ChapterImages` / `SearchPage` |
+
+**因此"加分类"最小改动的正确落点是**：
+1. 在提供 `latest/search/album` 的那个封装类里加一个 `categories()`（走 `JmApi::request`，参照 `latest` 的写法）；
+2. `JmParse` 加一个 `parseCategories(json)`（JM 的 `/categories` 是数组，元素含 `id/title` 与子分类）；
+3. `JmWorker` 加 `loadCategories()` slot 与 `categoriesReady(names, ids)` 信号；
+4. `JmBackend` 加 `Q_INVOKABLE void loadCategories();` 与对应信号转发；
+5. `src/qml/CategoryScreen.qml` 照 `HomeScreen`/`DetailScreen` 模板写（列表直接复用 `ComicCard`）。
+
+**未做**：本轮只完成定位，未写代码。下一步按上面五步实施，验收仍为四项目标
+（构建 0 错误 / `--shot` 出图与日志 / 交互自检或新增一条可断言的自检 / `ctest` 16/16）。
