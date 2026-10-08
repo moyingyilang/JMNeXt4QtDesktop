@@ -256,6 +256,30 @@ int main(int argc, char** argv) {
         });
         return app.exec();
     }
+    // --category-filter <标签>：验证"点分类标签 -> 取作品列表"这条链路
+    // （JmClient::categoryFilter -> JmWorker::categoryFilter -> JmBackend::categoryReady）。
+    // 用法示例：./build/jmnext4qml --category-filter 女高中生
+    if (argc >= 2 && std::string(argv[1]) == "--category-filter") {
+        const QString tag = (argc >= 3) ? QString::fromUtf8(argv[2]) : QString();
+        QObject::connect(&backend, &jmnext::qt::JmBackend::categoryReady, &app,
+                         [&app](const QStringList& titles, const QStringList&) {
+                             qInfo().noquote() << QStringLiteral("分类筛选自检：%1 条，首条：%2")
+                                                      .arg(titles.size())
+                                                      .arg(titles.value(0).section('\n', 0, 0));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("分类筛选自检失败：%1").arg(e);
+            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend, tag] { backend.categoryFilter(tag, 1); });
+        QTimer::singleShot(60000, &app, [&app] {
+            qInfo().noquote() << QStringLiteral("分类筛选自检超时（60 秒）");
+            app.quit();
+        });
+        return app.exec();
+    }
+
     // --hot-tags：验证分类屏的数据链路（JmParse::parseHotTags -> JmClient::hotTags
     // -> JmWorker::loadHotTags -> JmBackend::hotTagsReady）。与 --ui-selftest 同一套路：
     // 走真实网络、把结果打到日志，用于回答"热标签到底取到没有"。

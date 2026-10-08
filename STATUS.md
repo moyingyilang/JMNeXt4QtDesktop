@@ -1624,3 +1624,28 @@ $ ./build/jmnext4qml --hot-tags
 
 **Qt 侧屏幕清单**：Home / Search / Reader / Detail（抽取）、About / Settings / **Category（新建）** = **7 屏**；
 未实现 18 屏。
+
+### 分类切片第七步（第 51 轮）：筛选链路接通并**实测返回真实作品**
+
+新增 `--category-filter <标签>` 自检，首次运行即通过：
+
+```
+$ ./build/jmnext4qml --category-filter 女高中生
+分类筛选自检：80 条，首条：慾望入门课
+```
+
+| 层 | 位置 | 状态 |
+| --- | --- | --- |
+| `JmClient::categoryFilter` | `JmClient.cpp` | 已验证（返回 80 条） |
+| `JmWorker::categoryFilter` / `categoryReady` | `JmWorker.h`（slot+信号）、`.cpp`（实现） | 已验证 |
+| `JmBackend::categoryFilter` / `categoryReady` | `JmBackend.h`（Q_INVOKABLE+信号）、`.cpp`（转发+连接） | 已验证 |
+| `--category-filter` 自检 | `main_qml.cpp` | 本轮新增，可重跑 |
+
+**协议细节已按 Kotlin 原码落实并生效**：`c` 为空时**省略整个参数**（不拼 `c=`）；
+本轮用非空标签调用，拿到 80 条，说明请求拼接与 `parseSearchPage` 复用都正确。
+
+**验证手段现为六条**：`ctest`（16 项）、widget `--list/--chapters`、`--shot`（含 `--open`）、
+`--ui-selftest`（加载更多）、`--hot-tags`（分类标签）、**`--category-filter`（分类筛选）**。
+
+**仍待做**：把筛选结果接到 `CategoryScreen` 的界面上（现在是 `--category-filter` 在数据层验证，
+屏里点标签只打日志）。Qt 侧屏幕仍为 7 个，未实现 18 个。

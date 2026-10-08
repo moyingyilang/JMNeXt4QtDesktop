@@ -319,6 +319,25 @@ void JmWorker::reportCacheStats() {
 
 namespace jmnext::qt {
 
+void JmWorker::categoryFilter(const QString& c, int page) {
+    if (!ensureStarted()) return;
+    auto list = client().categoryFilter(c.toStdString(), page);
+    if (!list) {
+        emit failed(QStringLiteral("分类筛选失败：%1").arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    QStringList titles, ids;
+    for (const auto& e : *list) {
+        titles << QStringLiteral("%1\n   %2　[%3]")
+                      .arg(QString::fromStdString(e.name))
+                      .arg(QString::fromStdString(e.author))
+                      .arg(QString::fromStdString(e.categoryTitle));
+        ids << QString::fromStdString(e.id);
+    }
+    emit status(QStringLiteral("分类「%1」第 %2 页：%3 条").arg(c).arg(page).arg(titles.size()));
+    emit categoryReady(titles, ids);
+}
+
 void JmWorker::loadHotTags() {
     if (!ensureStarted()) return;
     auto tags = client().hotTags();

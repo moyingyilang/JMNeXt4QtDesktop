@@ -48,6 +48,9 @@ public slots:
 
     /// 热门标签（分类浏览页的数据源；JmClient::hotTags）
     void loadHotTags();
+
+    /// 按分类标签筛选作品（c 为空表示不筛选；参数会被省略）
+    void categoryFilter(const QString& c, int page);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
@@ -79,6 +82,9 @@ signals:
 
     /// 热门标签就绪（纯字符串数组）
     void hotTagsReady(const QStringList& tags);
+
+    /// 分类筛选结果就绪（title/id 两个平行列表，与 listReady 同形态）
+    void categoryReady(const QStringList& titles, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);

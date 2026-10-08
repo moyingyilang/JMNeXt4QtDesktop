@@ -36,6 +36,8 @@ public:
     Q_INVOKABLE void loadCovers(int n);
     /// 热门标签（分类浏览页的数据源）
     Q_INVOKABLE void loadHotTags();
+    /// 按分类标签筛选作品（第 51 轮）
+    Q_INVOKABLE void categoryFilter(const QString& c, int page = 1);
     Q_INVOKABLE void reportCacheStats();
 
 signals:
@@ -43,6 +45,7 @@ signals:
     void listAppended(const QStringList& titles, const QStringList& ids);
     /// 热门标签就绪（纯字符串数组）
     void hotTagsReady(const QStringList& tags);
+    void categoryReady(const QStringList& titles, const QStringList& ids);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
     void currentAidChanged();

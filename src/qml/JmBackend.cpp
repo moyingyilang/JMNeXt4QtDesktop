@@ -16,6 +16,7 @@ JmBackend::JmBackend(QObject* parent) : QObject(parent) {
     connect(worker_, &JmWorker::listReady, this, &JmBackend::listReady);
     connect(worker_, &JmWorker::listAppended, this, &JmBackend::listAppended);
     connect(worker_, &JmWorker::hotTagsReady, this, &JmBackend::hotTagsReady);
+    connect(worker_, &JmWorker::categoryReady, this, &JmBackend::categoryReady);
     connect(worker_, &JmWorker::albumReady, this, &JmBackend::albumReady);
     connect(worker_, &JmWorker::albumCoverReady, this, &JmBackend::albumCoverReady);
     connect(worker_, &JmWorker::chaptersReady, this, &JmBackend::chaptersReady);
@@ -44,6 +45,7 @@ void JmBackend::invoke(const char* method, Args&&... args) {
 void JmBackend::loadList() { invoke("loadList"); }
 void JmBackend::loadMore() { invoke("loadMore"); }
 void JmBackend::loadHotTags() { invoke("loadHotTags"); }
+void JmBackend::categoryFilter(const QString& c, int page) { invoke("categoryFilter", Q_ARG(QString, c), Q_ARG(int, page)); }
 void JmBackend::search(const QString& word, int page) { invoke("search", Q_ARG(QString, word), Q_ARG(int, page)); }
 void JmBackend::loadAlbum(const QString& aid) {
     currentAid_ = aid;
