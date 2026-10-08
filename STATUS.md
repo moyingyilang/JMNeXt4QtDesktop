@@ -1344,3 +1344,29 @@ showPageAt / prefetch / saveProgressNow / previewNext
 **写新 QML → 登记 → 接线（信号 + 外层状态）→ 构建/运行/自检/单测四项验证**。
 后面那些"零数据层成本"的屏（更多列表、设置）可照此复制；
 "需要新接口"的屏（分类/随机/评论/收藏/历史/签到/画师/登录）在此基础上再加一层 C++ 请求与解析。
+
+### 设置屏（第 38 轮）失败与回滚：信号名与属性的自动信号重名
+
+**失败现象**（QML 运行期，构建期 `qmlcachegen` 反而通过了）：
+
+```
+Main.qml:183:9: Type SettingsScreen unavailable
+SettingsScreen.qml:28:12: Duplicate signal name: invalid override of property change signal or superclass signal
+```
+
+**根因**：我写了 `property bool twoPage`，QML 会自动生成变化信号 **`twoPageChanged`**；
+而我又手写了一个 `signal twoPageChanged(bool on)` → **重名**，整个类型不可用。
+
+**修法（两处，各一行）**：把自定义信号改名，避开自动生成的名字 ——
+`signal twoPageChanged(bool on)` → **`signal twoPageToggled(bool on)`**；
+`Main.qml` 实例上的 `onTwoPageChanged:` → **`onTwoPageToggled:`**。
+
+**回滚结果**：删除 `SettingsScreen.qml`、恢复 `Main.qml` 与 `SearchScreen.qml`、撤销 CMake 登记 →
+构建 0 错误、`列表已填充：80 条`、截图 1180x780、`git status` 干净。**无残留。**
+
+**这条经验要记进"写 QML 的规矩"**（本目标已积累若干条）：
+
+> **自定义信号不能与属性的自动变化信号同名**（`fooChanged` 由 `property ... foo` 自动生成）。
+> 同理，属性名也不能与 `Rectangle`/`Item` 的内置属性重名（第 5 轮踩过 `radius`）。
+
+**下一步**：按上述两处改名重做设置屏（QML 文件可原样复用，只改信号名与实例上的处理器名）。
