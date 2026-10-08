@@ -942,3 +942,27 @@ src/qml/JmBackend.cpp:17  connect(worker_, &JmWorker::listAppended, this, &JmBac
 | `./build/jmnext4desktop --list` / `--chapters <aid>` | widget 路径真实链路 |
 | `./build/jmnext4qml --shot <png> <ms> [--search 词]` | QML 渲染结果（静态；`--shot` 必须在第一位） |
 | `./build/jmnext4qml --ui-selftest` | QML 交互链路（加载更多） |
+
+### 抽取 `HomeScreen.qml` 的"现状快照"（下次照此搬，不必重新摸索）
+
+`Main.qml` 里属于首页的部分（当前行号，随改动会漂移，搬前用 grep 重新确认）：
+
+| 片段 | 当前位置 | 搬进 `HomeScreen.qml` 后由谁持有 |
+| --- | --- | --- |
+| 搜索行（TextField + 搜索按钮 + "作品列表（N 条）"标题） | ~21–55 | **留在 Main.qml**（它属于搜索屏；Kotlin 侧也在 `SearchScreen`） |
+| `ListModel { id: listModel }` | ~16 | **HomeScreen 持有** |
+| 列表视图（含 `ComicCard` delegate） | ~57–78 | HomeScreen 持有 |
+| `StateBox`（空/失败 + 重试） | ~81–91 | HomeScreen 持有 |
+| `LoadMoreFooter` | ~93–103 | HomeScreen 持有 |
+| `function onListReady(titles, ids)` | ~280 起 | HomeScreen 的 `Connections` 持有 |
+| `function onListAppended(titles, ids)` | ~296 起 | 同上 |
+| `function onCoverUrlReady(index, url)` | 待确认行号 | 同上 |
+| 与列表相关的 `property`（`lastListCount` / `listExhausted` / `listLoading`） | ~245–247 | 同上 |
+
+**关键约束（本目标已踩过的坑）**：
+1. `backend` 在 QML 里是通过上下文属性可见的，因此 `HomeScreen.qml` **可以直接引用 `backend`**，
+   不必把后端一路当参数传下去；但**主题色必须由调用方注入**（token 是 `Main.qml` 的属性）；
+2. 新文件必须**登记进 `CMakeLists.txt` 的 `QML_FILES`**，且缩进用 `\(\s*\)` 让 sed 自己匹配；
+3. 搬完**必须跑 `jmnext4qml --shot`**（第 7 轮的假通过教训）+ `--ui-selftest`（确认"增长：通过"仍在）。
+
+**回退点**：本轮已打 tag `port-20`，可整体回退到"组件层完成、加载更多修通"的状态。
