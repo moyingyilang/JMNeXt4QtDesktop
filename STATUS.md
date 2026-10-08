@@ -1954,3 +1954,26 @@ StateBox.qml
 `--chapters`）都可能因网络抖动而失败** —— 排查时应先重跑一次，不要立刻怀疑代码。
 
 **Qt 侧屏幕现为 8 个**：Home / Search / Reader / Detail / About / Settings / Category / **More**；未实现 17 项（按审计表）。
+
+---
+
+# 收尾验证（第 59 轮）：八项全过，无回归
+
+`scripts/verify-all.sh`（本轮加入仓库，容器内 `bash scripts/verify-all.sh` 即可重跑）：
+
+| # | 检查 | 结果 |
+| --- | --- | --- |
+| 1 | 干净重建（`cmake -S . -B build` + `--build -j2`） | 退出码 0，**错误 0** |
+| 2 | `ctest --test-dir build` | **100% tests passed, 0 failed out of 16** |
+| 3 | `jmnext4desktop --list` | 封面缩略图成功 3 张；**首页列表自检：通过** |
+| 4 | `jmnext4desktop --chapters 209827` | 章节 159 / 列表项 159；末页 第 1/194 页 764x1200；**章节选择自检：通过** |
+| 5 | `jmnext4qml --shot <png> 9000` | 分类标签已填充 10 个；截图 **1180x780** |
+| 6 | `jmnext4qml --ui-selftest` | **listAppended 追加 80 条，增长：通过** |
+| 7 | `jmnext4qml --hot-tags` | **10 个**（前三个：辦公女郎 / 動畫化 / 歹戲拖棚） |
+| 8 | `jmnext4qml --category-filter 女高中生` | **80 条**，首条 慾望入门课 |
+
+**两点说明**：
+1. 第 7 项在上一轮曾失败（网络抖动），本轮**恢复通过** —— 印证上轮"偶发非回归"的判断；依赖网络的检查先重跑一次再怀疑代码；
+2. 本套件已入库（`scripts/verify-all.sh`），接手者一条命令即可复现上述状态。
+
+**仓库状态**：工作区干净、与远端同步、自 tag `port-20` 以来 **38 个提交**。
