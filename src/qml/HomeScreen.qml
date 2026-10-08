@@ -25,6 +25,9 @@ ColumnLayout {
     property bool exhausted: false
 
     // 主题色由调用方注入（token 是 Main.qml 的运行时属性，写死会让四套风格切换失效）
+    // 列表分页状态：全部由本组件维护（原在 Main.qml，第 31–33 轮下沉）
+    property int lastListCount: 0
+
     property color hoverColor: "#2f3237"
     property color textColor: "#e6e6e6"
     property color secondaryColor: "#b9bcc2"
@@ -104,6 +107,22 @@ ColumnLayout {
         home.loading = false
         console.log("QML 追加 " + titles.length + " 条，当前共 " + home.listModel.count + " 条")
         backend.loadCovers(20)
+    }
+
+    // 首屏填充（首页列表）与搜索结果（替换语义）都走这条：两种情况下都是"清空后重填"。
+    // 注意与 onListAppended 的区别：那条是**追加**（加载更多），这条是**替换**。
+    function onListReady(titles, ids) {
+        home.listModel.clear()
+        for (var i = 0; i < titles.length; ++i)
+            home.listModel.append({ "title": titles[i], "aid": ids[i], "coverUrl": "" })
+        console.log("QML 列表已填充：" + home.listModel.count + " 条")
+        home.loading = false
+        if (home.listModel.count <= home.lastListCount) {
+            home.exhausted = true
+            console.log("QML 列表已到底：" + home.listModel.count + " 条")
+        }
+        home.lastListCount = home.listModel.count
+        backend.loadCovers(20)          // 让前 20 条的封面 URL 与图片就位
     }
     }
 }

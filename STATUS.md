@@ -1219,3 +1219,26 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 **剩余（列表部分）**：`onListReady`（首屏填充 / 搜索替换）+ 三个状态属性
 （`lastListCount` / `listExhausted` / `listLoading`）。做完这三样，
 `Main.qml` 里与列表相关的部分才算真正清空。
+
+### `Connections` 下沉完成（列表部分，第 33 轮）：`Main.qml` 里列表逻辑已清空
+
+| 项 | 结果 |
+| --- | --- |
+| `Main.qml` | `onListReady` / `onListAppended` / `onCoverUrlReady` **全部为 0**；`lastListCount` / `listExhausted` / `listLoading` 三个状态**残留 0** |
+| `HomeScreen.qml` | 三个回调各 1，`lastListCount` 为组件内部状态，`loading` / `exhausted` 由组件自管 |
+| 有数据路径 | `列表已填充：80 条` + 截图 1180x780 |
+| **空列表路径** | `列表已填充：0 条` → **`列表已到底：0 条`**（推导逻辑在新家照常工作） |
+| 交互自检 | `listAppended 追加 80 条，增长：通过` |
+| 单测 | `ctest` **16/16** |
+
+**这条纵向切片的价值**：这是本目标第一次**完整沉掉一层**（一个屏的全部后端回调 + 它需要的状态）。
+前四轮只是"渲染搬走、逻辑留原地"，`Main.qml` 因此一直薄不下来；现在列表这一层真正搬完了。
+
+**做法固化（后面各屏照此）**：
+1. 删除用**精确文本替换**（`\Q…\E`），不用行号区间；
+2. 新增插到**根对象内部**（按行号定位收尾行），绝不追加到文件末尾；
+3. **一次一个函数**，四项目标（构建 0 错误 / `--shot` 出图与日志 / `--ui-selftest` / `ctest`）各自验证；
+4. **先确认构建成功再看 QML 输出**（旧二进制会给出假证据）。
+
+**下一层**：`onAlbumReady` / `onChaptersReady` / `onCurrentAidChanged` → `DetailScreen`；
+`onPageReady` / `onPageChanged` → `ReaderScreen`；`onStatus` / `onFailed` 留在 `Main`（跨屏状态栏）。

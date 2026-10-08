@@ -102,9 +102,6 @@ ApplicationWindow {
 
     property string pageStatus: ""
     // 列表分页状态：条数不再增长即视为"已到底"（后端暂未暴露 hasMore，先在界面侧推导）
-    property int lastListCount: 0
-    property bool listExhausted: false
-    property bool listLoading: false
     // 临时布局探针：启动 3 秒后打印各层宽度（不需要页面，避免网络波动影响测量）
     Timer {
         interval: 3000; running: true; repeat: false
@@ -134,20 +131,6 @@ ApplicationWindow {
 
     Connections {
         target: backend
-
-        function onListReady(titles, ids) {
-            listModel.clear()
-            for (var i = 0; i < titles.length; ++i)
-                listModel.append({ "title": titles[i], "aid": ids[i], "coverUrl": "" })
-            console.log("QML 列表已填充：" + listModel.count + " 条")
-            root.listLoading = false
-            if (listModel.count <= root.lastListCount) {
-                root.listExhausted = true
-                console.log("QML 列表已到底：" + listModel.count + " 条")
-            }
-            root.lastListCount = listModel.count
-            backend.loadCovers(20)          // 让前 20 条的封面 URL 与图片就位
-        }
 
         function onAlbumReady(name, author, tags) {
             root.albumName = name; root.albumAuthor = author
