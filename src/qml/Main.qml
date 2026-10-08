@@ -91,6 +91,8 @@ ApplicationWindow {
             }
 
             LoadMoreFooter {
+                // 列表为空时不显示页脚：此时 StateBox 已占满列表区，再显示"加载更多"既无意义也会打架
+                visible: listModel.count > 0
                 Layout.fillWidth: true
                 loading: root.listLoading
                 exhausted: root.listExhausted
