@@ -1409,3 +1409,22 @@ SettingsScreen.qml:28:12: Duplicate signal name: invalid override of property ch
 
 **未做**：本轮只完成定位，未写代码。下一步按上面五步实施，验收仍为四项目标
 （构建 0 错误 / `--shot` 出图与日志 / 交互自检或新增一条可断言的自检 / `ctest` 16/16）。
+
+### 分类切片：样板已读齐（第 41 轮）
+
+| 发现 | 意义 |
+| --- | --- |
+| `src/core/JmPaths.h` **已有 `CATEGORIES[] = "categories"`** 与 `CATEGORIES_FILTER[]` | **少一处改动** —— 路径常量不用加 |
+| `JmClient::latest` 的写法（`JmClient.cpp:75`） | 四行结构：bootstrap 检查 → `JmApi api(session_, http_)` → `api.request(路径, 查询)` → `parse*(r->text)` |
+| `parseLatestList` 在 `JmParse.cpp:201` | 解析样板（含 JSON 手法），`parseCategories` 照它写 |
+
+**剩余还需确认的一处**：`parseLatestList` 用的 JSON 库与取值写法（下一轮开头读 20 行即可）。
+
+**五步清单更新为四步**（路径常量已存在）：
+1. `JmClient` 加 `categories()`
+2. `JmParse` 加 `parseCategories()`
+3. `JmWorker` 加 slot + 信号
+4. `JmBackend` 加 `Q_INVOKABLE` + 信号转发 → `CategoryScreen.qml`
+
+**关于节奏的如实说明**：第 40、41 两轮都是"读代码定位"，没有产出功能。这是必要的（前面几次失败都源于没看清结构），
+但也确实慢了。下一步将**连续实施**这四步，做完即验证。
