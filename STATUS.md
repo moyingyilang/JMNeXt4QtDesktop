@@ -1525,3 +1525,21 @@ std::optional<std::vector<std::string>> JmClient::hotTags() {
 `JmClient.h/.cpp`、`JmWorker`、`JmBackend`、新 QML），一轮做不完。
 但**规格已经全部落纸**：本节两个函数可直接粘贴，其余三层（worker slot+信号、backend Q_INVOKABLE、QML 屏）
 在 `STATUS.md` 前几节已有清单与验收方式。
+
+### 分类切片第一步落地（第 45 轮）：核心层两个函数
+
+| 项 | 结果 |
+| --- | --- |
+| `JmParse.h` | 新增声明 `parseHotTags`（附注释说明为何用 hot_tags 而非 categories） |
+| `JmParse.cpp` | 新增实现（照 `parseLatestList` 的手写扫描：`find('[')` → `matchingBracket` → `splitTopLevel` → `readString`） |
+| `JmClient.h` / `.cpp` | 新增 `hotTags()`（照 `latest` 的四行结构，路径用已有的 `paths::HOT_TAGS`） |
+| 四处插入的锚点 | 插入前逐个 `grep -cF` 核对，**均为唯一命中（1 处）** |
+| 验证 | 构建退出码 0、错误 0；`ctest` **16/16 通过**（既有测试未受影响） |
+
+**如实标注**：新增的 `parseHotTags` / `hotTags` **还没有被任何测试或运行路径调用** ——
+本轮只证明"能编译、不破坏既有测试"。真正的验证要等 worker / backend / QML 三层接上之后，
+用一条可断言的路径（例如 `--selftest` 里打印标签数量）来证明它真的取到了数据。
+
+**下一轮**：`JmWorker` 加 `loadHotTags()` slot 与 `hotTagsReady(QStringList)` 信号
+→ `JmBackend` 加 `Q_INVOKABLE void loadHotTags()` 与信号转发 → 在 `--selftest` 里断言标签数量
+→ 最后写 `CategoryScreen.qml`。

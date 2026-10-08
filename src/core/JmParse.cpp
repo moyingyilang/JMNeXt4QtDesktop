@@ -266,6 +266,21 @@ bool needsUnscrambleFor(int aid, int scrambleId, const std::string& url) {
     return needsUnscramble(url, aid, scrambleId);
 }
 
+std::optional<std::vector<std::string>> parseHotTags(const std::string& json) {
+    const auto start = json.find('[');
+    if (start == std::string::npos) return std::nullopt;
+    const auto end = matchingBracket(json, start);
+    if (end == std::string::npos) return std::nullopt;
+
+    std::vector<std::string> out;
+    for (auto& item : splitTopLevel(json.substr(start + 1, end - start - 1))) {
+        std::string value;
+        std::size_t stop = 0;
+        if (readString(item, skipWs(item, 0), value, stop) && !value.empty()) out.push_back(value);
+    }
+    return out;
+}
+
 std::optional<SearchPage> parseSearchPage(const std::string& json) {
     // 找 "content" 后面的数组，交给 parseLatestList（它对"数组切片"同样适用）
     const auto key = json.find("\"content\"");

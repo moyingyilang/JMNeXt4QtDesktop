@@ -82,6 +82,14 @@ std::optional<std::vector<ListEntry>> JmClient::latest(int page) {
     return parsed;
 }
 
+std::optional<std::vector<std::string>> JmClient::hotTags() {
+    if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
+    JmApi api(session_, http_);
+    auto r = api.request(paths::HOT_TAGS, "");
+    if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    return parseHotTags(r->text);
+}
+
 std::optional<std::vector<ListEntry>> JmClient::search(const std::string& word, int page) {
     if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
     JmApi api(session_, http_);

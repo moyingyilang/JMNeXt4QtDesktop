@@ -66,6 +66,10 @@ struct SearchPage {
 /// 实现上复用 parseLatestList（它找第一个 '[' 再配对括号），把 content 的数组切片交给它。
 std::optional<SearchPage> parseSearchPage(const std::string& json);
 
+/// hot_tags：顶层**字符串数组**（分类浏览页用；见 JmRepository.kt 的说明：公开分类导航用 hot_tags，
+/// 而非 categories —— 后者是登录用户的收藏夹分类）。
+std::optional<std::vector<std::string>> parseHotTags(const std::string& json);
+
 /// JSON 字符串里的转义还原（至少处理 \/ \" \\ \n \t \r \uXXXX 的常见情形）
 std::string unescapeJson(const std::string& raw);
 
