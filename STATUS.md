@@ -810,3 +810,30 @@ QML 侧只是接线正确、能加载。两条可选做法（下一步择一）�
 
 **下一步**：读 `JmWorker::loadMore()` 实现与 `JmBackend::invoke` 模板（两者都不长），
 定位后修好，届时 `--ui-selftest` 应从"未增长：失败"变为"增长：通过"。
+
+### 根因找到了：`loadMore` 发的是 `listAppended`，而 QML 从来没接它
+
+前一轮我把嫌疑缩到三处，本轮读完 `JmWorker` 后**定位到确切原因**：
+
+| 事实 | 位置 |
+| --- | --- |
+| `loadMore()` 的产出走 **`emit listAppended(titles, ids)`** | `src/qt/JmWorker.cpp:382` |
+| `emit listReady(...)` 只有两处：`loadList()` 与 `search()` | `JmWorker.cpp:60` / `:91` |
+| **QML 侧（`src/qml/`）没有任何 `listAppended`** | 本轮 grep 确认 |
+
+**所以"加载更多"的机制是**：worker 侧**拼接**（`currentEntries_.insert(...)`、`pendingIds_ += ids`、`page_ = next`）
+并通过 `listAppended` 告诉界面"追加这些"；而 widget 版接了这个信号（所以 80 → 160 能用），
+**QML 侧根本没接** → 数据被丢掉 → 界面永远 80 条。
+
+**这也解释了我那个 `--ui-selftest` 为什么打印"第二页累计 80 条"**：它接的是 `listReady`，
+而 `loadMore` **根本不会**发 `listReady` —— 那次"第二页"其实是别的原因触发的同页 `listReady`。
+**我的自检本身也接错了信号**，这一点同样要改。
+
+### 修法（下一步，三处）
+
+1. `JmBackend`：把 worker 的 `listAppended` 转发成对 QML 可见的信号（现在只连了 `status`/`failed` 等）；
+2. `Main.qml`：新增 `onListAppended` 处理 —— **追加**到 `listModel`（而不是像 `onListReady` 那样 `clear()` 后重填），
+   并顺带请求新条目的封面（`backend.loadCovers(...)` 的现有用法需按索引核对）；
+3. `--ui-selftest`：改接 `listAppended` 来断言"新增了多少条"，而不是接 `listReady`。
+
+**验收标准不变**：改完后 `--ui-selftest` 应打印"增长：通过"，并且 `--shot` 出的图里列表条数变为 160。
