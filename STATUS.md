@@ -1608,3 +1608,19 @@ $ ./build/jmnext4qml --hot-tags
 | `./build/jmnext4qml --shot <png> <ms> [--open <aid>]` | QML 渲染（静态） |
 | `./build/jmnext4qml --ui-selftest` | QML 交互（加载更多） |
 | **`./build/jmnext4qml --hot-tags`** | **分类数据链路（本轮新增）** |
+
+### 分类切片第五步（第 49 轮）：`CategoryScreen.qml` 建成
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/CategoryScreen.qml`（104 行：标题 + 刷新按钮 + 标签 `ListView` + 计数 + 关闭） |
+| 数据源 | **`hot_tags`**（依据 `shared/data/JmRepository.kt` 的说明：公开分类导航用它，`categories` 是登录用户收藏夹分类） |
+| 取数时机 | `Component.onCompleted: backend.loadHotTags()` + 手动"刷新"按钮 |
+| 接线 | `SearchScreen` 加"分类"按钮 → `Main.showCategory` → 屏实例 |
+| 验证 | 构建 0 错误 / QML 运行 + 截图 1180x780（无回归）/ `--hot-tags` 自检 **10 个** / `ctest` **16/16** |
+
+**未做的部分（如实）**：点标签后的**筛选结果尚未接** —— 点击目前只发 `tagClicked(tag)` 信号、由外层打日志。
+接筛选要用 `categories/filter`，且必须遵守协议细节：**`c` 为空时省略整个参数**（发 `c=` 会返回错误页而非 JSON）。
+
+**Qt 侧屏幕清单**：Home / Search / Reader / Detail（抽取）、About / Settings / **Category（新建）** = **7 屏**；
+未实现 18 屏。

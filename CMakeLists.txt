@@ -149,4 +149,5 @@ qt_add_qml_module(jmnext4qml
         src/qml/DetailScreen.qml
         src/qml/AboutScreen.qml
         src/qml/SettingsScreen.qml
+        src/qml/CategoryScreen.qml
 )

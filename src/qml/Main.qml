@@ -37,6 +37,7 @@ ApplicationWindow {
                 onSearchRequested: (word) => backend.search(word, 1)
                 onAboutRequested: root.showAbout = true
                 onSettingsRequested: root.showSettings = true
+                onCategoryRequested: root.showCategory = true
             }
 
             HomeScreen {
@@ -115,6 +116,7 @@ ApplicationWindow {
     /// 是否显示"关于"屏（第 37 轮新增）
     property bool showAbout: false
     property bool showSettings: false
+    property bool showCategory: false
     property bool twoPage: false
     // 诊断用：页面就绪 1.5 秒后再量一次几何（onStatusChanged 那一刻可能还没完成布局）
     Timer {
@@ -195,5 +197,19 @@ ApplicationWindow {
                 backend.setTwoPage(on)
             }
             onBlockWordsChanged: (words) => backend.setBlockWords(words)
+        }
+
+        CategoryScreen {
+            id: categoryPane
+            visible: root.showCategory
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showCategory = false
+            onTagClicked: (tag) => console.log("QML 分类标签被点击（筛选待接）：" + tag)
         }
 }
