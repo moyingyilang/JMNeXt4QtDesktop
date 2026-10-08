@@ -1844,3 +1844,91 @@ StateBox.qml
 ```
 
 > 注：本清单只列**文件存在性**，不等于已对齐 —— 逐项状态判定在下一轮按此数据给出。
+
+---
+
+# 完成度审计（第 57 轮，逐项对应目标的完成判定）
+
+> 判定依据只有两类：**仓库里存在的文件** + **可重跑的验证证据**。不用感觉判断。
+> 三档：**已对齐**（功能与观感均已验证）/ **部分**（主路径可用已验证，但有明确缺口）/ **未做**。
+
+## 一、Kotlin 侧 25 个屏幕文件 → Qt 侧状态
+
+| Kotlin 文件 | Qt 状态 | 依据 / 缺口 |
+| --- | --- | --- |
+| `home/HomeScreen.kt` | **部分** | 列表 80 条、加载更多（`--ui-selftest` 增长通过）、空/失败态、页脚已对齐；**缺**：随机 FAB、下拉刷新 |
+| `home/RandomFab.kt` | 未做 | 依赖随机接口 |
+| `home/HomeViewModel.kt` | 部分 | Qt 侧以 `JmWorker` 承担其职责（列表/分页/封面） |
+| `search/SearchScreen.kt` | **部分** | 搜索行 + 结果替换已对齐；**缺**：筛选器 |
+| `search/SearchFilters.kt` | 未做 | 无接口 |
+| `detail/DetailScreen.kt` | **部分** | 封面 400x533、名称/作者/标签、章节 **159 条**均已实测；**缺**：评论入口、收藏按钮、评分等 |
+| `reader/ReaderScreen.kt` | **部分** | 翻页图 + 上一页/下一页 + 状态行；**缺**：手势、缩放、双页（后端有 `setTwoPage` 但界面未用）、下拉 |
+| `reader/ChapterPickerDialog.kt` | 未做 | 章节列表在详情页已有，弹窗未做 |
+| `reader/PageRatio.kt` | 未做 | 页宽比逻辑未移植 |
+| `category/CategoryScreen.kt` | **已对齐（功能面）** | 标签 10 个、筛选 80 条、`ComicCard` 渲染、点击可打开详情；**观感待人工确认** |
+| `about/AboutScreen.kt` | **部分** | 信息齐；外观未被截图覆盖 |
+| `settings/BlockSettingsScreen.kt` | **部分** | 双页 + 屏蔽词已接后端；**链路未被点击验证**；其余设置项未做 |
+| `favorites/FavoritesScreen.kt` | 未做 | 无接口 |
+| `favorites/FolderDialogs.kt` | 未做 | 无接口 |
+| `creator/CreatorScreen.kt` | 未做 | 无接口 |
+| `creator/CreatorWorkScreen.kt` | 未做 | 无接口 |
+| `comments/CommentsScreen.kt` | 未做 | 无接口 |
+| `random/RandomListScreen.kt` | 未做 | 无接口 |
+| `profile/ProfileScreen.kt` | 未做 | 依赖登录 |
+| `profile/DailyHistorySection.kt` | 未做 | 依赖登录/每日接口 |
+| `auth/AuthScreen.kt` | 未做 | 依赖登录链路 |
+| `more/MoreListScreen.kt` | 未做 | 纯静态列表，成本最低的遗留项 |
+| `notifications/NotificationsScreen.kt` | 未做 | 无接口 |
+| `tags/TagFavoritesScreen.kt` | 未做 | 无接口 |
+| `week/WeekScreen.kt` | 未做 | 无接口（`shared/data/Daily.kt` 有参照） |
+
+**小计**：已对齐 1 / 部分 7 / 未做 17（`HomeViewModel` 计入部分）。
+
+## 二、Kotlin 侧 8 个组件 → Qt 侧状态
+
+| Kotlin 组件 | Qt 状态 |
+| --- | --- |
+| `ComicCard.kt` | **已对齐**（含悬停 120ms 过渡、按压 0.985 弹性） |
+| `StateBox.kt` | **已对齐**（`kind` + `retry`，空/失败态已接线） |
+| `LoadMoreFooter.kt` | **已对齐**（三态 + 已到底推导 + 空列表隐藏） |
+| `Glass.kt` / `GlassTopBar.kt` / `FloatingBottomBar.kt` / `ItemMotion.kt` / `AmbientBackdrop.kt` | **未做**（5 个） |
+
+**小计**：3 / 8。
+
+## 三、交互（目标 (a)3）
+
+| 交互 | Qt 状态 |
+| --- | --- |
+| 加载更多 | **已对齐**（`--ui-selftest` 断言"增长：通过"） |
+| 分类筛选 | **已对齐**（`--category-filter` 实测 80 条） |
+| 翻页手势 / 缩放 | **未做**（只有上一页/下一页按钮） |
+| 下拉刷新 | **未做** |
+| 共享元素过渡 | **未做** |
+| 动画与视觉效果 | **部分**（卡片悬停/按压有；`ItemMotion`、`AmbientBackdrop`、壁纸未做） |
+
+## 四、数据层（目标 (a)1）
+
+| 能力 | Qt 状态 |
+| --- | --- |
+| 主机发现与签名 | **已对齐**（`jmnext4net discover` 实测 `https://www.cdnhjk.net/`） |
+| 列表 / 搜索 / 详情 / 章节 / 翻页 | **已对齐**（widget 与 QML 两条路径均实测） |
+| 反切片 | **已对齐**（Android 侧修通；Qt 侧 `core` 有 `needsUnscrambleFor` 与实现，`ctest` 覆盖） |
+| 图片解码与缓存、磁盘缓存 | **已对齐**（`ctest` 覆盖；自检有 `cacheStats`） |
+| 屏蔽词 / 双页 | **已对齐（后端）**，界面接线未被点击验证 |
+| **热门标签 / 分类筛选** | **本轮新增并已验证** |
+| 收藏 / 历史 / 评论 / 画师 / 分类树 / 随机 / 签到 / 登录 | **未做**（每项都要新开接口与切片） |
+| 本地存储（prefs、阅读进度） | **部分**（阅读进度保存有 `saveProgressNow`；`prefs`/屏蔽标签持久化未验证） |
+
+## 五、结论（对应目标的完成判定）
+
+| 目标条款 | 达成情况 |
+| --- | --- |
+| "覆盖 Kotlin 版**全部屏幕**" | **未达成**：已对齐 1、部分 7、未做 17（共 25） |
+| "覆盖**主要交互**" | **未达成**：6 类交互中 2 类已对齐、1 类部分、3 类未做 |
+| "对照表逐项标注已对齐" | 已补（本表） |
+| "未能对齐的**如实列出并说明原因**" | 已补（上表每行的"缺"与原因；多数是"无接口 / 依赖登录 / 轮次不足"） |
+| "未验证项如实记录" | 已补（阅读器 `geomProbe`、设置屏两条链路、分类屏观感） |
+
+**因此本目标未完成，不应标记为 complete。** 剩余轮次（3 轮）不足以改变这个结论：
+其余 17 屏每屏都需新开一条四层纵向切片（解析 + 客户端 + worker + backend + QML），
+且其中 6 屏还依赖登录链路（凭据与登录流程本身尚未移植）。
