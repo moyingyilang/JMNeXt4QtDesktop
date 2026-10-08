@@ -76,6 +76,19 @@ ApplicationWindow {
                     }
                 }
             }
+
+            // 空/失败状态：列表为空时给出明确说明与重试入口（对应 Kotlin 的 ErrorBox / MessageState）
+            StateBox {
+                anchors.fill: listView
+                visible: listModel.count === 0
+                kind: root.pageStatus.indexOf("失败") >= 0 ? "error" : "message"
+                title: root.pageStatus.length > 0 ? root.pageStatus : "还没有内容"
+                description: "点“重试”重新载入列表"
+                canRetry: true
+                textColor: root.cText
+                secondaryColor: root.cTextSecondary
+                onRetry: backend.loadList()
+            }
         }
 
         // 右栏：阅读器（有页面后覆盖详情视图）

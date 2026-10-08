@@ -596,3 +596,28 @@ QML 的惯例是一个文件一个类型，所以收敛为一个组件加 `kind`
 **本轮踩到的坑（第 3 次同类）**：登记 QML 文件时我又按"看起来的缩进"写了 sed 模式，结果没匹配上
 （列表项实际是 **10 个空格**，不是我以为的 10/12 混合）。**可靠做法**：`sed -n '/QML_FILES/,/^  )/p' ... | cat -A`
 先看真实空白，或用 `\(\s*\)` 让 sed 自己吞掉缩进。现已按后者修正并验证。
+
+### 本轮：`StateBox` 接进首页（列表空/失败时不再是一片空白）
+
+此前列表为空时界面**没有任何说明**（只有一行 `pageStatus` 文本），使用者分不清"在加载 / 没内容 / 失败了"。
+现在在列表区域叠加 `StateBox`：
+
+```qml
+StateBox {
+    anchors.fill: listView
+    visible: listModel.count === 0
+    kind: root.pageStatus.indexOf("失败") >= 0 ? "error" : "message"
+    title: root.pageStatus.length > 0 ? root.pageStatus : "还没有内容"
+    canRetry: true
+    onRetry: backend.loadList()
+}
+```
+
+对应 Kotlin 的 `ErrorBox` / `MessageState`（`ui/components/StateBox.kt`）。
+
+**证据（本轮实测）**：构建退出码 0、错误 0；`jmnext4qml --shot` 退出码 0、截图 **1180x780**。
+
+**如实标注**：
+- 已验证的是"**编译 + QML 能加载**"；
+- **空/失败状态本身的观感没有被截图覆盖** —— 截图时列表有 80 条，`visible: listModel.count === 0` 为假，
+  所以那张图里这个组件是隐藏的。要覆盖它需要在"无网络/空结果"的情况下拍照，列为下一步验证项。
