@@ -60,7 +60,7 @@ Rectangle {
         ListView {
             id: resultView
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.fillHeight: resultModel.count > 0
             clip: true
             model: resultModel
             spacing: 2
