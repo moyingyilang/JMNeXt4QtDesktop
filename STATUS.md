@@ -1326,3 +1326,21 @@ showPageAt / prefetch / saveProgressNow / previewNext
 
 **如实说明**：剩余 24 轮，需要新接口的屏有 8 类以上，**不可能全部完成**；
 我会按"成本 × 可见度"排序推进，并在 `STATUS.md` 里逐项标注"已对齐 / 未做 / 为什么"。
+
+### 新建屏第一例（第 37 轮）：`AboutScreen.qml`（零数据层成本）
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/AboutScreen.qml`（67 行，`Rectangle` 根：标题 / 说明 / 许可证 / 现状 / 关闭按钮） |
+| 数据层 | **零改动**（不碰 `core` / `JmWorker` / `JmBackend`） |
+| 接线 | `SearchScreen` 新增"关于"按钮 → `signal aboutRequested()` → `Main.qml` 的 `showAbout` 状态 → `AboutScreen` 实例（`visible: root.showAbout`） |
+| 登记 | `CMakeLists.txt` 的 `QML_FILES` |
+| 验证 | 构建 0 错误（**`qmlcachegen` 已在构建期编译该屏**）/ QML 运行正常：`列表已填充：80 条` + 截图 1180x780（无回归）/ `--ui-selftest` 增长通过 / `ctest` 16/16 |
+
+**如实标注**：该屏初始 `visible: false`，而 `--shot` **点不了鼠标**，所以**"关于屏的实际外观"没有被截图覆盖**。
+已验证的是：**它能被编译、能被实例化、且没有影响既有界面**。外观需要人工点一次或下一轮加一条可拍摄路径。
+
+**这一步的意义**：把"**新建**一屏"（而非抽取别人的）的流程跑通了：
+**写新 QML → 登记 → 接线（信号 + 外层状态）→ 构建/运行/自检/单测四项验证**。
+后面那些"零数据层成本"的屏（更多列表、设置）可照此复制；
+"需要新接口"的屏（分类/随机/评论/收藏/历史/签到/画师/登录）在此基础上再加一层 C++ 请求与解析。

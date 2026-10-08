@@ -21,6 +21,8 @@ ColumnLayout {
     property color secondaryColor: "#9aa0a8"
 
     signal searchRequested(string word)
+    /// 打开"关于"屏（第 37 轮新增，零数据层成本的入口）
+    signal aboutRequested()
 
     // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
     RowLayout {
@@ -38,6 +40,10 @@ ColumnLayout {
         Button {
             text: "搜索"
             onClicked: search.searchRequested(searchField.text)
+        }
+        Button {
+            text: "关于"
+            onClicked: search.aboutRequested()
         }
     }
 

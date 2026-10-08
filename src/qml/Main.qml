@@ -35,6 +35,7 @@ ApplicationWindow {
                 listModel: listModel
                 secondaryColor: "#9aa0a8"
                 onSearchRequested: (word) => backend.search(word, 1)
+                onAboutRequested: root.showAbout = true
             }
 
             HomeScreen {
@@ -110,6 +111,8 @@ ApplicationWindow {
     // 阅读器状态：**不在绑定里直接读 context property**（编译后的 QML 绑定看不到它们，会当 null），
     // 改由 Connections 的 onPageChanged 计算后赋给根属性，绑定只读根属性。
     property bool reading: false
+    /// 是否显示"关于"屏（第 37 轮新增）
+    property bool showAbout: false
     // 诊断用：页面就绪 1.5 秒后再量一次几何（onStatusChanged 那一刻可能还没完成布局）
     Timer {
         id: geomProbe
@@ -158,4 +161,17 @@ ApplicationWindow {
             backend.loadList()
         }
     }
+
+        AboutScreen {
+            id: aboutPane
+            visible: root.showAbout
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showAbout = false
+        }
 }
