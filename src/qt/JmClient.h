@@ -29,6 +29,12 @@ public:
     std::optional<std::vector<std::string>> hotTags();
     /// 搜索（参数名 search_query 是探出来的；条目字段与首页列表相同）
     std::optional<std::vector<jmnext::core::ListEntry>> search(const std::string& word, int page);
+
+    /// 按分类筛选作品（分类浏览页点标签后用）。
+    ///  c 分类标识；**为空时整个 c 参数必须省略** —— 实测发 `c=` 会让服务端返回
+    ///          `Could not connect to mysql!` 错误页（不是 JSON）；省略才是合法的"不筛选"语义。
+    ///          依据：shared/data/JmRepository.kt 对 categoryFilter 的注释（实测结论）。
+    std::optional<std::vector<jmnext::core::ListEntry>> categoryFilter(const std::string& c, int page);
     std::optional<jmnext::core::AlbumInfo> album(const std::string& id);
     std::optional<jmnext::core::ChapterImages> chapter(const std::string& id);
     ImageCache& cache() { return cache_; }

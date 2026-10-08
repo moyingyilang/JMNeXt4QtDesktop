@@ -82,6 +82,20 @@ std::optional<std::vector<ListEntry>> JmClient::latest(int page) {
     return parsed;
 }
 
+std::optional<std::vector<ListEntry>> JmClient::categoryFilter(const std::string& c, int page) {
+    if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
+    JmApi api(session_, http_);
+    // c 为空时**不能**发 "c=" —— 实测会拿到 `Could not connect to mysql!` 错误页（不是 JSON）。
+    // 省略整个参数才是合法的"不筛选"语义（依据：shared/data/JmRepository.kt 对 categoryFilter 的注释）。
+    std::string query = "page=" + std::to_string(page);
+    if (!c.empty()) query = "c=" + c + "&" + query;
+    auto r = api.request(paths::CATEGORIES_FILTER, query);
+    if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    auto parsed = parseSearchPage(r->text);
+    if (!parsed) { lastError_ = "分类筛选解析失败"; return std::nullopt; }
+    return parsed->items;
+}
+
 std::optional<std::vector<std::string>> JmClient::hotTags() {
     if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
     JmApi api(session_, http_);
