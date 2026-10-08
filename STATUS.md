@@ -485,3 +485,21 @@ Behavior on scale { SpringAnimation { spring: 2.5; damping: 0.35 } }
 
 **结论**：先补齐这三项，再把 delegate 换成 `ComicCard`；替换当轮必须带
 `--list` 显示 80 条（回归）与截图（观感）两项证据。本轮**不做**会倒退的替换。
+
+### 本轮：列表 delegate 已换成组件（拆结构的第一刀落地）
+
+`Main.qml` 的列表项由内联 `Rectangle`（65–117 行）换成 `components/ComicCard.qml`，
+原有点击逻辑原样保留（`console.log` + `root.albumAid = aid` + `backend.loadAlbum(aid)`）。
+
+**证据（本轮实测）**：
+
+| 项 | 命令 | 结果 |
+| --- | --- | --- |
+| 构建 | `cmake --build build -j2` | 退出码 0，错误 0 |
+| 回归（列表） | `./build/jmnext4desktop --list` | **列表已加载：80 条**，封面 400x533 连续显示 |
+| 单测 | `ctest --test-dir build` | 通过（与替换前同为全绿） |
+| 观感 | `./build/jmnext4qml --list --screenshot` | **未取得**：退出码 1，无 PNG 产出（`--screenshot` 可能需要子参数，STATUS 旧记录提到"带子参数等 45 秒"） |
+
+**如实标注**：本次替换的**功能性**（80 条列表、封面、构建、单测）已验证；
+**观感**（悬停过渡与按压弹性是否仍生效）**未经截图或人工确认** —— 组件里这两条动效是从原 delegate
+原样搬来的，但"搬对了"与"看起来一样"是两件事，需下一轮补上截图或由使用者目测。

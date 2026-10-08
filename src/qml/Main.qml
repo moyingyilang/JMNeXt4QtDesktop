@@ -62,57 +62,17 @@ ApplicationWindow {
                 model: listModel
                 spacing: 2
 
-                delegate: Rectangle {
-                    width: ListView.view.width
-                    height: 74
-                    color: mouseArea.containsMouse ? root.cSurface2 : "transparent"
-                    radius: root.radiusMd
-                    // 动效（QML 原生，widget 侧做不到）：悬停颜色过渡 + 按压弹性缩放
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                    scale: mouseArea.pressed ? 0.985 : 1.0
-                    Behavior on scale { SpringAnimation { spring: 2.5; damping: 0.35 } }
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 6
-                        spacing: 8
-
-                        // 封面：后端给出 URL 前显示占位（image 源为空时不请求）
-                        Image {
-                            Layout.preferredWidth: 48
-                            Layout.preferredHeight: 64
-                            fillMode: Image.PreserveAspectCrop
-                            source: coverUrl.length > 0
-                                    ? "image://jm/cover?" + encodeURIComponent(coverUrl)
-                                    : ""
-                            // 加载失败或尚未就绪时，用纯色底代替空白
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#2b2d31"; border.color: "#3a3d43"; border.width: 1
-                                visible: parent.status !== Image.Ready
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: title
-                            color: root.cText
-                            font.pixelSize: 13
-                            wrapMode: Text.WordWrap
-                            maximumLineCount: 3
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    MouseArea {
-                        id: mouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            console.log("QML 点击作品 aid=" + aid)
-                            root.albumAid = aid
-                            backend.loadAlbum(aid)
-                        }
+                delegate: ComicCard {
+                    title: model.title
+                    aid: model.aid
+                    coverUrl: model.coverUrl
+                    hoverColor: root.cSurface2
+                    textColor: root.cText
+                    cardRadius: root.radiusMd
+                    onClicked: {
+                        console.log("QML 点击作品 aid=" + aid)
+                        root.albumAid = aid
+                        backend.loadAlbum(aid)
                     }
                 }
             }
