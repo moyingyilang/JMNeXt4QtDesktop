@@ -696,3 +696,32 @@ QTimer::singleShot(maxWaitMs, &app, grabAndQuit);          // 兜底：默认 15
    **"已经到底了"这条分支还没有数据来源**（后端未暴露"是否还有下一页"）。要真正对齐 Kotlin 版，
    需要 `JmBackend` 增加一个 `hasMore` 属性（列为下一步）；
 2. "点击后真的加载出第二页"**尚未验证**（需要点击交互，而 `--shot` 是静态拍照）。
+
+### 本轮：页脚的"已经到底了"有了真实依据（在界面侧推导，不动 C++）
+
+`JmBackend` 没有暴露"是否还有下一页"，而加 C++ 属性属结构性改动。**改为在 QML 侧推导**：
+`onListReady` 里先 `listModel.clear()` 再重填**累计列表**（widget 版的"80 → 160 条"证明是累计语义），
+因此 **"条数不再增长"就等于"已到底"**：
+
+```qml
+root.listLoading = false
+if (listModel.count <= root.lastListCount) {
+    root.listExhausted = true
+    console.log("QML 列表已到底：" + listModel.count + " 条")
+}
+root.lastListCount = listModel.count
+```
+
+页脚的 `loading` / `exhausted` 也接上了真实状态（不再写死 false），点击时置 `listLoading = true`。
+
+**证据（本轮实测）**：
+
+| 场景 | 命令 | 结果 |
+| --- | --- | --- |
+| 有数据 | `--shot <path> 8000` | 退出码 0，截图 **1180x780** |
+| 空列表 | `--shot <path> 8000 --search zzz_none` | `列表已填充：0 条` → **`列表已到底：0 条`**（推导分支确实执行），截图 1180x780 |
+
+**如实标注**：
+1. "已经到底了"的**视觉**只在空列表那张图里可能出现，而空列表时 `StateBox` 覆盖了列表区 ——
+   两者是否视觉上打架**尚未确认**（需要人工看图）；
+2. "点击后真的加载出第二页并转为 160 条"仍**未验证**（需要点击交互，`--shot` 是静态拍照）。
