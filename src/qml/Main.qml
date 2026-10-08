@@ -89,6 +89,18 @@ ApplicationWindow {
                 secondaryColor: root.cTextSecondary
                 onRetry: backend.loadList()
             }
+
+            LoadMoreFooter {
+                Layout.fillWidth: true
+                loading: false
+                exhausted: false
+                textColor: root.cText
+                secondaryColor: root.cTextSecondary
+                onLoadMore: {
+                    console.log("QML 请求加载更多")
+                    backend.loadMore()
+                }
+            }
         }
 
         // 右栏：阅读器（有页面后覆盖详情视图）

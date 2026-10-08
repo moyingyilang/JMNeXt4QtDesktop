@@ -668,3 +668,31 @@ QTimer::singleShot(maxWaitMs, &app, grabAndQuit);          // 兜底：默认 15
 
 教训：**这条命令的用法应来自源码或 `--help`，而不是我拼出来的顺序**；本轮之前那份"发现真问题"的记录已作废，
 留在这里是为了让后来者看到"我曾误判过什么、依据是什么"。
+
+### 本轮：QML 前端补上"加载更多"（此前只有 widget 版有）
+
+**先量后改的发现**：`Main.qml` 里**没有任何 `loadMore`** —— 那个能力只在 widget 版
+（`jmnext4desktop --list` 那条"80 → 160 条"走的是 widget 路径）。也就是说
+**QML 前端的首页只能看第一页**，这是与 Kotlin 版的一处真实功能缺口。
+
+**本轮动作**：
+
+1. 新增 `src/qml/LoadMoreFooter.qml`（55 行，对应 Kotlin 的 `ui/components/LoadMoreFooter.kt`：
+   `loading` / `exhausted` / `error` 三态 + `signal loadMore()`；颜色由调用方注入）；
+2. 登记进 QML 模块；
+3. 接到首页（插在 `StateBox` 块之后），`onLoadMore` 调 `backend.loadMore()`。
+
+**证据（本轮实测，四项全过）**：
+
+| 项 | 结果 |
+| --- | --- |
+| 构建 | 退出码 0，错误 0 |
+| 文件进模块 | `build/JMNeXt/LoadMoreFooter.qml` 存在 |
+| QML 程序 | `--shot` 退出码 0，日志 `QML 列表已填充：80 条` |
+| 截图 | 成功：**1180x780** |
+
+**如实标注的两点**：
+1. 页脚的 `loading` / `exhausted` 目前**写死为 false** —— 所以它现在恒显示"加载更多"，
+   **"已经到底了"这条分支还没有数据来源**（后端未暴露"是否还有下一页"）。要真正对齐 Kotlin 版，
+   需要 `JmBackend` 增加一个 `hasMore` 属性（列为下一步）；
+2. "点击后真的加载出第二页"**尚未验证**（需要点击交互，而 `--shot` 是静态拍照）。

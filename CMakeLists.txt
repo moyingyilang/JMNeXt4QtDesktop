@@ -142,4 +142,5 @@ qt_add_qml_module(jmnext4qml
         src/qml/Main.qml
         src/qml/ComicCard.qml
         src/qml/StateBox.qml
+        src/qml/LoadMoreFooter.qml
 )
