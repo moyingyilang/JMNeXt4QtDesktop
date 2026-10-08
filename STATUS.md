@@ -891,3 +891,54 @@ src/qml/JmBackend.cpp:17  connect(worker_, &JmWorker::listAppended, this, &JmBac
 
 **仍未验证**：`--shot` 的图里列表是否真的显示 160 条（自检已证明数据层与信号链正确，
 但"追加后界面渲染出 160 条"还需要一张图或人工目测）。
+
+---
+
+## 移植进度账（本目标第 20/60 轮时的实际状态）
+
+> 只写有实测证据的条目；"对齐"= 与 Kotlin 版（或与自家 widget 版）行为一致且有验证手段。
+
+### 已经对齐的
+
+| 项 | 证据／验证手段 |
+| --- | --- |
+| 首页列表（真主机、真数据、真封面） | `--shot` 出的图 + 日志"列表已填充：80 条"、"封面 400x533" |
+| **加载更多（+80 追加）** | **`--ui-selftest`：`listAppended 追加 80 条，增长：通过`** |
+| 搜索（替换列表） | 走 `listReady`，`--search` 可触发 |
+| 空/失败状态（含重试） | `StateBox` 已接线；空列表分支实测执行（日志"已到底：0 条"） |
+| 页脚三态（加载中/已到底/失败） | `LoadMoreFooter` 已接线；"已到底"按累计条数推导 |
+| 详情 / 阅读器 / 章节 | 既有能力（`--open` / `--chapters` 路径可验证） |
+| 主题 token | 四套风格可切换；组件颜色由调用方注入，不写死 |
+
+### 组件层（对应 Kotlin `ui/components/`）
+
+| Kotlin | Qt 侧 | 状态 |
+| --- | --- | --- |
+| `ComicCard.kt` | `src/qml/ComicCard.qml` | 已接线（含悬停 120ms 过渡、按压 0.985 弹性） |
+| `StateBox.kt`（三个组合函数） | `src/qml/StateBox.qml` | 已接线（`kind` + `retry` 信号） |
+| `LoadMoreFooter.kt` | `src/qml/LoadMoreFooter.qml` | 已接线 |
+| `Glass.kt` / `GlassTopBar.kt` / `FloatingBottomBar.kt` / `ItemMotion.kt` / `AmbientBackdrop.kt` | — | **未做** |
+
+### 屏幕层（Kotlin `ui/screens/` 有 25 个文件）
+
+| 现状 | 说明 |
+| --- | --- |
+| **全部界面仍集中在 `src/qml/Main.qml`** | 本轮之前的组件抽取是"从 Main.qml 里拿出去"，但**屏幕本身还没独立成文件** |
+| 下一步 | 抽 `HomeScreen.qml`（第 8 轮列的五项一起搬：`ListModel`、列表视图、`onListReady`+`loadCovers(20)`、`coverUrlChanged` 回填、`onListAppended`） |
+
+### 仍未验证 / 未做（按优先级）
+
+1. **图里是否显示 160 条**：自检已证明数据与信号链正确，但"追加后界面渲染出 160 条"只差一张图或人工目测；
+2. `HomeScreen.qml` 等**每屏一个文件**的结构改造（本目标的核心结构目标）；
+3. 其余五个组件（Glass / GlassTopBar / FloatingBottomBar / ItemMotion / AmbientBackdrop）；
+4. Kotlin 侧那 25 个屏幕里，Qt 侧目前只有首页/搜索/详情/阅读器四个的雏形，
+   收藏 / 分类 / 画师 / 评论 / 随机 / 我的 / 登录 / 屏蔽设置 / 标签 / 周更 / 通知 / 更多列表 **均未做**。
+
+### 验证手段一览（每轮都跑）
+
+| 命令 | 覆盖 |
+| --- | --- |
+| `ctest --test-dir build` | 数据层既有单测（16 项） |
+| `./build/jmnext4desktop --list` / `--chapters <aid>` | widget 路径真实链路 |
+| `./build/jmnext4qml --shot <png> <ms> [--search 词]` | QML 渲染结果（静态；`--shot` 必须在第一位） |
+| `./build/jmnext4qml --ui-selftest` | QML 交互链路（加载更多） |
