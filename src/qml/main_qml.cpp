@@ -212,6 +212,44 @@ int main(int argc, char** argv) {
         });
         return app.exec();
     }
+    // --ui-selftest：验证"点了加载更多真的出第二页"。
+    //
+    // 为什么需要它：--shot 是静态拍照，无法点击；此前"80 → 160 条"只在 widget 版验证过，
+    // QML 侧只能证明"接线正确、能加载"。这里用 QML 侧同一条路径（JmBackend::loadMore）
+    // 走一遍：列表就绪 -> 主动 loadMore -> 核对条数是否增长。
+    if (argc >= 2 && std::string(argv[1]) == "--ui-selftest") {
+        int round = 0;
+        int firstCount = 0;
+        QObject::connect(&backend, &jmnext::qt::JmBackend::listReady, &app,
+                         [&backend, &round, &firstCount, &app](const QStringList& titles, const QStringList&) {
+                             ++round;
+                             if (round == 1) {
+                                 firstCount = titles.size();
+                                 qInfo().noquote() << QStringLiteral("界面自检：第一页 %1 条，请求加载更多…")
+                                                          .arg(firstCount);
+                                 backend.loadMore();
+                                 return;
+                             }
+                             const int secondCount = titles.size();
+                             qInfo().noquote()
+                                 << QStringLiteral("界面自检：第二页累计 %1 条（第一页 %2 条，%3）")
+                                        .arg(secondCount)
+                                        .arg(firstCount)
+                                        .arg(secondCount > firstCount ? QStringLiteral("增长：通过")
+                                                                      : QStringLiteral("未增长：失败"));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("界面自检失败：%1").arg(e);
+            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend] { backend.loadList(); });
+        QTimer::singleShot(120000, &app, [&app] {
+            qInfo().noquote() << QStringLiteral("界面自检超时（120 秒）");
+            app.quit();
+        });
+        return app.exec();
+    }
     // --open <aid>：启动后直接打开某作品的详情页（无头验证用：点不了鼠标，但要能拍到详情屏）
     for (int i = 1; i + 1 < argc; ++i) {
         if (std::string(argv[i]) == "--open") {
