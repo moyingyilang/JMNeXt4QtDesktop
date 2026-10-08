@@ -1204,3 +1204,18 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **下一步**：同法下沉 `onListAppended`（加载更多的追加），再下沉 `onListReady` + 三个列表状态
 （`lastListCount` / `listExhausted` / `listLoading`）—— **一次一个，各自验证**。
+
+### `Connections` 下沉第二个（第 32 轮）：`onListAppended` 归 `HomeScreen`
+
+| 项 | 结果 |
+| --- | --- |
+| `Main.qml` | 删除 `onListAppended`（精确文本替换）；同时删掉注入给 `HomeScreen` 的 `loading:` / `exhausted:` 绑定与 `onMoreClicked` 里的 `root.listLoading = true` —— **loading 状态改由组件自己维护**（这正是第 29 轮设计里那条"状态归属要一并改"） |
+| `HomeScreen.qml` | `onListAppended` 加进已有 `Connections`（插在块收尾之前，仍在根对象内部） |
+| 四项验证 | 构建 0 错误 / `--shot` 退出码 0 + 80 条 + `收到封面 URL：index 0` + 截图 1180x780 / **`--ui-selftest`：`listAppended 追加 80 条，增长：通过`** / `ctest` 16/16 |
+
+**这条验证的意义**：`--ui-selftest` 打印的"追加 80 条"现在是由 **`HomeScreen` 自己的 `Connections`** 处理的 ——
+也就是说"加载更多"这条链路的核心逻辑已经从 `Main.qml` 搬走了，而功能没有退化。
+
+**剩余（列表部分）**：`onListReady`（首屏填充 / 搜索替换）+ 三个状态属性
+（`lastListCount` / `listExhausted` / `listLoading`）。做完这三样，
+`Main.qml` 里与列表相关的部分才算真正清空。

@@ -94,5 +94,16 @@ ColumnLayout {
                 if (index === 0) console.log("QML 收到封面 URL：index 0")
             }
         }
+
+    // 加载更多的结果走 listAppended（worker 侧已拼接好，这里只做"追加"）——
+    // 注意**不能**像 onListReady 那样先 clear()，否则会把已有列表清掉。
+    // loading 状态自本组件维护（原先在 Main.qml，下沉后不再由外层注入）。
+    function onListAppended(titles, ids) {
+        for (var j = 0; j < titles.length; ++j)
+            home.listModel.append({ "title": titles[j], "aid": ids[j], "coverUrl": "" })
+        home.loading = false
+        console.log("QML 追加 " + titles.length + " 条，当前共 " + home.listModel.count + " 条")
+        backend.loadCovers(20)
+    }
     }
 }
