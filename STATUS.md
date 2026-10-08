@@ -1715,3 +1715,67 @@ Layout.fillHeight: resultModel.count > 0
 
 **如实标注**：这是**观感**改动，而我无法看图（本机缺 `sharp`，`read_image` 不可用）——
 "标签列表现在确实占满、筛选后两个列表平分"这一点**需要人工看一眼**。逻辑与构建层面已验证。
+
+---
+
+# 交接清单（第 55 轮整理）
+
+给接手的自己或他人：**照这个做，不需要重新摸索。**
+
+## 一、新建一屏的标准五步
+
+以分类屏（唯一走完的五步样板）为例：
+
+| 步 | 做什么 | 参照 |
+| --- | --- | --- |
+| 1 | 在 `shared/` 找**权威模型与调用**（不要猜接口） | `JMNeXt/shared/src/main/kotlin/com/jmnext/data/` |
+| 2 | `core/JmParse` 加解析（**手写扫描**，用现成的 `readString`/`splitTopLevel`/`matchingBracket`/`scalarField`/`stringField`） | `parseLatestList`（`JmParse.cpp:201`） |
+| 3 | `qt/JmClient` 加方法（四行结构：bootstrap 检查 → `JmApi api(session_, http_)` → `api.request(路径, 查询)` → `parse*(r->text)`） | `JmClient::latest`（`JmClient.cpp:75`） |
+| 4 | `qt/JmWorker` 加 slot + 信号（slot 里 `ensureStarted()` → 调 client → `emit status(...)` + `emit xxxReady(...)`；失败走 `emit failed`） | `JmWorker::loadHotTags` |
+| 5 | `qml/JmBackend` 加 `Q_INVOKABLE` + 信号声明 + `connect` + `invoke` 转发；再写 QML 屏（`ColumnLayout` 根、主题色注入、`Connections { target: backend }`） | `JmBackend` 的 hotTags/categoryFilter 两套 |
+
+**新增 QML 文件必须登记进 `CMakeLists.txt` 的 `QML_FILES`**，sed 用 `\(\s*\)` 吞缩进。
+
+## 二、六条验证命令（每步都跑）
+
+```sh
+ctest --test-dir build                                   # 数据层 16 项单测
+./build/jmnext4desktop --list                            # widget 路径列表
+./build/jmnext4desktop --chapters 209827                 # widget 路径章节
+./build/jmnext4qml --shot <png> 8000 [--open <aid>]      # QML 渲染（--shot 必须在第一位）
+./build/jmnext4qml --ui-selftest                         # QML 交互：加载更多
+./build/jmnext4qml --hot-tags                            # 分类标签（10 个）
+./build/jmnext4qml --category-filter 女高中生            # 分类筛选（80 条）
+```
+
+容器内构建：`/data/data/com.termux/files/home/jmc/.work/enter.sh 'cd <仓库> && cmake --build build -j2'`，
+并设 `QT_QPA_PLATFORM=offscreen`。
+
+## 三、已知坑（全部踩过，别再踩）
+
+| 类别 | 坑 | 纪律 |
+| --- | --- | --- |
+| 锚点 | 凭缩进猜 sed 模式 → 匹配不到（返工 4 次） | 改前 `grep -cF` 核对唯一命中；`cat -A` 看真实空白 |
+| 锚点 | 取"第一个同缩进 `}`"圈定多函数区间 → 只删了一半 | 多函数区间要匹配**下一个函数头**，或整体重写 |
+| 构建 | `cmake --build` 通过 **不等于** QML 可用（`qmlcachegen` 过、运行期挂） | 必须跑 `jmnext4qml` |
+| 构建 | 构建**失败**时跑 `--shot` 用的是**旧二进制**，日志照样正常 → 假证据 | 先确认构建成功，再看 QML 输出 |
+| QML | 属性与 `Rectangle` 内置名冲突（如 `radius`） | 改名（`cardRadius`） |
+| QML | 自定义信号与属性的自动变化信号重名（`twoPage` → `twoPageChanged`） | 信号改名（`twoPageToggled`） |
+| QML | 追加内容到**根对象之外** → `Syntax error` | 插到根对象**内部** |
+| QML | `visible: false` 的项在 Layout 里**仍占位** | 用条件 `Layout.fillHeight` |
+| 协议 | `categories/filter` 的 `c` 为空时**必须省略参数**（发 `c=` 返回错误页而非 JSON） | 见 `JmRepository.kt` 注释 |
+| 协议 | 公开分类导航用 **`hot_tags`**，不是 `categories`（后者是登录用户收藏夹分类） | 同上 |
+| 环境 | Termux 与容器间 bind 挂载会掉；`/tmp` 在 Termux 不可写 | 临时文件放 `.work/` |
+
+## 四、未做的事（如实，逐项给原因）
+
+| 项 | 原因 |
+| --- | --- |
+| 其余 18 屏（收藏/画师/评论/随机/我的/登录/屏蔽设置页/标签/周更/通知/更多列表等） | 每屏要开一条四层纵向切片，剩余轮次不足；**非技术阻碍** |
+| 五个组件（`Glass`/`GlassTopBar`/`FloatingBottomBar`/`ItemMotion`/`AmbientBackdrop`） | 同上，未开始 |
+| 交互：翻页手势与缩放、下拉刷新、共享元素过渡 | 未开始 |
+| `JmNavHost` 式的路由与转场 | 现在是 `Main.qml` 里的 `reading`/`showAbout`/`showSettings`/`showCategory` 布尔开关，**不是**真正的路由栈 |
+| 阅读器的 `geomProbe` 诊断探针 | 抽取时该探针在块外，被有意删减（第 27 轮记） |
+| 设置屏两条链路（`setTwoPage`/`setBlockWords`）的点击验证 | 缺自动触发路径（第 39 轮记） |
+| 分类屏观感（布局占比） | 无法看图，需人工确认（第 54 轮记） |
+| 图片质量档位 / 默认图源 | Qt 侧数据层尚无对应能力 |
