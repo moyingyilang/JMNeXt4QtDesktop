@@ -141,4 +141,5 @@ qt_add_qml_module(jmnext4qml
     QML_FILES
         src/qml/Main.qml
         src/qml/ComicCard.qml
+        src/qml/StateBox.qml
 )

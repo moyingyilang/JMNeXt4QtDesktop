@@ -565,3 +565,34 @@ QML 加载失败
 **做法**：把上述几项作为一个整体迁进 `HomeScreen.qml`，主页只保留一个实例与到后端的连接；
 迁完**必须**跑 `./build/jmnext4qml --shot <path>`（第 7 轮的规矩：改 QML 必须跑 QML 程序），
 并确认 `--list` 那条 widget 路径仍 80 条。
+
+### 本轮：状态组件 `StateBox.qml` 落地（对应 Kotlin 的 StateBox.kt）
+
+Kotlin 侧状态展示是三个组合函数：`LoadingBox` / `MessageState(title, description, icon, onRetry)` / `ErrorBox(message)`。
+QML 的惯例是一个文件一个类型，所以收敛为一个组件加 `kind`：
+
+| Kotlin | 本组件用法 |
+| --- | --- |
+| `LoadingBox` | `StateBox { kind: "loading"; description: "…" }` |
+| `MessageState` | `StateBox { kind: "message"; title: …; description: … }` |
+| `ErrorBox` | `StateBox { kind: "error"; title: 错误信息 }` |
+| 重试回调 | 父级连接 `onRetry:`（QML 不能像 Compose 那样直接收 lambda） |
+
+颜色与 `ComicCard` 同一策略：由调用方注入，组件内不写死（否则四套风格切换失效）。
+
+**证据（本轮实测）**：
+
+| 项 | 结果 |
+| --- | --- |
+| 构建 | 退出码 0，错误 0 |
+| 文件进入模块 | `build/JMNeXt/src/qml/StateBox.qml` 存在 |
+| 类型已登记 | `build/JMNeXt/qmldir` 命中 StateBox |
+| QML 程序运行 | `jmnext4qml --shot` 退出码 0，截图 1180x780 |
+
+**如实标注**：本轮只完成"组件落地 + 可加载"，**尚未在 `Main.qml` 里替换现有的纯文本状态显示**
+（现状是 `root.pageStatus` 直接塞进 `Text`，见 Main.qml:115/198，由 `onStatus`/`onFailed`/`onPageReady` 驱动）。
+替换属下一步，替换后需按同样四项验证。
+
+**本轮踩到的坑（第 3 次同类）**：登记 QML 文件时我又按"看起来的缩进"写了 sed 模式，结果没匹配上
+（列表项实际是 **10 个空格**，不是我以为的 10/12 混合）。**可靠做法**：`sed -n '/QML_FILES/,/^  )/p' ... | cat -A`
+先看真实空白，或用 `\(\s*\)` 让 sed 自己吞掉缩进。现已按后者修正并验证。
