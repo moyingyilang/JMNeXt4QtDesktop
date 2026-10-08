@@ -319,6 +319,19 @@ void JmWorker::reportCacheStats() {
 
 namespace jmnext::qt {
 
+void JmWorker::loadHotTags() {
+    if (!ensureStarted()) return;
+    auto tags = client().hotTags();
+    if (!tags) {
+        emit failed(QStringLiteral("热门标签失败：%1").arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    QStringList out;
+    for (const auto& t : *tags) out << QString::fromStdString(t);
+    emit status(QStringLiteral("热门标签：%1 个").arg(out.size()));
+    emit hotTagsReady(out);
+}
+
 void JmWorker::loadMore() {
     if (!ensureStarted()) return;
     const int next = page_ + 1;

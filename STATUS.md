@@ -1543,3 +1543,20 @@ std::optional<std::vector<std::string>> JmClient::hotTags() {
 **下一轮**：`JmWorker` 加 `loadHotTags()` slot 与 `hotTagsReady(QStringList)` 信号
 → `JmBackend` 加 `Q_INVOKABLE void loadHotTags()` 与信号转发 → 在 `--selftest` 里断言标签数量
 → 最后写 `CategoryScreen.qml`。
+
+### 分类切片第二步（第 46 轮）：`JmWorker` 通路
+
+| 项 | 位置 | 说明 |
+| --- | --- | --- |
+| slot | `JmWorker.h:50` | `void loadHotTags();`（放在 `loadCovers` 之后） |
+| 信号 | `JmWorker.h:81` | `void hotTagsReady(const QStringList& tags);` |
+| 实现 | `JmWorker.cpp:322` | `ensureStarted()` → `client().hotTags()` → `emit status("热门标签：N 个")` + `emit hotTagsReady(...)`；失败走 `emit failed(...)` |
+| 锚点 | 三处插入前均 `grep -cF` 核对，**各唯一命中** | |
+| 验证 | 构建退出码 0、错误 0；`ctest` **16/16** | |
+
+**仍如实标注**：`loadHotTags()` **还没有任何调用者**（`JmBackend` 与 QML 尚未接），
+所以现在仍然只能证明"能编译"。下一步：
+
+1. `JmBackend` 加 `Q_INVOKABLE void loadHotTags();` + 信号转发（照 `listAppended` 那条连接的写法）；
+2. 在 `--selftest` 里调用它并**断言标签数量 > 0**（这样新链路就有自动验证）；
+3. 写 `CategoryScreen.qml`（标签列表 + 按标签筛选）。

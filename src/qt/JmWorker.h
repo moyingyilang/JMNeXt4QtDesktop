@@ -45,6 +45,9 @@ public slots:
     void loadMore();
     /// 为列表前 n 项取封面：成功发 coverReady(index, image)
     void loadCovers(int n);
+
+    /// 热门标签（分类浏览页的数据源；JmClient::hotTags）
+    void loadHotTags();
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
@@ -73,6 +76,9 @@ signals:
     void coverReady(int index, const QImage& image);
     /// 与 coverReady 配套：先告知该下标的封面 URL（QML 侧图片提供器据此命中同一份磁盘缓存）
     void coverUrlReady(int index, const QString& url);
+
+    /// 热门标签就绪（纯字符串数组）
+    void hotTagsReady(const QStringList& tags);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);
