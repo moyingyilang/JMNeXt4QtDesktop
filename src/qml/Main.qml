@@ -54,52 +54,24 @@ ApplicationWindow {
                 Layout.leftMargin: 10; Layout.topMargin: 8
             }
 
-            ListView {
-                id: listView
+            HomeScreen {
+                id: homeScreen
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
-                model: listModel
-                spacing: 2
-
-                delegate: ComicCard {
-                    title: model.title
-                    aid: model.aid
-                    coverUrl: model.coverUrl
-                    hoverColor: root.cSurface2
-                    textColor: root.cText
-                    cardRadius: root.radiusMd
-                    onClicked: {
-                        console.log("QML 点击作品 aid=" + aid)
-                        root.albumAid = aid
-                        backend.loadAlbum(aid)
-                    }
-                }
-            }
-
-            // 空/失败状态：列表为空时给出明确说明与重试入口（对应 Kotlin 的 ErrorBox / MessageState）
-            StateBox {
-                anchors.fill: listView
-                visible: listModel.count === 0
-                kind: root.pageStatus.indexOf("失败") >= 0 ? "error" : "message"
-                title: root.pageStatus.length > 0 ? root.pageStatus : "还没有内容"
-                description: "点“重试”重新载入列表"
-                canRetry: true
-                textColor: root.cText
-                secondaryColor: root.cTextSecondary
-                onRetry: backend.loadList()
-            }
-
-            LoadMoreFooter {
-                // 列表为空时不显示页脚：此时 StateBox 已占满列表区，再显示"加载更多"既无意义也会打架
-                visible: listModel.count > 0
-                Layout.fillWidth: true
+                listModel: listModel
+                pageStatus: root.pageStatus
                 loading: root.listLoading
                 exhausted: root.listExhausted
+                hoverColor: root.cSurface2
                 textColor: root.cText
                 secondaryColor: root.cTextSecondary
-                onLoadMore: {
-                    console.log("QML 请求加载更多")
+                cardRadius: root.radiusMd
+                onCardClicked: (aid) => {
+                    root.albumAid = aid
+                    backend.loadAlbum(aid)
+                }
+                onRetryClicked: backend.loadList()
+                onMoreClicked: {
                     root.listLoading = true
                     backend.loadMore()
                 }

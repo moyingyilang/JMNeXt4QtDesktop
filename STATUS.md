@@ -1034,3 +1034,28 @@ QML 加载失败
 实例化**（`Layout.*` 附加属性对实例化对象有效，这是 Qt 的标准写法）。
 
 **下一步就是按这张表逐点改**（每个改动点都有明确的行与目标写法），改完跑四项验证；不过就按第 23 轮记的回滚命令退回。
+
+### 成功：`HomeScreen.qml` 抽出来了（本目标的第一屏独立成文件）
+
+**过程**：第 22 轮用"机械搬运 + 正则改写"失败（挖空一行 → `Non-existent attached object`），
+第 23 轮回滚并改写方法，第 24 轮**先读原文**才发现真正要改的只有 22 处（我原计划改动的两三倍都是多余的），
+第 25 轮按清单逐点改，一次通过。
+
+| 项 | 结果 |
+| --- | --- |
+| 新文件 | `src/qml/HomeScreen.qml`（85 行，`ColumnLayout` 根：列表视图 + StateBox + LoadMoreFooter） |
+| `Main.qml` | 第 57 行起改为 `HomeScreen { … }` 实例（数据与主题色注入，3 个信号回传） |
+| 登记 | `CMakeLists.txt` 的 `QML_FILES` |
+| 构建 | 退出码 0，错误 0 |
+| **QML 程序** | `--shot` 退出码 0，`列表已填充：80 条`，**截图 1180x780** |
+| **交互自检** | `--ui-selftest`：`listAppended 追加 80 条，增长：通过` |
+| 单测 | `ctest` 通过 |
+
+**设计要点（下一屏照此复制）**：
+- 组件**只搬纯渲染**，数据用 `property var listModel` 传入，后端调用用**信号**回传（本轮共 3 个：
+  `cardClicked` / `retryClicked` / `moreClicked`），`Connections` 与 `backend.*` **全部留在 `Main.qml`**；
+- 根用 `ColumnLayout`，于是原文里的 `Layout.fillWidth/fillHeight` **可以原样保留**，改造面最小；
+- 主题色由调用方注入（`hoverColor` / `textColor` / `secondaryColor` / `cardRadius`）。
+
+**下一步**：按同样套路抽 `SearchScreen.qml`（搜索行 + 结果列表），然后把两屏的 `Connections`
+也逐步搬进各自屏幕（一次一层，每层验证）。
