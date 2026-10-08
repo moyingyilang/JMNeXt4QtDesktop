@@ -1473,3 +1473,55 @@ Qt 侧此前的参照只看了 `app/src/main/kotlin`，**漏了 `shared`** —�
 
 **四层切片清单（已无未知项）**：`parseStringArray` + `JmClient::hotTags/categoryFilter`
 → `JmWorker` 两个 slot 与信号 → `JmBackend` 两个 `Q_INVOKABLE` → `CategoryScreen.qml`。
+
+### 分类切片：可直接照写的代码（第 44 轮，辅助函数已确认）
+
+`src/core/JmParse.cpp` 的匿名命名空间里**已有全部所需辅助**（逐个确认过）：
+
+| 辅助 | 签名 | 用途 |
+| --- | --- | --- |
+| `readString` | `bool readString(const std::string& s, std::size_t i, std::string& out, std::size_t& end)` | **读 JSON 字符串**（hot_tags 的元素就用它） |
+| `skipWs` | `std::size_t skipWs(const std::string&, std::size_t)` | 跳过空白 |
+| `matchingBracket` | `std::size_t matchingBracket(const std::string&, std::size_t)` | 配对括号 |
+| `splitTopLevel` | `std::vector<std::string> splitTopLevel(const std::string& body)` | 顶层元素切分 |
+| `stringArrayField` | `std::vector<std::string> stringArrayField(const std::string& obj, const std::string& key)` | **可参照它的实现写顶层数组版**（它在 `JmParse.cpp:132`） |
+
+**据此可直接写出的函数**（下一轮照此落地，不必再探）：
+
+```cpp
+// JmParse.h（声明，放在 parseSearchPage 附近）
+std::optional<std::vector<std::string>> parseHotTags(const std::string& json);
+
+// JmParse.cpp（实现；照 parseLatestList 的"手写扫描"套路，元素用 readString）
+std::optional<std::vector<std::string>> parseHotTags(const std::string& json) {
+    const auto start = json.find('[');
+    if (start == std::string::npos) return std::nullopt;
+    const auto end = matchingBracket(json, start);
+    if (end == std::string::npos) return std::nullopt;
+    std::vector<std::string> out;
+    for (auto& item : splitTopLevel(json.substr(start + 1, end - start - 1))) {
+        std::string value;
+        std::size_t stop = 0;
+        if (readString(item, skipWs(item, 0), value, stop) && !value.empty()) out.push_back(value);
+    }
+    return out;
+}
+```
+
+`JmClient` 侧照 `latest` 的四行结构（`JmClient.cpp:75`）：
+
+```cpp
+std::optional<std::vector<std::string>> JmClient::hotTags() {
+    if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
+    JmApi api(session_, http_);
+    auto r = api.request(paths::HOT_TAGS, "");
+    if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    return parseHotTags(r->text);
+}
+```
+
+**关于节奏的如实记录**：第 40–44 连续五轮没有产出功能代码（定位、读参照、确认辅助函数）。
+原因是真实的：**本会话上下文已近耗尽，每轮只够执行一条命令**，而分类切片需要改 5 个文件（`JmParse.h/.cpp`、
+`JmClient.h/.cpp`、`JmWorker`、`JmBackend`、新 QML），一轮做不完。
+但**规格已经全部落纸**：本节两个函数可直接粘贴，其余三层（worker slot+信号、backend Q_INVOKABLE、QML 屏）
+在 `STATUS.md` 前几节已有清单与验收方式。
