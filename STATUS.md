@@ -1560,3 +1560,21 @@ std::optional<std::vector<std::string>> JmClient::hotTags() {
 1. `JmBackend` 加 `Q_INVOKABLE void loadHotTags();` + 信号转发（照 `listAppended` 那条连接的写法）；
 2. 在 `--selftest` 里调用它并**断言标签数量 > 0**（这样新链路就有自动验证）；
 3. 写 `CategoryScreen.qml`（标签列表 + 按标签筛选）。
+
+### 分类切片第三步（第 47 轮）：`JmBackend` 通路完成
+
+| 项 | 位置 | 内容 |
+| --- | --- | --- |
+| `Q_INVOKABLE` | `JmBackend.h:38` | `void loadHotTags();` |
+| 信号 | `JmBackend.h:45` | `void hotTagsReady(const QStringList& tags);` |
+| 连接 | `JmBackend.cpp:18` | `connect(worker_, &JmWorker::hotTagsReady, this, &JmBackend::hotTagsReady);` |
+| 转发 | `JmBackend.cpp:46` | `void JmBackend::loadHotTags() { invoke("loadHotTags"); }` |
+| 锚点 | 四处插入前均 `grep -cF`，**各唯一命中** | |
+| 验证 | 构建 0 错误 / `ctest` **16/16** / QML 冒烟截图 1180x780 | |
+
+**至此热标签链路已经贯通四层**：`JmParse` → `JmClient` → `JmWorker` → `JmBackend`（QML 可调用）。
+**但仍未被调用**，所以还没有"真的取到标签"的证据 —— 下一步两件事：
+
+1. 在 `--selftest` 里 `backend.loadHotTags()` 并**断言标签数量大于 0**（第一次真正验证这条链路）；
+2. 写 `CategoryScreen.qml`：左侧/上方标签列表（`hotTagsReady` 填充），点标签后调
+   `categories/filter`（**注意 `c` 为空时必须省略参数**，见第 43 轮记的协议陷阱）取作品列表并复用 `ComicCard`。

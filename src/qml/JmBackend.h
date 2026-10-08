@@ -34,11 +34,15 @@ public:
     Q_INVOKABLE void setBlockWords(const QStringList& words);
     Q_INVOKABLE void setTwoPage(bool on);
     Q_INVOKABLE void loadCovers(int n);
+    /// 热门标签（分类浏览页的数据源）
+    Q_INVOKABLE void loadHotTags();
     Q_INVOKABLE void reportCacheStats();
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
     void listAppended(const QStringList& titles, const QStringList& ids);
+    /// 热门标签就绪（纯字符串数组）
+    void hotTagsReady(const QStringList& tags);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
     void currentAidChanged();
