@@ -38,6 +38,7 @@ ApplicationWindow {
                 onAboutRequested: root.showAbout = true
                 onSettingsRequested: root.showSettings = true
                 onCategoryRequested: root.showCategory = true
+                onMoreRequested: root.showMore = true
             }
 
             HomeScreen {
@@ -117,6 +118,7 @@ ApplicationWindow {
     property bool showAbout: false
     property bool showSettings: false
     property bool showCategory: false
+    property bool showMore: false
     property bool twoPage: false
     // 诊断用：页面就绪 1.5 秒后再量一次几何（onStatusChanged 那一刻可能还没完成布局）
     Timer {
@@ -211,5 +213,24 @@ ApplicationWindow {
             accentColor: root.cAccent
             onCloseRequested: root.showCategory = false
             onTagClicked: (tag) => console.log("QML 分类标签被点击（筛选待接）：" + tag)
+        }
+
+        MoreScreen {
+            id: morePane
+            visible: root.showMore
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showMore = false
+            onEntryClicked: (key) => {
+                if (key === "category") { root.showMore = false; root.showCategory = true }
+                else if (key === "about") { root.showMore = false; root.showAbout = true }
+                else if (key === "settings") { root.showMore = false; root.showSettings = true }
+                else console.log("QML 更多：该项在 Qt 版尚未实现 -> " + key)
+            }
         }
 }

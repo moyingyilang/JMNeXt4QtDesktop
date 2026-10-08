@@ -27,6 +27,8 @@ ColumnLayout {
     signal settingsRequested()
     /// 打开分类屏（第 49 轮）
     signal categoryRequested()
+    /// 打开"更多"屏（第 58 轮）
+    signal moreRequested()
 
     // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
     RowLayout {
@@ -56,6 +58,10 @@ ColumnLayout {
         Button {
             text: "分类"
             onClicked: search.categoryRequested()
+        }
+        Button {
+            text: "更多"
+            onClicked: search.moreRequested()
         }
     }
 
