@@ -460,3 +460,28 @@ jmnext4qml --page <png> --shot out.png 9000
 `ui/components/ComicCard.kt`：只暴露 title/author/coverUrl 与 `clicked()` 信号），
 两项验证都通过。**注意**：它目前**尚未在 `Main.qml` 里使用**（本轮只跑通"新增即登记即可加载"的链路），
 因此"能加载"已验证、"已被界面使用"未验证。
+
+### 下一步（把列表项换成 ComicCard）的三个前提 —— 先查清再动，避免倒退
+
+本轮本想把 `Main.qml` 的列表项换成新落的 `components/ComicCard.qml`，**核对后发现直接换会倒退**：
+现有 delegate（`Main.qml:65` 起）已经带着 P3 阶段的动效 ——
+
+```qml
+color: mouseArea.containsMouse ? root.cSurface2 : "transparent"
+Behavior on color { ColorAnimation { duration: 120 } }
+scale: mouseArea.pressed ? 0.985 : 1.0
+Behavior on scale { SpringAnimation { spring: 2.5; damping: 0.35 } }
+```
+
+而 `ComicCard.qml` 目前是朴素版（颜色写死、无悬停与弹性）。所以替换前必须先补齐三件事：
+
+1. **模型字段名**：delegate 直接用了 `aid` 与 `coverUrl` 等角色名，组件里要原样接收；
+   需先确认模型的完整角色清单（`JmBackend` / `JmWorker` 一侧），不能猜；
+2. **主题 token 的取用方式**：现有 delegate 用 `root.cSurface2` / `root.radiusMd`（写在
+   `Main.qml` 里的属性），组件要复用它们就得知道 token 是单例、上下文属性还是 `Main.qml` 的属性 ——
+   这决定了 `ComicCard.qml` 该怎么取色，**不能把颜色写死在组件里**（否则主题切换会失效）；
+3. **动效要一起搬**：`ColorAnimation`（悬停 120ms）与 `SpringAnimation`（按压 0.985 弹性）
+   必须进组件，否则就是"换了个组件、丢了动效"。
+
+**结论**：先补齐这三项，再把 delegate 换成 `ComicCard`；替换当轮必须带
+`--list` 显示 80 条（回归）与截图（观感）两项证据。本轮**不做**会倒退的替换。
