@@ -1292,3 +1292,37 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **`Main.qml` 现状**：列表与章节逻辑均已清空，只剩路由（`reading`）、外层状态（`albumAid`、`pageUrl`）、
 跨屏状态栏（`pageStatus`）、源切换。**这就是它该有的样子。**
+
+### 新建屏幕的成本评估（第 36 轮实测数据层家底）
+
+**`JmWorker` / `JmBackend` 现有能力**（`Q_INVOKABLE` 与 slots 全文读过）：
+
+```
+loadList / loadMore / search / loadAlbum / openChapter / openChapterId / step /
+loadCovers / setBlockWords / setTwoPage / reportCacheStats / fetchAlbumCover /
+showPageAt / prefetch / saveProgressNow / previewNext
+```
+
+**没有**：分类、随机、评论、收藏、历史、签到、画师、登录 —— 一个都没有。
+
+**结论：新建一屏的成本 = 一条纵向切片（4 层）**：
+
+| 层 | 要加的东西 |
+| --- | --- |
+| `core/JmApi` + `JmParse` | 新接口的请求与解析（JM 的 `/categories`、`/comments`、`/favorite` …） |
+| `qt/JmWorker` | 一个 slot + 一个信号（`categoriesReady` …） |
+| `qml/JmBackend` | 一个 `Q_INVOKABLE`（以及必要的 `Q_PROPERTY`） |
+| `src/qml/` | 新屏 QML（照 `HomeScreen`/`DetailScreen` 模板） |
+
+**所以 21 屏分两类**：
+
+| 类别 | 屏幕 | 成本 |
+| --- | --- | --- |
+| **不需要数据层** | **关于**、**更多列表**、**设置**（本机 prefs 即可） | 最低：纯 QML，一屏一轮 |
+| 需要新数据接口 | 分类 / 随机 / 评论 / 收藏 / 历史 / 签到 / 画师 / 登录 | 每屏 1–2 轮（含 C++ 解析与真机核对） |
+
+**下一步建议**：先做 **关于** 与 **更多列表**（零数据层成本），把"**新建**一屏（而非抽取）"的流程跑通；
+再做**分类**（JM 的 `/categories` 结构简单，且能复用现成的列表渲染）。
+
+**如实说明**：剩余 24 轮，需要新接口的屏有 8 类以上，**不可能全部完成**；
+我会按"成本 × 可见度"排序推进，并在 `STATUS.md` 里逐项标注"已对齐 / 未做 / 为什么"。
