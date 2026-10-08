@@ -1448,3 +1448,28 @@ Qt 侧此前的参照只看了 `app/src/main/kotlin`，**漏了 `shared`** —�
 **分类的具体形状已读到**（`Models.kt` 第 205–224 行），下一轮据此写
 `parseCategories`（照 `parseLatestList` 的手写扫描套路）+ `JmClient::categories`，
 再走 worker / backend / QML 四层。
+
+### 决定性发现：分类屏该用 `hot_tags`，不是 `categories`（第 43 轮）
+
+读 `shared/data/JmRepository.kt` 得到**权威答案**（不是我的推测）：
+
+| 接口 | 用途 | 结论 |
+| --- | --- | --- |
+| `categories` | 条目带 `slug`/`updated_at`，**是登录用户的收藏夹分类** | **不能**用作公开分类导航 |
+| **`hot_tags`** | **纯字符串数组** | **分类浏览页就是用它**（`JmRepository.kt:252` 注释原文） |
+| `categories/filter` | 按分类筛选作品（`PagedList`，可分页） | 点标签后取作品列表用它 |
+
+**若我照最初的想法用 `categories` 实现，就是照着一个 Kotlin 版自己都不用的接口做** —— 这次读参照价值在于此。
+
+**另一个必须遵守的协议细节**（`JmRepository.kt` 对 `categoryFilter` 的注释，实测结论）：
+
+> `c` 为空时**整个参数必须省略**；发 `c=` 会让服务端返回 `Could not connect to mysql!` 错误页（不是 JSON）。
+> 省略 `c` 是合法的"不筛选"语义。分类树里第一个「最新A漫」的 slug 正是空串。
+
+**Qt 侧落地因此简化很多**：
+1. `hot_tags` 是**字符串数组** → 解析用现成的 `splitTopLevel` 即可（不需要 DTO 结构解析）；
+2. 点标签后的作品列表是 `PagedList` → **与搜索同一形态**，很可能可复用现成的 `parseSearchPage`；
+3. `JmPaths.h` 已有 `HOT_TAGS` / `CATEGORIES_FILTER` 常量。
+
+**四层切片清单（已无未知项）**：`parseStringArray` + `JmClient::hotTags/categoryFilter`
+→ `JmWorker` 两个 slot 与信号 → `JmBackend` 两个 `Q_INVOKABLE` → `CategoryScreen.qml`。
