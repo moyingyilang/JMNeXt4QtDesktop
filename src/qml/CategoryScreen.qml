@@ -24,6 +24,8 @@ Rectangle {
 
     signal closeRequested()
     signal tagClicked(string tag)
+    /// 点击筛选结果里的作品（外层负责打开详情）
+    signal resultClicked(string aid)
 
     property string activeTag: ""
     property int resultCount: 0
@@ -51,6 +53,33 @@ Rectangle {
         }
 
         ListModel { id: tagModel }
+
+        // 筛选结果列表（第 53 轮补上渲染；数据链路与处理器此前已验证）
+        ListModel { id: resultModel }
+
+        ListView {
+            id: resultView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            model: resultModel
+            spacing: 2
+            visible: resultModel.count > 0
+
+            delegate: ComicCard {
+                width: ListView.view.width
+                title: model.title
+                aid: model.aid
+                coverUrl: model.coverUrl
+                hoverColor: "#2f3237"
+                textColor: category.titleColor
+                cardRadius: 6
+                onClicked: {
+                    console.log("QML 分类结果点击作品 aid=" + aid)
+                    category.resultClicked(aid)
+                }
+            }
+        }
 
         ListView {
             id: tagView
@@ -103,6 +132,10 @@ Rectangle {
         // 分类筛选结果（第 52 轮接通；界面列表下一步再画，先保证数据到位且有日志证据）
         function onCategoryReady(titles, ids) {
             category.resultCount = titles.length
+            resultModel.clear()
+            for (var k = 0; k < titles.length; ++k)
+                resultModel.append({ "title": titles[k], "aid": ids[k], "coverUrl": "" })
+            backend.loadCovers(20)
             console.log("QML 分类筛选已收到：" + titles.length + " 条（标签：" + category.activeTag + "）"
                         + (titles.length > 0 ? "，首条：" + titles[0].split("\n")[0] : ""))
         }

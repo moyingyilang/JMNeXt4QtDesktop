@@ -1673,3 +1673,27 @@ $ ./build/jmnext4qml --category-filter 女高中生
 
 **仍未做**：筛选结果的**列表渲染**（现在是计数 + 日志，没有把 80 条画成 `ComicCard` 列表）。
 数据与处理器都已验证，只差渲染。
+
+### 分类屏补上结果渲染（第 53 轮）：这屏已完整
+
+| 改动 | 内容 |
+| --- | --- |
+| 结果模型与列表 | `ListModel { id: resultModel }` + `ListView`，delegate 复用 **`ComicCard`**（同一卡片组件，含悬停/按压动效） |
+| 收到结果 | `onCategoryReady` 里 `resultModel.clear()` + 逐条 append，并调 `backend.loadCovers(20)` 让封面就位 |
+| 点击结果 | 新增 `signal resultClicked(aid)`，由外层负责打开详情 |
+
+**证据**：
+
+```
+$ ./build/jmnext4qml --shot <png> 9000        -> QML 分类标签已填充：10 个；截图 1180x780
+$ ./build/jmnext4qml --category-filter 女高中生 -> QML 分类筛选已收到：80 条，首条：慾望入门课
+构建 0 错误；ctest 16/16
+```
+
+**核对时发现的一个布局问题（已记，下一步一行修）**：结果 `ListView` 与标签 `ListView` 都设了
+`Layout.fillHeight: true`，而 **QML 里隐藏的项在 Layout 中仍然占位** —— 于是"没有筛选结果时，
+标签列表也被压成一半"。修法：把结果列表改成 `Layout.fillHeight: resultModel.count > 0`
+（空时高度 0，标签列表占满）。**本轮未修**，如实记录。
+
+**分类屏至此功能完整**：标签列表（`hot_tags`）→ 点击取作品（`categories/filter`，遵守 `c` 省略规则）
+→ 结果用 `ComicCard` 渲染 → 点击结果可打开详情（信号已就位）。这是 Qt 侧**第一块从零贯通四层的完整功能屏**。
