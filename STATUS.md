@@ -1270,3 +1270,25 @@ ComicCard.qml / StateBox.qml / LoadMoreFooter.qml   组件
 
 **下一层**：`onChaptersReady` → `DetailScreen`（需把 `chapterModel` 一起搬进去）；
 再之后 `onPageReady`/`onPageChanged` 视路由设计而定。
+
+### `Connections` 下沉第四个（第 35 轮）：`onChaptersReady` + `chapterModel` 归 `DetailScreen`
+
+| 项 | 结果 |
+| --- | --- |
+| `Main.qml` | 删除 `onChaptersReady`、`ListModel { id: chapterModel }`、以及实例上的 `chapterModel:` 绑定 —— **残留 0** |
+| `DetailScreen.qml` | 自带 `ListModel { id: chapterModel }`（id 不变，故组件内引用无需改名）+ `Connections` 新增 `onChaptersReady` |
+| **详情路径验证** | `--shot <png> 12000 --open 209827` → `详情封面已加载：400x533` + `收到详情：魔都精兵的奴隶…（标签 5）` + **`章节列表已填充：159 条`** + 截图 1180x780 |
+| 列表路径验证 | `列表已填充：80 条` + 截图 1180x780 |
+| 交互自检 / 单测 | `追加 80 条，增长：通过` / `ctest` 16/16 |
+
+**过程中的两个真实错误（都已修）**：
+1. 把 `detail.chapterModel` 只改了一处（`model:`），漏了另一处（`text: "章节（" + …count + "）"`）→ 运行期 `QML 加载失败`；
+2. 删除 `Main.qml` 里实例绑定时，sed 模式**多写了一个逗号**（实际行是 `chapterModel: chapterModel` 无逗号）→ 没删掉，导致
+   `Main.qml:82: Cannot assign to non-existent property "chapterModel"`。
+
+**两条经验**：
+- 改属性名/搬模型时，**同一文件里可能有多处引用**，要用 `grep -n 名字` 全查，而不是只改印象中的那一处；
+- 删除一行的 sed 模式**必须用 `cat -A` 看真实内容**（逗号、缩进、行尾）——这是本目标第 4 次因"凭印象写模式"返工。
+
+**`Main.qml` 现状**：列表与章节逻辑均已清空，只剩路由（`reading`）、外层状态（`albumAid`、`pageUrl`）、
+跨屏状态栏（`pageStatus`）、源切换。**这就是它该有的样子。**

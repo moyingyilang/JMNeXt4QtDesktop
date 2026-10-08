@@ -79,7 +79,6 @@ ApplicationWindow {
             Layout.fillHeight: true
             albumAid: root.albumAid
             pageStatus: root.pageStatus
-            chapterModel: chapterModel
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             onChapterClicked: (cid) => backend.openChapterId(cid, 0)
@@ -121,19 +120,9 @@ ApplicationWindow {
     }
     property string pageUrl: ""
     property string albumAid: ""
-    ListModel { id: chapterModel }
 
     Connections {
         target: backend
-
-        function onChaptersReady(names, ids) {
-            chapterModel.clear()
-            for (var i = 0; i < names.length; ++i)
-                chapterModel.append({ "name": names[i], "cid": ids[i] })
-            console.log("QML 章节列表已填充：" + chapterModel.count + " 条")
-            if (typeof autoReadAid !== "undefined" && autoReadAid === root.albumAid && ids.length > 0)
-                backend.openChapterId(ids[0], 0)
-        }
 
         function onCurrentAidChanged() { root.albumAid = backend.currentAid }
 

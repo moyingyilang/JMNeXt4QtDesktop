@@ -21,7 +21,8 @@ Rectangle {
     property string albumAuthor: ""
     property string albumTags: ""
     property string pageStatus: ""
-    property var chapterModel
+    // 章节模型：第 35 轮从 Main.qml 搬入（原先靠属性传进来，但填充它的回调也在这里，属于同一个归属）
+    ListModel { id: chapterModel }
 
     property color surfaceColor: "#26282c"
     property color strokeColor: "#3a3d43"
@@ -72,7 +73,7 @@ Rectangle {
             Layout.fillWidth: true
         }
         Text {
-            text: "章节（" + detail.chapterModel.count + "）"
+            text: "章节（" + chapterModel.count + "）"
             color: detail.tagColor; font.pixelSize: 12
             Layout.topMargin: 6
         }
@@ -81,7 +82,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            model: detail.chapterModel
+            model: chapterModel
             spacing: 2
             delegate: Rectangle {
                 width: ListView.view.width; height: 30
@@ -120,5 +121,16 @@ Rectangle {
             detail.albumTags = "标签：" + tags.join("、")
             console.log("QML 收到详情：" + name + "（标签 " + tags.length + "）")
         }
+
+    // 章节列表填充（第 35 轮下沉）。chapterModel 已随本组件持有，故不改名。
+    // albumAid 只用于 autoReadAid 的比较 —— 它仍由外层传入。
+    function onChaptersReady(names, ids) {
+        chapterModel.clear()
+        for (var i = 0; i < names.length; ++i)
+            chapterModel.append({ "name": names[i], "cid": ids[i] })
+        console.log("QML 章节列表已填充：" + chapterModel.count + " 条")
+        if (typeof autoReadAid !== "undefined" && autoReadAid === detail.albumAid && ids.length > 0)
+            backend.openChapterId(ids[0], 0)
+    }
     }
 }
