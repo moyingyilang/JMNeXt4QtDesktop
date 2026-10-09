@@ -282,6 +282,9 @@ int main(int argc, char** argv) {
 
     // --raw <path> [query]：直出响应原文，用于一次看清未知响应形态（调试用）
     if (argc >= 3 && std::string(argv[1]) == "--raw") {
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [](const QString& e) {
+            qInfo().noquote() << QStringLiteral("RAW失败：%1").arg(e.left(200));
+        });
         const QString path = QString::fromUtf8(argv[2]);
         const QString query = (argc >= 4) ? QString::fromUtf8(argv[3]) : QString();
         QObject::connect(&backend, &jmnext::qt::JmBackend::status, &app, [](const QString& s) {
