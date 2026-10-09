@@ -36,6 +36,8 @@ ColumnLayout {
     signal cardClicked(string aid)
     signal retryClicked()
     signal moreClicked()
+    /// 随机作品的入口（对应 Kotlin 版 home/RandomFab.kt）
+    signal randomClicked()
 
     ListView {
         id: listView
@@ -124,5 +126,22 @@ ColumnLayout {
         home.lastListCount = home.listModel.count
         backend.loadCovers(20)          // 让前 20 条的封面 URL 与图片就位
     }
+    }
+
+    // 随机 FAB（对应 Kotlin 版 home/RandomFab.kt）：悬浮在列表右下角
+    FloatingBottomBar {
+        Layout.alignment: Qt.AlignRight
+        Layout.rightMargin: 12
+        Layout.bottomMargin: 6
+        visible: home.listModel.count > 0
+        tint: home.hoverColor
+        strokeColor: home.secondaryColor
+        Button {
+            text: "随机"
+            onClicked: {
+                console.log("QML 首页：随机 FAB")
+                home.randomClicked()
+            }
+        }
     }
 }

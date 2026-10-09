@@ -59,6 +59,13 @@ ApplicationWindow {
                 onMoreClicked: {
                     backend.loadMore()
                 }
+                onRandomClicked: {
+                    root.listTitle = "随机推荐"
+                    root.listPath = "random_recommend"
+                    root.listQuery = ""
+                    root.listTag = "random"
+                    root.showList = true
+                }
             }
         }
 
