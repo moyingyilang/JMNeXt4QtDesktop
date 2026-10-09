@@ -2106,3 +2106,16 @@ ctest --test-dir build                                   # 16 项
 屏幕 8 个独立文件 + 通用列表屏覆盖 7 个入口（随机/画师/收藏/历史/通知/标签/追更）。
 
 **未验证**：收藏/历史/通知需要真实账号；`creator_author` 标题；周更两级屏未做。
+
+## 第 65 轮：--raw 定位 + 画师字段修好 + 周更两级屏
+
+| 项 | 结果 |
+| --- | --- |
+| 新调试入口 | `--raw <path> [query]` 直出响应原文（截断 1200 字），未知形态一次看清 |
+| 画师（`creator_author`） | 看清响应是 `data.content`、名字键 **`author_name`** → 宽松解析补该兜底 → **实测「30 条，首条：SirensParadise」** |
+| 周更刊期（`week`） | 刊期在 `categories`、显示名是 **`time`** → 补兜底 → **实测「260 条，首条：2026第260期10.09 - 10.02」** |
+| 周更作品（`week/filter`） | 参数 `id`/`type`/`page`（Kotlin 原码）；**`type` 传空可用** → **实测「20 条，首条：[3D]王大吊传奇01」** |
+| 周更两级屏 | 新增 `src/qml/WeekScreen.qml`（左列刊期 → 右侧该刊期作品，全部走通用 `loadPaged`，两个 tag：`week` / `weekworks`），已接到更多列表 |
+| 标签收藏 | `tags_favorite` 实测**网络请求失败** → 需登录态（与收藏/历史同类），暂不改其"未实现"标记 |
+
+**规模**：QML **20 个文件**；组件 8/8；交互 4/6；屏幕 10 个（Home/Search/Reader/Detail/About/Settings/Category/More/Login/Week）+ 通用列表屏覆盖 7 个入口。

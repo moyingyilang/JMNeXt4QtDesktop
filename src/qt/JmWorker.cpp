@@ -338,6 +338,11 @@ void JmWorker::logout() {
 void JmWorker::loadPaged(const QString& tag, const QString& path, const QString& query) {
     if (!ensureStarted()) return;
     auto list = client().paged(path.toStdString(), query.toStdString());
+    // tag == "raw"：只回显响应原文（调试未知形态用；截断 320 字，不落盘、不含账号信息）
+    if (tag == QStringLiteral("raw")) {
+        emit status(QStringLiteral("RAW：%1").arg(QString::fromStdString(client().lastRaw()).left(1200)));
+        return;
+    }
     if (!list) {
         emit failed(QStringLiteral("列表加载失败（%1）：%2")
                         .arg(tag).arg(QString::fromStdString(client().lastError())));

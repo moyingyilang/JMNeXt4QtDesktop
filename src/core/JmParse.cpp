@@ -280,6 +280,8 @@ std::optional<std::vector<ListEntry>> parseLooseList(const std::string& json) {
             e.name = stringField(obj, "name");
             if (e.name.empty()) e.name = stringField(obj, "work_title");
             if (e.name.empty()) e.name = stringField(obj, "title");
+            if (e.name.empty()) e.name = stringField(obj, "author_name");   // 画师列表（creator_author）用这个键
+            if (e.name.empty()) e.name = stringField(obj, "time");   // 周更刊期（week）用 time 作显示名
             e.author = stringField(obj, "author");
             if (e.author.empty()) e.author = stringField(obj, "author_name");
             e.image = stringField(obj, "image");

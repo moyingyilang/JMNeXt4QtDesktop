@@ -156,6 +156,7 @@ qt_add_qml_module(jmnext4qml
         src/qml/MoreScreen.qml
         src/qml/ComicListScreen.qml
         src/qml/LoginScreen.qml
+        src/qml/WeekScreen.qml
         src/qml/Glass.qml
         src/qml/GlassTopBar.qml
         src/qml/FloatingBottomBar.qml

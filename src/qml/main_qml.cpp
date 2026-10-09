@@ -280,6 +280,18 @@ int main(int argc, char** argv) {
         return app.exec();
     }
 
+    // --raw <path> [query]：直出响应原文，用于一次看清未知响应形态（调试用）
+    if (argc >= 3 && std::string(argv[1]) == "--raw") {
+        const QString path = QString::fromUtf8(argv[2]);
+        const QString query = (argc >= 4) ? QString::fromUtf8(argv[3]) : QString();
+        QObject::connect(&backend, &jmnext::qt::JmBackend::status, &app, [](const QString& s) {
+            qInfo().noquote() << QStringLiteral("状态：%1").arg(s);
+        });
+        QTimer::singleShot(0, &backend, [&backend, path, query] { backend.loadPaged("raw", path, query); });
+        QTimer::singleShot(30000, &app, [&app] { app.quit(); });
+        return app.exec();
+    }
+
     // --paged <path> [query]：直接打任意"作品列表"型接口（收藏/历史/画师/周更/随机推荐…）。
     // 存在理由：通用列表屏 ComicListScreen 的每个入口只差 path/query，用它可以一次性核对多个接口，
     // 不必对每屏各写一条自检。示例：

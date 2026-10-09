@@ -133,6 +133,7 @@ ApplicationWindow {
     /// 通用列表屏（第 61 轮）：任意"作品列表"型接口共用一屏
     property bool showList: false
     property bool showLogin: false
+    property bool showWeek: false
     property string listTitle: ""
     property string listPath: ""
     property string listQuery: ""
@@ -261,7 +262,7 @@ ApplicationWindow {
                     var m = ({
                         "random":    ["随机推荐", "random_recommend", ""],
                         "creator":   ["画师列表", "creator_author", "page=1"],
-                        "week":      ["每周更新", "week", ""],
+                        "week":      ["__week__", "", ""],
                         "favorites": ["我的收藏（需登录）", "favorite", "page=1"],
                         "history":   ["阅读历史（需登录）", "watch_list", "page=1"],
                         "tags":      ["标签收藏", "tags_favorite", ""],
@@ -269,6 +270,7 @@ ApplicationWindow {
                         "auth":      ["__login__", "", ""]
                     })[key]
                     if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
+                    if (m && m[1] === "__week__") { root.showMore = false; root.showWeek = true; return }
                     if (m) {
                         root.listTitle = m[0]; root.listPath = m[1]; root.listQuery = m[2]
                         root.listTag = key
@@ -323,6 +325,23 @@ ApplicationWindow {
             Connections {
                 target: backend
                 function onLoginResult(ok, msg) { loginPane.message = (ok ? "成功：" : "失败：") + msg }
+            }
+        }
+
+        WeekScreen {
+            id: weekPane
+            visible: root.showWeek
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            surfaceColor: root.cSurface2
+            accentColor: root.cAccent
+            onCloseRequested: root.showWeek = false
+            onComicClicked: (aid) => {
+                root.albumAid = aid
+                backend.loadAlbum(aid)
+                root.showWeek = false
             }
         }
 }
