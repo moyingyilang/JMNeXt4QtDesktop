@@ -70,6 +70,10 @@ std::optional<SearchPage> parseSearchPage(const std::string& json);
 /// 而非 categories —— 后者是登录用户的收藏夹分类）。
 std::optional<std::vector<std::string>> parseHotTags(const std::string& json);
 
+/// 宽松列表解析：字段名多态（name/work_title/title、author/author_name、image/work_image、id/aid），
+/// 且自动下钻到响应里第一个"有内容的对象数组"。用于收藏/画师/周更等层级与字段各异的列表接口。
+std::optional<std::vector<ListEntry>> parseLooseList(const std::string& json);
+
 /// JSON 字符串里的转义还原（至少处理 \/ \" \\ \n \t \r \uXXXX 的常见情形）
 std::string unescapeJson(const std::string& raw);
 

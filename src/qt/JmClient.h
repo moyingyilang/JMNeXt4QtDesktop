@@ -30,6 +30,11 @@ public:
     /// 搜索（参数名 search_query 是探出来的；条目字段与首页列表相同）
     std::optional<std::vector<jmnext::core::ListEntry>> search(const std::string& word, int page);
 
+    /// 通用分页列表：把任意 (path, query) 当作"作品列表"请求并解析。
+    /// 存在理由：多个接口（收藏/画师作品/标签/周更/随机）的响应形态与搜索相同，
+    /// 用一个入口覆盖，避免每个接口都写一条四层切片。
+    std::optional<std::vector<jmnext::core::ListEntry>> paged(const std::string& path, const std::string& query);
+
     /// 按分类筛选作品（分类浏览页点标签后用）。
     ///  c 分类标识；**为空时整个 c 参数必须省略** —— 实测发 `c=` 会让服务端返回
     ///          `Could not connect to mysql!` 错误页（不是 JSON）；省略才是合法的"不筛选"语义。

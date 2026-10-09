@@ -266,6 +266,34 @@ bool needsUnscrambleFor(int aid, int scrambleId, const std::string& url) {
     return needsUnscramble(url, aid, scrambleId);
 }
 
+std::optional<std::vector<ListEntry>> parseLooseList(const std::string& json) {
+    std::vector<ListEntry> out;
+    std::size_t start = json.find('[');
+    while (start != std::string::npos) {
+        const auto end = matchingBracket(json, start);
+        if (end == std::string::npos) break;
+        for (auto& obj : splitTopLevel(json.substr(start + 1, end - start - 1))) {
+            if (obj.find('{') == std::string::npos) continue;
+            ListEntry e;
+            e.id = scalarField(obj, "id");
+            if (e.id.empty()) e.id = scalarField(obj, "aid");
+            e.name = stringField(obj, "name");
+            if (e.name.empty()) e.name = stringField(obj, "work_title");
+            if (e.name.empty()) e.name = stringField(obj, "title");
+            e.author = stringField(obj, "author");
+            if (e.author.empty()) e.author = stringField(obj, "author_name");
+            e.image = stringField(obj, "image");
+            if (e.image.empty()) e.image = stringField(obj, "work_image");
+            e.categoryTitle = stringField(obj, "platform_name");
+            if (!e.id.empty() || !e.name.empty()) out.push_back(e);
+        }
+        if (!out.empty()) return out;
+        start = json.find('[', start + 1);   // 本层为空则下钻
+    }
+    if (out.empty()) return std::nullopt;
+    return out;
+}
+
 std::optional<std::vector<std::string>> parseHotTags(const std::string& json) {
     const auto start = json.find('[');
     if (start == std::string::npos) return std::nullopt;

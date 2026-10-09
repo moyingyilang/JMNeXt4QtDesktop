@@ -82,6 +82,23 @@ std::optional<std::vector<ListEntry>> JmClient::latest(int page) {
     return parsed;
 }
 
+std::optional<std::vector<ListEntry>> JmClient::paged(const std::string& path, const std::string& query) {
+    if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
+    JmApi api(session_, http_);
+    auto r = api.request(path, query);
+    if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    if (auto parsed = parseSearchPage(r->text)) {
+        bool named = false;
+        for (const auto& e : parsed->items) if (!e.name.empty()) { named = true; break; }
+        if (named || parsed->items.empty()) return parsed->items;
+    }
+    if (auto loose = parseLooseList(r->text)) return loose;
+    // 有些接口（如 random_recommend）返回**顶层数组**，与 latest 同形。
+    if (auto flat = parseLatestList(r->text)) return flat;
+    lastError_ = "列表解析失败";
+    return std::nullopt;
+}
+
 std::optional<std::vector<ListEntry>> JmClient::categoryFilter(const std::string& c, int page) {
     if (!bootstrapped_) { lastError_ = "尚未初始化主机"; return std::nullopt; }
     JmApi api(session_, http_);

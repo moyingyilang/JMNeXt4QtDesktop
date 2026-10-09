@@ -51,6 +51,9 @@ public slots:
 
     /// 按分类标签筛选作品（c 为空表示不筛选；参数会被省略）
     void categoryFilter(const QString& c, int page);
+
+    /// 通用分页列表（tag 用于把结果对上是哪个请求）
+    void loadPaged(const QString& tag, const QString& path, const QString& query);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
@@ -85,6 +88,9 @@ signals:
 
     /// 分类筛选结果就绪（title/id 两个平行列表，与 listReady 同形态）
     void categoryReady(const QStringList& titles, const QStringList& ids);
+
+    /// 通用分页列表就绪
+    void pagedReady(const QString& tag, const QStringList& titles, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);

@@ -2041,3 +2041,26 @@ ctest --test-dir build                                   # 16 项
 
 **因此：本目标未完成。** 留给下一步的不是一堆半成品，而是
 "清单（审计表）+ 模板（分类屏五步）+ 验证（`scripts/verify-all.sh`）+ 坑（11 条）"齐备的起点。
+
+## 第 61 轮（提速模式）：一次切片解锁多屏 + 组件补齐到 8/8
+
+| 项 | 内容 |
+| --- | --- |
+| 通用数据通路 | `JmClient::paged(path,query)` → `JmWorker::loadPaged(tag,path,query)` → `JmBackend::loadPaged` + `pagedReady(tag,titles,ids)`。**一屏覆盖所有"作品列表"型接口**，新增屏 = 在 `MoreScreen` 表里加一行，不再动 C++ |
+| 宽松解析 | `JmParse::parseLooseList`：字段名多态（`name/work_title/title`、`author/author_name`、`image/work_image`、`id/aid`）且自动下钻到第一个有内容的对象数组 |
+| 通用屏 | `src/qml/ComicListScreen.qml`（标题+刷新+列表+空态+关闭；换接口靠 `onApiPathChanged` 重载） |
+| 新自检 | `--paged <path> [query]`，一条命令核对任意列表接口 |
+| **组件 8/8** | 补齐 `Glass`/`GlassTopBar`/`FloatingBottomBar`/`ItemMotion`/`AmbientBackdrop`（说明：Qt 6.4 无 `MultiEffect` 真模糊，`Glass` 用半透明+描边近似，已在文件头注明） |
+| 入口接线 | `MoreScreen` 的随机推荐/画师/收藏/历史/标签/通知均映射到真实 `path/query`（取自 `shared/data/JmRepository.kt`） |
+
+**实测（`--paged`）**：
+
+| 接口 | 结果 |
+| --- | --- |
+| `random_recommend` | **30 条，首条有真实标题** |
+| `creator_author page=1` | 30 条，但**标题为空**（字段未对上，待查原始 JSON） |
+| `favorite page=1` / `watch_list page=1` | **网络请求失败**（这两个接口需要登录态，而登录链路尚未移植） |
+| `week` | 返回的是**刊期与分类**而非作品列表 → 取作品需 `week/filter` 且需 issue/type 两级参数，入口已如实标回"未实现" |
+
+**进度**：屏幕 **8 个文件 + 一个通用列表屏覆盖 7 个入口**；组件 **8/8**（本目标首次满额）。
+构建 0 错误、QML 运行与截图正常。
