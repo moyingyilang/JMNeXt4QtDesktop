@@ -2064,3 +2064,20 @@ ctest --test-dir build                                   # 16 项
 
 **进度**：屏幕 **8 个文件 + 一个通用列表屏覆盖 7 个入口**；组件 **8/8**（本目标首次满额）。
 构建 0 错误、QML 运行与截图正常。
+
+## 第 62 轮（提速模式）：登录链路
+
+| 层 | 改动 |
+| --- | --- |
+| 传输 | `HttpClient` 加 `post()`（**默认实现返回失败**，因此既有 16 项测试的测试桩无需改动）；`QtHttpClient::post` 用 `QNetworkAccessManager::post` 实现（单独文件 `QtHttpClientPost.cpp`） |
+| 协议 | `JmApi::post(path, formBody)`：表单 `Content-Type: application/x-www-form-urlencoded`；`headersFor` 在登录后追加 `Authorization: Bearer <jwt>`（Kotlin 侧 `JmRemote` 同款） |
+| 凭证 | `core::setAuthJwt/authJwt`（**过渡实现：进程内全局**，未落盘未加密；Kotlin 侧是 Keystore 加密存储 —— 已在代码注释与本文如实标注） |
+| 客户端 | `JmClient::login(username,password)` → POST `login`，取 `jwt_token`/`jwtToken`/`token`；`logout()` 清凭证（单独文件 `JmClientAuth.cpp`） |
+| 工作线程/桥 | `JmWorker::login/logout` + `loginResult(ok,msg)`；`JmBackend::login/logout` + 信号转发 |
+| 界面 | `src/qml/LoginScreen.qml`（用户名/密码/登录/退出 + 结果提示 + 现状说明）；`MoreScreen` 的"登录/注册"入口已接 |
+
+**经验（本轮踩的）**：**往 .cpp 末尾追加实现会落到命名空间之外**（两次编译失败）——
+改成"实现放独立 .cpp 文件"后一次通过。另外用 `\s*` 前导匹配做 CMake 插入会把两行粘在一起，已修。
+
+**未验证**：登录成功与否需要真实账号（凭据不落盘、不进日志、不在回复里回显）；
+按纪律交给用户在自己的账号上验证。注册接口未接。

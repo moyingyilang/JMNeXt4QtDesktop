@@ -35,6 +35,11 @@ public:
     /// 用一个入口覆盖，避免每个接口都写一条四层切片。
     std::optional<std::vector<jmnext::core::ListEntry>> paged(const std::string& path, const std::string& query);
 
+    /// 登录：POST login（表单 username/password），成功后把 JWT 记进会话（供后续请求带头）。
+    /// 依据 shared/data/JmRepository.kt 的 login()：参数 username/password，返回体里取 jwt_token。
+    bool login(const std::string& username, const std::string& password);
+    void logout();
+
     /// 按分类筛选作品（分类浏览页点标签后用）。
     ///  c 分类标识；**为空时整个 c 参数必须省略** —— 实测发 `c=` 会让服务端返回
     ///          `Could not connect to mysql!` 错误页（不是 JSON）；省略才是合法的"不筛选"语义。

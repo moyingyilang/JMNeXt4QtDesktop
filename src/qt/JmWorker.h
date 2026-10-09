@@ -54,6 +54,10 @@ public slots:
 
     /// 通用分页列表（tag 用于把结果对上是哪个请求）
     void loadPaged(const QString& tag, const QString& path, const QString& query);
+
+    /// 登录（成功后凭证在进程内生效，后续请求自动带头）
+    void login(const QString& username, const QString& password);
+    void logout();
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
@@ -91,6 +95,9 @@ signals:
 
     /// 通用分页列表就绪
     void pagedReady(const QString& tag, const QStringList& titles, const QStringList& ids);
+
+    /// 登录结果
+    void loginResult(bool ok, const QString& message);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);

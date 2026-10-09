@@ -319,6 +319,22 @@ void JmWorker::reportCacheStats() {
 
 namespace jmnext::qt {
 
+void JmWorker::login(const QString& username, const QString& password) {
+    if (!ensureStarted()) return;
+    if (client().login(username.toStdString(), password.toStdString())) {
+        emit status(QStringLiteral("已登录：%1").arg(username));
+        emit loginResult(true, QStringLiteral("登录成功"));
+    } else {
+        emit loginResult(false, QString::fromStdString(client().lastError()));
+    }
+}
+
+void JmWorker::logout() {
+    client().logout();
+    emit status(QStringLiteral("已退出登录"));
+    emit loginResult(false, QStringLiteral("已退出登录"));
+}
+
 void JmWorker::loadPaged(const QString& tag, const QString& path, const QString& query) {
     if (!ensureStarted()) return;
     auto list = client().paged(path.toStdString(), query.toStdString());

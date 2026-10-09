@@ -17,6 +17,8 @@ public:
     /// 同步 get（桌面端在后台线程上调用；超时毫秒数默认 20 秒）
     jmnext::net::HttpResponse get(const std::string& url,
                                  const std::vector<std::string>& headers) override;
+    jmnext::net::HttpResponse post(const std::string& url, const std::string& body,
+                                   const std::vector<std::string>& headers) override;
     /// 最近一次失败的说明（网络类失败时上层据此标记主机可疑）
     const std::string& lastError() const { return lastError_; }
 

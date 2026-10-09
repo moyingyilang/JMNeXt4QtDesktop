@@ -49,9 +49,14 @@ std::optional<Envelope> extractEnvelope(const std::string& body) {
 
 // 与主项目 JmRemote.kt 实际发送的三个头一致（登录后还会加 Authorization: Bearer <jwt>，
 // 那部分等做登录再接；这里不带凭证）
+std::string g_jwt;
+
 std::vector<std::string> headersFor(const JmSession& s) {
-    return {"Token: " + s.token(), "Tokenparam: " + s.tokenParam(),
-            "Accept: application/json, text/plain, */*"};
+    std::vector<std::string> h{"Token: " + s.token(), "Tokenparam: " + s.tokenParam(),
+                               "Accept: application/json, text/plain, */*"};
+    // 登录后带上凭证（Kotlin 侧 JmRemote 同款：Authorization: Bearer <jwt>）
+    if (!g_jwt.empty()) h.push_back("Authorization: Bearer " + g_jwt);
+    return h;
 }
 }  // namespace
 
@@ -64,6 +69,23 @@ std::optional<JmApi::Result> JmApi::request(const std::string& path, const std::
     std::string url = *base;
     if (!query.empty()) url += "?" + query;
     return doRequest(url, /*allowRetry=*/true);
+}
+
+void setAuthJwt(const std::string& jwt) { g_jwt = jwt; }
+const std::string& authJwt() { return g_jwt; }
+
+
+std::optional<JmApi::Result> JmApi::post(const std::string& path, const std::string& formBody) {
+    auto base = session_.apiUrl(path);
+    if (!base) { lastError_ = "API 主机尚未初始化"; return std::nullopt; }
+    auto headers = headersFor(session_);
+    headers.push_back("Content-Type: application/x-www-form-urlencoded");
+    const auto resp = http_.post(*base, formBody, headers);
+    if (!resp.ok()) { lastError_ = "HTTP " + std::to_string(resp.status); return std::nullopt; }
+    Result r;
+    r.status = resp.status;
+    r.text = resp.body;
+    return r;
 }
 
 std::optional<JmApi::Result> JmApi::requestPath(const std::string& fullPathWithQuery) {

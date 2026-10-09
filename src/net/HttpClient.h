@@ -16,6 +16,14 @@ class HttpClient {
 public:
     virtual ~HttpClient() = default;
     virtual HttpResponse get(const std::string& url, const std::vector<std::string>& headers) = 0;
+
+    /// POST（表单）。默认实现返回失败，真实实现（Qt 侧）覆盖它；
+    /// 这样加登录不会破坏既有的测试桩（它们只实现 get）。
+    virtual HttpResponse post(const std::string& url, const std::string& body,
+                              const std::vector<std::string>& headers) {
+        (void)url; (void)body; (void)headers;
+        return HttpResponse{};
+    }
 };
 
 }  // namespace jmnext::net

@@ -18,6 +18,12 @@
 
 namespace jmnext::core {
 
+/// 登录凭证（JWT）。
+/// 说明：这是**过渡实现** —— 放在进程内全局，让 get/post 的 header 拼装能带上凭证；
+/// 与 Kotlin 侧用 Keystore 加密落盘不同，这里既不落盘也不加密（当前阶段仅进程内）。
+void setAuthJwt(const std::string& jwt);
+const std::string& authJwt();
+
 class JmApi {
 public:
     struct Result {
@@ -31,6 +37,9 @@ public:
     /// 发一次业务请求。query 是**原样**拼到 URL 后面的查询串（不含 '?'），可为空。
     std::optional<Result> request(const std::string& path, const std::string& query = "");
     std::optional<Result> requestPath(const std::string& fullPathWithQuery);
+
+    /// POST 表单请求（登录/注册/收藏写入等）。body 已是 x-www-form-urlencoded 文本。
+    std::optional<Result> post(const std::string& path, const std::string& formBody);
 
     const std::string& lastError() const { return lastError_; }
 

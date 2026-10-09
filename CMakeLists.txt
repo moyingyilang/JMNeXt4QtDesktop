@@ -42,7 +42,10 @@ if(Qt6_FOUND)
 # 共用 Qt 层（网络客户端 / 缓存 / 解码 / 后台 worker）——widget 与 QML 两个前端都用它。
 # 刻意不含 MainWindow.cpp：那是 widget 专属界面；QML 侧由 JmBackend 复用同一个 JmWorker。
 add_library(jmnext_qtlayer STATIC
-    src/qt/ImageCodec.cpp src/qt/JmClient.cpp src/qt/QtHttpClient.cpp
+    src/qt/ImageCodec.cpp src/qt/JmClient.cpp
+    src/qt/JmClientAuth.cpp
+    src/qt/QtHttpClient.cpp
+    src/qt/QtHttpClientPost.cpp
     src/qt/ImageCache.cpp src/qt/JmWorker.cpp)
 target_include_directories(jmnext_qtlayer PUBLIC src)
 target_link_libraries(jmnext_qtlayer PUBLIC jmnext_core Qt6::Gui Qt6::Network Qt6::Core)
@@ -114,7 +117,7 @@ if(Qt6_FOUND)
     add_executable(jmnext4img src/qt/main_img.cpp src/qt/ImageCodec.cpp)
     target_link_libraries(jmnext4img PRIVATE jmnext_core Qt6::Gui)
     # QtHttpClient 是给上层用的实现（没有 main），做成静态库
-    add_library(jmnext_qtnet STATIC src/qt/QtHttpClient.cpp)
+    add_library(jmnext_qtnet STATIC src/qt/QtHttpClient.cpp src/qt/QtHttpClientPost.cpp)
     target_link_libraries(jmnext_qtnet PUBLIC jmnext_core Qt6::Network)
     # 真实网络自检工具（给真机用）
     add_executable(jmnext4net src/qt/main_net.cpp)
@@ -152,6 +155,7 @@ qt_add_qml_module(jmnext4qml
         src/qml/CategoryScreen.qml
         src/qml/MoreScreen.qml
         src/qml/ComicListScreen.qml
+        src/qml/LoginScreen.qml
         src/qml/Glass.qml
         src/qml/GlassTopBar.qml
         src/qml/FloatingBottomBar.qml

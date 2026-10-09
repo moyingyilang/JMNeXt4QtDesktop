@@ -18,6 +18,7 @@ JmBackend::JmBackend(QObject* parent) : QObject(parent) {
     connect(worker_, &JmWorker::hotTagsReady, this, &JmBackend::hotTagsReady);
     connect(worker_, &JmWorker::categoryReady, this, &JmBackend::categoryReady);
     connect(worker_, &JmWorker::pagedReady, this, &JmBackend::pagedReady);
+    connect(worker_, &JmWorker::loginResult, this, &JmBackend::loginResult);
     connect(worker_, &JmWorker::albumReady, this, &JmBackend::albumReady);
     connect(worker_, &JmWorker::albumCoverReady, this, &JmBackend::albumCoverReady);
     connect(worker_, &JmWorker::chaptersReady, this, &JmBackend::chaptersReady);
@@ -47,6 +48,9 @@ void JmBackend::loadList() { invoke("loadList"); }
 void JmBackend::loadMore() { invoke("loadMore"); }
 void JmBackend::loadHotTags() { invoke("loadHotTags"); }
 void JmBackend::categoryFilter(const QString& c, int page) { invoke("categoryFilter", Q_ARG(QString, c), Q_ARG(int, page)); }
+void JmBackend::login(const QString& u, const QString& p) { invoke("login", Q_ARG(QString, u), Q_ARG(QString, p)); }
+void JmBackend::logout() { invoke("logout"); }
+
 void JmBackend::loadPaged(const QString& tag, const QString& path, const QString& query) {
     invoke("loadPaged", Q_ARG(QString, tag), Q_ARG(QString, path), Q_ARG(QString, query));
 }

@@ -40,6 +40,8 @@ public:
     Q_INVOKABLE void categoryFilter(const QString& c, int page = 1);
     /// 通用分页列表（收藏/画师/标签/周更…共用）
     Q_INVOKABLE void loadPaged(const QString& tag, const QString& path, const QString& query);
+    Q_INVOKABLE void login(const QString& username, const QString& password);
+    Q_INVOKABLE void logout();
     Q_INVOKABLE void reportCacheStats();
 
 signals:
@@ -49,6 +51,7 @@ signals:
     void hotTagsReady(const QStringList& tags);
     void categoryReady(const QStringList& titles, const QStringList& ids);
     void pagedReady(const QString& tag, const QStringList& titles, const QStringList& ids);
+    void loginResult(bool ok, const QString& message);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
     void currentAidChanged();

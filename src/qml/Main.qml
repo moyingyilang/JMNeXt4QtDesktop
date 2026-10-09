@@ -128,6 +128,7 @@ ApplicationWindow {
     property bool showMore: false
     /// 通用列表屏（第 61 轮）：任意"作品列表"型接口共用一屏
     property bool showList: false
+    property bool showLogin: false
     property string listTitle: ""
     property string listPath: ""
     property string listQuery: ""
@@ -252,8 +253,10 @@ ApplicationWindow {
                         "favorites": ["我的收藏", "favorite", "page=1"],
                         "history":   ["阅读历史", "watch_list", "page=1"],
                         "tags":      ["标签收藏", "tags_favorite", ""],
-                        "notify":    ["通知", "notifications", ""]
+                        "notify":    ["通知", "notifications", ""],
+                        "auth":      ["__login__", "", ""]
                     })[key]
+                    if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
                     if (m) {
                         root.listTitle = m[0]; root.listPath = m[1]; root.listQuery = m[2]
                         root.listTag = key
@@ -285,6 +288,25 @@ ApplicationWindow {
                 root.albumAid = aid
                 backend.loadAlbum(aid)
                 root.showList = false
+            }
+        }
+
+        LoginScreen {
+            id: loginPane
+            visible: root.showLogin
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showLogin = false
+            onSubmit: (u, p) => backend.login(u, p)
+            onLogoutRequested: backend.logout()
+            Connections {
+                target: backend
+                function onLoginResult(ok, msg) { loginPane.message = (ok ? "成功：" : "失败：") + msg }
             }
         }
 }

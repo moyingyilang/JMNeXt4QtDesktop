@@ -40,7 +40,7 @@ Rectangle {
         ListElement { key: "favorites";name: "我的收藏";         ready: false }
         ListElement { key: "history";  name: "阅读历史";         ready: false }
         ListElement { key: "profile";  name: "我的";             ready: false }
-        ListElement { key: "auth";     name: "登录 / 注册";      ready: false }
+        ListElement { key: "auth";     name: "登录 / 注册";      ready: true }
         ListElement { key: "notify";   name: "通知";             ready: false }
         ListElement { key: "comments"; name: "评论";             ready: false }
     }
