@@ -73,6 +73,8 @@ ApplicationWindow {
         ReaderScreen {
             id: readerPane
             visible: root.reading
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             pageUrl: root.pageUrl
@@ -86,6 +88,8 @@ ApplicationWindow {
         DetailScreen {
             id: rightPane
             visible: !root.reading
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             albumAid: root.albumAid
@@ -186,6 +190,8 @@ ApplicationWindow {
         AboutScreen {
             id: aboutPane
             visible: root.showAbout
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             surfaceColor: root.cSurface1
@@ -199,6 +205,8 @@ ApplicationWindow {
         SettingsScreen {
             id: settingsPane
             visible: root.showSettings
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             surfaceColor: root.cSurface1
@@ -218,6 +226,8 @@ ApplicationWindow {
         CategoryScreen {
             id: categoryPane
             visible: root.showCategory
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             surfaceColor: root.cSurface1
@@ -232,6 +242,8 @@ ApplicationWindow {
         MoreScreen {
             id: morePane
             visible: root.showMore
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             surfaceColor: root.cSurface1
@@ -250,10 +262,10 @@ ApplicationWindow {
                         "random":    ["随机推荐", "random_recommend", ""],
                         "creator":   ["画师列表", "creator_author", "page=1"],
                         "week":      ["每周更新", "week", ""],
-                        "favorites": ["我的收藏", "favorite", "page=1"],
-                        "history":   ["阅读历史", "watch_list", "page=1"],
+                        "favorites": ["我的收藏（需登录）", "favorite", "page=1"],
+                        "history":   ["阅读历史（需登录）", "watch_list", "page=1"],
                         "tags":      ["标签收藏", "tags_favorite", ""],
-                        "notify":    ["通知", "notifications", ""],
+                        "notify":    ["通知（需登录）", "notifications", ""],
                         "auth":      ["__login__", "", ""]
                     })[key]
                     if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
@@ -272,6 +284,8 @@ ApplicationWindow {
         ComicListScreen {
             id: comicListPane
             visible: root.showList
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             title: root.listTitle
@@ -294,6 +308,8 @@ ApplicationWindow {
         LoginScreen {
             id: loginPane
             visible: root.showLogin
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
             Layout.fillHeight: true
             surfaceColor: root.cSurface1

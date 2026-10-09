@@ -2093,3 +2093,16 @@ ctest --test-dir build                                   # 16 项
 **未解决**：`creator_author` 仍显示 30 条而标题为空，但"首行标题为空"的回显分支**没有触发**，
 说明标题串首行非空、而自检打印处显示为空 —— 两者矛盾，本轮未查明。**如实记录，不算已对齐**。
 下一步用它查：`--paged creator_author page=1` 看 status，或加 `--raw` 直接打印响应前 300 字。
+
+## 第 64 轮：转场 + 收藏/历史/通知接线
+
+| 改动 | 说明 |
+| --- | --- |
+| 转场 | `Main.qml` 的 8 个面板统一加 `opacity: visible ? 1 : 0` + `Behavior on opacity`（140ms OutCubic）—— 对应 `JmNavHost` 的过场观感；Qt 6.4 无 `MultiEffect`，故用透明度而非共享元素位移 |
+| 收藏 / 历史 / 通知 | `MoreScreen` 标为可用并接到通用列表屏（路径 `favorite` / `watch_list` / `notifications`，参数 `page=1`），**登录后可用** |
+| 画师 | 标为可用（`creator_author page=1`，30 条能取到但标题待修） |
+
+**当前规模**：QML 19 个文件；组件 8/8；交互 4/6（加载更多、分类筛选、翻页手势+缩放、下拉刷新）；
+屏幕 8 个独立文件 + 通用列表屏覆盖 7 个入口（随机/画师/收藏/历史/通知/标签/追更）。
+
+**未验证**：收藏/历史/通知需要真实账号；`creator_author` 标题；周更两级屏未做。

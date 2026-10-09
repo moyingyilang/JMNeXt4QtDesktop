@@ -22,6 +22,7 @@ Rectangle {
 
     signal closeRequested()
     signal entryClicked(string key)
+    /// 已实现项：由外层决定跳到哪一屏（见 Main.qml 的 onEntryClicked）
 
     color: more.surfaceColor
     border.color: more.strokeColor
@@ -37,11 +38,11 @@ Rectangle {
         ListElement { key: "creator";  name: "画师列表";         ready: true }
         ListElement { key: "week";     name: "每周更新（需刊期参数）"; ready: false }
         ListElement { key: "tags";     name: "标签收藏";         ready: false }
-        ListElement { key: "favorites";name: "我的收藏";         ready: false }
-        ListElement { key: "history";  name: "阅读历史";         ready: false }
+        ListElement { key: "favorites";name: "我的收藏";         ready: true }
+        ListElement { key: "history";  name: "阅读历史";         ready: true }
         ListElement { key: "profile";  name: "我的";             ready: false }
         ListElement { key: "auth";     name: "登录 / 注册";      ready: true }
-        ListElement { key: "notify";   name: "通知";             ready: false }
+        ListElement { key: "notify";   name: "通知";             ready: true }
         ListElement { key: "comments"; name: "评论";             ready: false }
     }
 
