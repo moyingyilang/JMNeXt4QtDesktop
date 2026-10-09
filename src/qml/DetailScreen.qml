@@ -38,6 +38,8 @@ Rectangle {
     signal favoriteToggled(string aid)
     /// 追更开关（依据 JmRepository.toggleTracking：POST album_sertracking，参数 id）
     signal trackToggled(string aid)
+    /// 查看评论（依据 JmRepository.comments：GET forum，mode=all&page=1&aid=）
+    signal commentsRequested(string aid)
 
     color: detail.surfaceColor
     border.color: detail.strokeColor
@@ -86,6 +88,10 @@ Rectangle {
             Button {
                 text: "追更 / 取消"
                 onClicked: detail.trackToggled(detail.albumAid)
+            }
+            Button {
+                text: "评论"
+                onClicked: detail.commentsRequested(detail.albumAid)
             }
             Text {
                 text: detail.pageStatus

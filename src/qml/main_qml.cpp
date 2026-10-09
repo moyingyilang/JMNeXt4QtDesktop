@@ -280,48 +280,53 @@ int main(int argc, char** argv) {
         return app.exec();
     }
 
-    // --login <用户名> <密码>：验证登录链路（POST login -> 取 jwt -> 带 Authorization 拉一次收藏）。
-    // 注意：用户名/密码由命令行传入，**不落盘、不写日志**；本自检只打印成功/失败与条数。
-    // 用法：JM_USER=... JM_PASS=... ./build/jmnext4qml --login "$JM_USER" "$JM_PASS"
+    // --login <用户名> <密码>：登录后**错开探测全部需要登录态的接口**，一次运行给出可用表。
+    // 凭据只由命令行传入：不落盘、不写日志、不回显（令牌值从不打印）。
     if (argc >= 4 && std::string(argv[1]) == "--login") {
         const QString user = QString::fromUtf8(argv[2]);
         const QString pass = QString::fromUtf8(argv[3]);
+        struct Probe { const char* tag; const char* path; const char* query; };
+        static const Probe probes[] = {
+            {"favorite", "favorite", "page=1"},
+            {"watch_list", "watch_list", "page=1"},
+            {"notifications", "notifications", ""},
+            {"tags_favorite", "tags_favorite", ""},
+            {"setting", "setting", "app_img_shunt=1&lang=zh&t=1"},
+            {"forum", "forum", "mode=all&page=1&aid=209827"},
+        };
+        const int probeCount = static_cast<int>(sizeof(probes) / sizeof(probes[0]));
+        QObject::connect(&backend, &jmnext::qt::JmBackend::pagedReady, &app,
+                         [](const QString& tag, const QStringList& titles, const QStringList&) {
+                             qInfo().noquote() << QStringLiteral("登录后[%1]：%2 条%3")
+                                                      .arg(tag)
+                                                      .arg(titles.size())
+                                                      .arg(titles.isEmpty()
+                                                               ? QString()
+                                                               : QStringLiteral("，首条：") +
+                                                                     titles.value(0).section('\n', 0, 0).left(36));
+                         });
         QObject::connect(&backend, &jmnext::qt::JmBackend::loginResult, &app,
-                         [&backend, user](bool ok, const QString& msg) {
+                         [&backend, &app, user, probeCount](bool ok, const QString& msg) {
                              qInfo().noquote() << QStringLiteral("登录自检：%1（用户 %2）")
                                                       .arg(ok ? QStringLiteral("成功") : QStringLiteral("失败"), user);
-                             if (!ok) { qInfo().noquote() << QStringLiteral("  原因：%1").arg(msg.left(160)); return; }
-                             // 登录成功：立刻用凭证拉一次收藏，证明 Authorization 真的生效
-                             backend.loadPaged("probe", "favorite", "page=1");
+                             if (!ok) {
+                                 qInfo().noquote() << QStringLiteral("  原因：%1").arg(msg.left(160));
+                                 QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                                 return;
+                             }
+                             // 错开发出，避免同时打满连接（每个探测单独一拍）
+                             for (int i = 0; i < probeCount; ++i) {
+                                 const auto p = probes[i];
+                                 QTimer::singleShot(200 + i * 1200, &backend, [&backend, p] {
+                                     backend.loadPaged(QString::fromUtf8(p.tag), QString::fromUtf8(p.path),
+                                                       QString::fromUtf8(p.query));
+                                 });
+                             }
                          });
-        QObject::connect(&backend, &jmnext::qt::JmBackend::pagedReady, &app,
-                         [&app](const QString& tag, const QStringList& titles, const QStringList&) {
-                             if (tag != QStringLiteral("probe")) return;
-                             qInfo().noquote() << QStringLiteral("凭证自检：收藏 %1 条，首条：%2")
-                                                      .arg(titles.size())
-                                                      .arg(titles.value(0).section('\n', 0, 0));
-                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
-                         });
-        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
-            qInfo().noquote() << QStringLiteral("登录自检失败：%1").arg(e.left(160));
-            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [](const QString& e) {
+            qInfo().noquote() << QStringLiteral("（失败）%1").arg(e.left(120));
         });
         QTimer::singleShot(0, &backend, [&backend, user, pass] { backend.login(user, pass); });
-        QTimer::singleShot(60000, &app, [&app] { qInfo().noquote() << QStringLiteral("登录自检超时"); app.quit(); });
-        return app.exec();
-    }
-
-    // --raw <path> [query]：直出响应原文，用于一次看清未知响应形态（调试用）
-    if (argc >= 3 && std::string(argv[1]) == "--raw") {
-        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [](const QString& e) {
-            qInfo().noquote() << QStringLiteral("RAW失败：%1").arg(e.left(200));
-        });
-        const QString path = QString::fromUtf8(argv[2]);
-        const QString query = (argc >= 4) ? QString::fromUtf8(argv[3]) : QString();
-        QObject::connect(&backend, &jmnext::qt::JmBackend::status, &app, [](const QString& s) {
-            qInfo().noquote() << QStringLiteral("状态：%1").arg(s);
-        });
-        QTimer::singleShot(0, &backend, [&backend, path, query] { backend.loadPaged("raw", path, query); });
         QTimer::singleShot(30000, &app, [&app] { app.quit(); });
         return app.exec();
     }

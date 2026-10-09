@@ -99,6 +99,7 @@ ApplicationWindow {
             onChapterClicked: (cid) => backend.openChapterId(cid, 0)
                 onFavoriteToggled: (aid) => backend.action("favorite", "favorite", "aid=" + aid)
                 onTrackToggled: (aid) => backend.action("track", "album_sertracking", "id=" + aid)
+                onCommentsRequested: (aid) => { root.commentAid = aid; root.showComments = true }
         }
     }
 
@@ -136,6 +137,8 @@ ApplicationWindow {
     property bool showList: false
     property bool showLogin: false
     property bool showWeek: false
+    property bool showComments: false
+    property string commentAid: ""
     property string listTitle: ""
     property string listPath: ""
     property string listQuery: ""
@@ -352,5 +355,18 @@ ApplicationWindow {
                 backend.loadAlbum(aid)
                 root.showWeek = false
             }
+        }
+
+        CommentScreen {
+            id: commentPane
+            visible: root.showComments
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            aid: root.commentAid
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            surfaceColor: root.cSurface2
+            accentColor: root.cAccent
+            onCloseRequested: root.showComments = false
         }
 }
