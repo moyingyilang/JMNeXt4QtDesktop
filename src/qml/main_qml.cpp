@@ -280,6 +280,32 @@ int main(int argc, char** argv) {
         return app.exec();
     }
 
+    // --paged <path> [query]：直接打任意"作品列表"型接口（收藏/历史/画师/周更/随机推荐…）。
+    // 存在理由：通用列表屏 ComicListScreen 的每个入口只差 path/query，用它可以一次性核对多个接口，
+    // 不必对每屏各写一条自检。示例：
+    //   ./build/jmnext4qml --paged random_recommend
+    //   ./build/jmnext4qml --paged creator_author page=1
+    //   ./build/jmnext4qml --paged week
+    if (argc >= 3 && std::string(argv[1]) == "--paged") {
+        const QString path = QString::fromUtf8(argv[2]);
+        const QString query = (argc >= 4) ? QString::fromUtf8(argv[3]) : QString();
+        QObject::connect(&backend, &jmnext::qt::JmBackend::pagedReady, &app,
+                         [&app](const QString& tag, const QStringList& titles, const QStringList&) {
+                             qInfo().noquote() << QStringLiteral("列表自检[%1]：%2 条，首条：%3")
+                                                      .arg(tag)
+                                                      .arg(titles.size())
+                                                      .arg(titles.value(0).section('\n', 0, 0));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("列表自检失败：%1").arg(e);
+            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend, path, query] { backend.loadPaged("selfcheck", path, query); });
+        QTimer::singleShot(45000, &app, [&app] { qInfo().noquote() << QStringLiteral("列表自检超时"); app.quit(); });
+        return app.exec();
+    }
+
     // --hot-tags：验证分类屏的数据链路（JmParse::parseHotTags -> JmClient::hotTags
     // -> JmWorker::loadHotTags -> JmBackend::hotTagsReady）。与 --ui-selftest 同一套路：
     // 走真实网络、把结果打到日志，用于回答"热标签到底取到没有"。

@@ -151,4 +151,10 @@ qt_add_qml_module(jmnext4qml
         src/qml/SettingsScreen.qml
         src/qml/CategoryScreen.qml
         src/qml/MoreScreen.qml
+        src/qml/ComicListScreen.qml
+        src/qml/Glass.qml
+        src/qml/GlassTopBar.qml
+        src/qml/FloatingBottomBar.qml
+        src/qml/ItemMotion.qml
+        src/qml/AmbientBackdrop.qml
 )

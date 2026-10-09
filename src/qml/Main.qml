@@ -119,6 +119,12 @@ ApplicationWindow {
     property bool showSettings: false
     property bool showCategory: false
     property bool showMore: false
+    /// 通用列表屏（第 61 轮）：任意"作品列表"型接口共用一屏
+    property bool showList: false
+    property string listTitle: ""
+    property string listPath: ""
+    property string listQuery: ""
+    property string listTag: "list"
     property bool twoPage: false
     // 诊断用：页面就绪 1.5 秒后再量一次几何（onStatusChanged 那一刻可能还没完成布局）
     Timer {
@@ -230,7 +236,48 @@ ApplicationWindow {
                 if (key === "category") { root.showMore = false; root.showCategory = true }
                 else if (key === "about") { root.showMore = false; root.showAbout = true }
                 else if (key === "settings") { root.showMore = false; root.showSettings = true }
-                else console.log("QML 更多：该项在 Qt 版尚未实现 -> " + key)
+                else {
+                    // 接口路径与参数取自 shared/data/JmRepository.kt（权威参照）
+                    var m = ({
+                        "random":    ["随机推荐", "random_recommend", ""],
+                        "creator":   ["画师列表", "creator_author", "page=1"],
+                        "week":      ["每周更新", "week", ""],
+                        "favorites": ["我的收藏", "favorite", "page=1"],
+                        "history":   ["阅读历史", "watch_list", "page=1"],
+                        "tags":      ["标签收藏", "tags_favorite", ""],
+                        "notify":    ["通知", "notifications", ""]
+                    })[key]
+                    if (m) {
+                        root.listTitle = m[0]; root.listPath = m[1]; root.listQuery = m[2]
+                        root.listTag = key
+                        root.showMore = false
+                        root.showList = true
+                    } else {
+                        console.log("QML 更多：该项还没有对应接口 -> " + key)
+                    }
+                }
+            }
+        }
+
+        ComicListScreen {
+            id: comicListPane
+            visible: root.showList
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: root.listTitle
+            apiPath: root.listPath
+            apiQuery: root.listQuery
+            tagId: root.listTag
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            surfaceColor: root.cSurface2
+            accentColor: root.cAccent
+            pageStatus: root.pageStatus
+            onCloseRequested: root.showList = false
+            onComicClicked: (aid) => {
+                root.albumAid = aid
+                backend.loadAlbum(aid)
+                root.showList = false
             }
         }
 }

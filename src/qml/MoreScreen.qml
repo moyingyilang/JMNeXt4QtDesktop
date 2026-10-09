@@ -33,16 +33,16 @@ Rectangle {
         ListElement { key: "category"; name: "分类（热门标签）"; ready: true }
         ListElement { key: "about";    name: "关于";             ready: true }
         ListElement { key: "settings"; name: "设置";             ready: true }
+        ListElement { key: "random";   name: "随机推荐";         ready: true }
+        ListElement { key: "creator";  name: "画师列表";         ready: true }
+        ListElement { key: "week";     name: "每周更新";         ready: true }
         ListElement { key: "tags";     name: "标签收藏";         ready: false }
-        ListElement { key: "week";     name: "每周更新";         ready: false }
-        ListElement { key: "random";   name: "随机作品";         ready: false }
         ListElement { key: "favorites";name: "我的收藏";         ready: false }
         ListElement { key: "history";  name: "阅读历史";         ready: false }
         ListElement { key: "profile";  name: "我的";             ready: false }
         ListElement { key: "auth";     name: "登录 / 注册";      ready: false }
         ListElement { key: "notify";   name: "通知";             ready: false }
         ListElement { key: "comments"; name: "评论";             ready: false }
-        ListElement { key: "creator";  name: "画师";             ready: false }
     }
 
     ColumnLayout {
