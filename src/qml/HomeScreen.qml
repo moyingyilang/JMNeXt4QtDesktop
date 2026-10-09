@@ -46,6 +46,14 @@ ColumnLayout {
         clip: true
         model: home.listModel
         spacing: 2
+        // 下拉刷新（对应 Kotlin 首页的 pullToRefresh）：在顶部继续下拉超过 60px 即重载
+        property real pullAccum: 0
+        onMovementEnded: {
+            if (atYBeginning && contentY < -60) {
+                console.log("QML 首页下拉刷新")
+                home.requestReload()
+            }
+        }
 
         delegate: ComicCard {
             title: model.title

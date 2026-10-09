@@ -301,6 +301,10 @@ int main(int argc, char** argv) {
             qInfo().noquote() << QStringLiteral("列表自检失败：%1").arg(e);
             QTimer::singleShot(100, &app, &QCoreApplication::quit);
         });
+        // 把后端 status 也打出来：未知响应形态的定位就靠它（例：字段名没对上时的响应片段）
+        QObject::connect(&backend, &jmnext::qt::JmBackend::status, &app, [](const QString& s) {
+            qInfo().noquote() << QStringLiteral("状态：%1").arg(s.left(260));
+        });
         QTimer::singleShot(0, &backend, [&backend, path, query] { backend.loadPaged("selfcheck", path, query); });
         QTimer::singleShot(45000, &app, [&app] { qInfo().noquote() << QStringLiteral("列表自检超时"); app.quit(); });
         return app.exec();

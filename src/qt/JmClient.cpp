@@ -87,6 +87,8 @@ std::optional<std::vector<ListEntry>> JmClient::paged(const std::string& path, c
     JmApi api(session_, http_);
     auto r = api.request(path, query);
     if (!r) { lastError_ = api.lastError(); return std::nullopt; }
+    lastRaw_ = r->text;
+    lastRaw_ = r->text;
     if (auto parsed = parseSearchPage(r->text)) {
         bool named = false;
         for (const auto& e : parsed->items) if (!e.name.empty()) { named = true; break; }

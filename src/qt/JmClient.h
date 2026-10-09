@@ -59,6 +59,8 @@ public:
     std::optional<QImage> pageImage(const std::string& url, int aid, int scrambleId);
 
     const std::string& lastError() const { return lastError_; }
+    /// 最近一次成功响应的原文（仅用于排查未知响应形态；不做持久化）
+    const std::string& lastRaw() const { return lastRaw_; }
     const std::string& host() const { return host_; }
     jmnext::core::JmSession& session() { return session_; }
 
@@ -69,6 +71,7 @@ private:
     std::string host_;
     std::string lastError_;
     bool bootstrapped_ = false;
+    std::string lastRaw_;
 };
 
 }  // namespace jmnext::qt

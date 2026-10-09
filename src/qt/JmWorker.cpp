@@ -352,6 +352,11 @@ void JmWorker::loadPaged(const QString& tag, const QString& path, const QString&
         ids << QString::fromStdString(e.id);
     }
     emit status(QStringLiteral("列表「%1」：%2 条").arg(tag).arg(titles.size()));
+    // 标题全空说明字段名没对上：把响应片段回显出来，便于一次改对（不落盘、不含账号信息）
+    if (!titles.isEmpty() && titles.first().split(QChar(10)).value(0).trimmed().isEmpty()) {
+        const auto raw = QString::fromStdString(client().lastRaw());
+        emit status(QStringLiteral("列表「%1」字段未识别，响应片段：%2").arg(tag).arg(raw.left(220)));
+    }
     emit pagedReady(tag, titles, ids);
 }
 
