@@ -34,6 +34,8 @@ Rectangle {
     property color placeholderColor: "#2b2d31"
 
     signal chapterClicked(string cid)
+    /// 收藏/取消收藏（登录后生效）
+    signal favoriteToggled(string aid)
 
     color: detail.surfaceColor
     border.color: detail.strokeColor
@@ -72,6 +74,20 @@ Rectangle {
             color: detail.tagColor; font.pixelSize: 12; wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+            Button {
+                text: "收藏 / 取消"
+                onClicked: detail.favoriteToggled(detail.albumAid)
+            }
+            Text {
+                text: detail.pageStatus
+                color: detail.statusColor; font.pixelSize: 12
+                Layout.fillWidth: true; elide: Text.ElideRight
+            }
+        }
+
         Text {
             text: "章节（" + chapterModel.count + "）"
             color: detail.tagColor; font.pixelSize: 12

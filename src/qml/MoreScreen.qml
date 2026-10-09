@@ -42,6 +42,7 @@ Rectangle {
         ListElement { key: "history";  name: "阅读历史";         ready: true }
         ListElement { key: "profile";  name: "我的";             ready: false }
         ListElement { key: "auth";     name: "登录 / 注册";      ready: true }
+        ListElement { key: "checkin";  name: "每日签到";         ready: true }
         ListElement { key: "notify";   name: "通知";             ready: true }
         ListElement { key: "comments"; name: "评论";             ready: false }
     }

@@ -42,6 +42,8 @@ public:
     Q_INVOKABLE void loadPaged(const QString& tag, const QString& path, const QString& query);
     Q_INVOKABLE void login(const QString& username, const QString& password);
     Q_INVOKABLE void logout();
+    /// 通用动作（收藏/点赞/追更/签到/评论）
+    Q_INVOKABLE void action(const QString& tag, const QString& path, const QString& form);
     Q_INVOKABLE void reportCacheStats();
 
 signals:
@@ -52,6 +54,7 @@ signals:
     void categoryReady(const QStringList& titles, const QStringList& ids);
     void pagedReady(const QString& tag, const QStringList& titles, const QStringList& ids);
     void loginResult(bool ok, const QString& message);
+    void actionDone(const QString& tag, bool ok, const QString& message);
     void albumReady(const QString& name, const QString& author, const QStringList& tags);
     void albumCoverReady(const QImage& image);
     void currentAidChanged();

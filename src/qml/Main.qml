@@ -267,10 +267,17 @@ ApplicationWindow {
                         "history":   ["阅读历史（需登录）", "watch_list", "page=1"],
                         "tags":      ["标签收藏", "tags_favorite", ""],
                         "notify":    ["通知（需登录）", "notifications", ""],
-                        "auth":      ["__login__", "", ""]
+                        "auth":      ["__login__", "", ""],
+                        "checkin":   ["__action__", "daily_chk", ""]
                     })[key]
                     if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
                     if (m && m[1] === "__week__") { root.showMore = false; root.showWeek = true; return }
+                    if (m && m[1] === "__action__") {
+                        root.showMore = false
+                        backend.action("checkin", m[1], m[2])
+                        root.pageStatus = "已请求：" + m[0]
+                        return
+                    }
                     if (m) {
                         root.listTitle = m[0]; root.listPath = m[1]; root.listQuery = m[2]
                         root.listTag = key

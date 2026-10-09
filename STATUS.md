@@ -2119,3 +2119,15 @@ ctest --test-dir build                                   # 16 项
 | 标签收藏 | `tags_favorite` 实测**网络请求失败** → 需登录态（与收藏/历史同类），暂不改其"未实现"标记 |
 
 **规模**：QML **20 个文件**；组件 8/8；交互 4/6；屏幕 10 个（Home/Search/Reader/Detail/About/Settings/Category/More/Login/Week）+ 通用列表屏覆盖 7 个入口。
+
+## 第 66 轮：通用 POST 动作通路 + 详情收藏 + 签到
+
+| 项 | 内容 |
+| --- | --- |
+| **通用动作通路** | `JmClient::action(path, form, msg)` → `JmWorker::action(tag,path,form)` + `actionDone(tag,ok,msg)` → `JmBackend::action`。**一次覆盖**收藏/点赞/追更/签到/评论发送/删除等所有 POST 动作接口，新增动作不用再改 C++ |
+| 详情页收藏 | `DetailScreen.qml` 加"收藏 / 取消"按钮 → `backend.action("favorite","favorite","aid=<aid>")`（依据 `JmRepository.toggleFavorite`） |
+| 每日签到 | 更多列表加"每日签到"入口 → `backend.action("checkin","daily_chk","")`（依据 `JmPaths.DAILY_CHECK`） |
+| 验证 | 构建 0 错误、QML 运行与截图正常 |
+
+**未验证（如实）**：收藏与签到都**需要登录态**，本轮只验证了代码通路；
+`forum`（评论）用 `--raw forum 'aid=209827&page=1'` 返回**空响应**，参数或登录要求待查。

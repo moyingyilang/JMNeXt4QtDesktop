@@ -319,6 +319,15 @@ void JmWorker::reportCacheStats() {
 
 namespace jmnext::qt {
 
+void JmWorker::action(const QString& tag, const QString& path, const QString& form) {
+    if (!ensureStarted()) return;
+    std::string msg;
+    const bool ok = client().action(path.toStdString(), form.toStdString(), &msg);
+    const QString m = QString::fromStdString(msg);
+    emit status(QStringLiteral("动作「%1」%2：%3").arg(tag).arg(ok ? "成功" : "失败").arg(m));
+    emit actionDone(tag, ok, m);
+}
+
 void JmWorker::login(const QString& username, const QString& password) {
     if (!ensureStarted()) return;
     if (client().login(username.toStdString(), password.toStdString())) {
