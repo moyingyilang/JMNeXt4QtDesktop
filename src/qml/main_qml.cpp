@@ -280,6 +280,37 @@ int main(int argc, char** argv) {
         return app.exec();
     }
 
+    // --login <用户名> <密码>：验证登录链路（POST login -> 取 jwt -> 带 Authorization 拉一次收藏）。
+    // 注意：用户名/密码由命令行传入，**不落盘、不写日志**；本自检只打印成功/失败与条数。
+    // 用法：JM_USER=... JM_PASS=... ./build/jmnext4qml --login "$JM_USER" "$JM_PASS"
+    if (argc >= 4 && std::string(argv[1]) == "--login") {
+        const QString user = QString::fromUtf8(argv[2]);
+        const QString pass = QString::fromUtf8(argv[3]);
+        QObject::connect(&backend, &jmnext::qt::JmBackend::loginResult, &app,
+                         [&backend, user](bool ok, const QString& msg) {
+                             qInfo().noquote() << QStringLiteral("登录自检：%1（用户 %2）")
+                                                      .arg(ok ? QStringLiteral("成功") : QStringLiteral("失败"), user);
+                             if (!ok) { qInfo().noquote() << QStringLiteral("  原因：%1").arg(msg.left(160)); return; }
+                             // 登录成功：立刻用凭证拉一次收藏，证明 Authorization 真的生效
+                             backend.loadPaged("probe", "favorite", "page=1");
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::pagedReady, &app,
+                         [&app](const QString& tag, const QStringList& titles, const QStringList&) {
+                             if (tag != QStringLiteral("probe")) return;
+                             qInfo().noquote() << QStringLiteral("凭证自检：收藏 %1 条，首条：%2")
+                                                      .arg(titles.size())
+                                                      .arg(titles.value(0).section('\n', 0, 0));
+                             QTimer::singleShot(100, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("登录自检失败：%1").arg(e.left(160));
+            QTimer::singleShot(100, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend, user, pass] { backend.login(user, pass); });
+        QTimer::singleShot(60000, &app, [&app] { qInfo().noquote() << QStringLiteral("登录自检超时"); app.quit(); });
+        return app.exec();
+    }
+
     // --raw <path> [query]：直出响应原文，用于一次看清未知响应形态（调试用）
     if (argc >= 3 && std::string(argv[1]) == "--raw") {
         QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [](const QString& e) {

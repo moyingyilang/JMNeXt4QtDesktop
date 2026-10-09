@@ -78,14 +78,38 @@ const std::string& authJwt() { return g_jwt; }
 std::optional<JmApi::Result> JmApi::post(const std::string& path, const std::string& formBody) {
     auto base = session_.apiUrl(path);
     if (!base) { lastError_ = "API 主机尚未初始化"; return std::nullopt; }
-    auto headers = headersFor(session_);
-    headers.push_back("Content-Type: application/x-www-form-urlencoded");
-    const auto resp = http_.post(*base, formBody, headers);
+
+    // 与 doRequest 同款：POST 的响应同样是信封 {code,data}，密文在 data 里，
+    // 且要用**发起请求时**的时间戳解密（登录就是这样拿到凭证的）。
+    auto doPost = [&](int64_t usedTime) {
+        auto headers = headersFor(session_);
+        headers.push_back("Content-Type: application/x-www-form-urlencoded");
+        const auto resp = http_.post(*base, formBody, headers);
+        return resp;
+    };
+
+    const int64_t usedTime = session_.time();
+    const auto resp = doPost(usedTime);
+    if (resp.status == 0) { lastError_ = "网络请求失败"; session_.markHostSuspect(); return std::nullopt; }
     if (!resp.ok()) { lastError_ = "HTTP " + std::to_string(resp.status); return std::nullopt; }
-    Result r;
-    r.status = resp.status;
-    r.text = resp.body;
-    return r;
+
+    const std::string payload = [&] {
+        if (auto env = extractEnvelope(resp.body)) return env->data;
+        return resp.body;
+    }();
+    if (auto text = decryptApiData(payload, usedTime)) return Result{resp.status, *text, false};
+
+    session_.refresh(usedTime + 1);          // 时间戳可能过期：换一个再试一次
+    const auto second = doPost(session_.time());
+    if (second.ok()) {
+        const std::string payload2 = [&] {
+            if (auto env = extractEnvelope(second.body)) return env->data;
+            return second.body;
+        }();
+        if (auto text = decryptApiData(payload2, session_.time())) return Result{second.status, *text, true};
+    }
+    lastError_ = "解密失败（已重试一次）";
+    return std::nullopt;
 }
 
 std::optional<JmApi::Result> JmApi::requestPath(const std::string& fullPathWithQuery) {

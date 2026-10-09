@@ -29,6 +29,9 @@ public:
     std::optional<std::vector<std::string>> hotTags();
     /// 搜索（参数名 search_query 是探出来的；条目字段与首页列表相同）
     std::optional<std::vector<jmnext::core::ListEntry>> search(const std::string& word, int page);
+    /// 搜索（带排序：Kotlin 侧 order -> 参数 o）
+    std::optional<std::vector<jmnext::core::ListEntry>> searchOrdered(const std::string& word, int page,
+                                                                     const std::string& order);
 
     /// 通用分页列表：把任意 (path, query) 当作"作品列表"请求并解析。
     /// 存在理由：多个接口（收藏/画师作品/标签/周更/随机）的响应形态与搜索相同，

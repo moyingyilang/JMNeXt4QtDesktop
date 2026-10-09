@@ -58,6 +58,7 @@ void JmBackend::action(const QString& tag, const QString& path, const QString& f
 void JmBackend::loadPaged(const QString& tag, const QString& path, const QString& query) {
     invoke("loadPaged", Q_ARG(QString, tag), Q_ARG(QString, path), Q_ARG(QString, query));
 }
+void JmBackend::searchOrdered(const QString& w, int p, const QString& o) { invoke("searchOrdered", Q_ARG(QString, w), Q_ARG(int, p), Q_ARG(QString, o)); }
 void JmBackend::search(const QString& word, int page) { invoke("search", Q_ARG(QString, word), Q_ARG(int, page)); }
 void JmBackend::loadAlbum(const QString& aid) {
     currentAid_ = aid;

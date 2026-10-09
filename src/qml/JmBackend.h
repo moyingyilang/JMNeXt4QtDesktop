@@ -23,6 +23,7 @@ public:
     Q_INVOKABLE void loadList();
     Q_INVOKABLE void loadMore();
     Q_INVOKABLE void search(const QString& word, int page = 1);
+    Q_INVOKABLE void searchOrdered(const QString& word, int page, const QString& order);
     Q_INVOKABLE void openChapter(const QString& aid, int page = 0);
     Q_INVOKABLE void loadAlbum(const QString& aid);
     Q_PROPERTY(QString currentAid READ currentAid NOTIFY currentAidChanged)

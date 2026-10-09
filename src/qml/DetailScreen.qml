@@ -36,6 +36,8 @@ Rectangle {
     signal chapterClicked(string cid)
     /// 收藏/取消收藏（登录后生效）
     signal favoriteToggled(string aid)
+    /// 追更开关（依据 JmRepository.toggleTracking：POST album_sertracking，参数 id）
+    signal trackToggled(string aid)
 
     color: detail.surfaceColor
     border.color: detail.strokeColor
@@ -80,6 +82,10 @@ Rectangle {
             Button {
                 text: "收藏 / 取消"
                 onClicked: detail.favoriteToggled(detail.albumAid)
+            }
+            Button {
+                text: "追更 / 取消"
+                onClicked: detail.trackToggled(detail.albumAid)
             }
             Text {
                 text: detail.pageStatus

@@ -37,6 +37,8 @@ public slots:
     void loadAlbum(const QString& aid);
     /// 搜索（结果走 listReady，界面按"替换列表"处理；屏蔽规则同样生效）
     void search(const QString& word, int page = 1);
+    /// 搜索（带排序；空字符串表示默认排序）
+    void searchOrdered(const QString& word, int page, const QString& order);
     /// 设置屏蔽关键词（来自界面输入）。列表加载时按 BlockRules 过滤，并上报隐藏条数
     void setBlockWords(const QStringList& words);
     /// 单页/双页：开时在 originalView_ 位置显示下一页

@@ -60,6 +60,26 @@ void JmWorker::loadList() {
     emit listReady(titles, ids);
 }
 
+void JmWorker::searchOrdered(const QString& word, int page, const QString& order) {
+    lastQuery_ = word;
+    if (!ensureStarted()) return;
+    auto list = client().searchOrdered(word.toStdString(), page, order.toStdString());
+    if (!list) {
+        emit failed(QStringLiteral("搜索失败：%1").arg(QString::fromStdString(client().lastError())));
+        return;
+    }
+    QStringList titles, ids;
+    for (const auto& e : *list) {
+        titles << QStringLiteral("%1\n   %2　[%3]")
+                      .arg(QString::fromStdString(e.name))
+                      .arg(QString::fromStdString(e.author))
+                      .arg(QString::fromStdString(e.categoryTitle));
+        ids << QString::fromStdString(e.id);
+    }
+    emit status(QStringLiteral("搜索「%1」排序[%2]：%3 条").arg(word).arg(order).arg(titles.size()));
+    emit listReady(titles, ids);
+}
+
 void JmWorker::search(const QString& word, int page) {
     lastQuery_ = word;           // 记住当前是搜索结果，"加载更多"要翻搜索的第 N 页
     if (!ensureStarted()) return;

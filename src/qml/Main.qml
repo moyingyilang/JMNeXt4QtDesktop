@@ -97,6 +97,8 @@ ApplicationWindow {
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             onChapterClicked: (cid) => backend.openChapterId(cid, 0)
+                onFavoriteToggled: (aid) => backend.action("favorite", "favorite", "aid=" + aid)
+                onTrackToggled: (aid) => backend.action("track", "album_sertracking", "id=" + aid)
         }
     }
 
