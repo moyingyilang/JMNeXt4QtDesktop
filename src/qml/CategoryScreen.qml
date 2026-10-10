@@ -148,5 +148,6 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: backend.loadHotTags()
+    // 可见时才加载：启动即发请求会占满单线程 worker（并让命令行探测排不上队）
+    onVisibleChanged: if (visible) backend.loadHotTags()
 }

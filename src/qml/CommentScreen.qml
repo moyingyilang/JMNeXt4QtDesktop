@@ -79,7 +79,6 @@ ColumnLayout {
     }
 
     onAidChanged: reload()
-    Component.onCompleted: reload()
 
     Connections {
         target: backend

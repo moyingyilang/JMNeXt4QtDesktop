@@ -156,6 +156,49 @@ int main(int argc, char** argv) {
 
     // --shot <png>：延时抓一张窗口图再退出（P0 用来证明"真的渲染出了画面"，P2 起用来看每屏效果）
 
+    // --logged <用户> <密码> [path] [query]：**在 QML 加载之前**登录并探测一个接口。
+    // 为什么需要它：写在 QML 加载之后的 --login/--paged/--raw 会被各屏的自动请求挤在队尾
+    // （worker 单线程、每请求最长 20 秒），导致"既无响应也无失败"的假象。
+    // 凭据只由命令行传入：不落盘、不写日志、不回显（令牌值从不打印）。
+    if (argc >= 4 && std::string(argv[1]) == "--logged") {
+        const QString user = QString::fromUtf8(argv[2]);
+        const QString pass = QString::fromUtf8(argv[3]);
+        const QString path = (argc >= 5) ? QString::fromUtf8(argv[4]) : QStringLiteral("favorite");
+        const QString query = (argc >= 6) ? QString::fromUtf8(argv[5]) : QStringLiteral("page=1");
+        QObject::connect(&backend, &jmnext::qt::JmBackend::loginResult, &app,
+                         [&backend, &app, user, path, query](bool ok, const QString& msg) {
+                             qInfo().noquote() << QStringLiteral("登录：%1").arg(ok ? QStringLiteral("成功")
+                                                                                   : QStringLiteral("失败"));
+                             if (!ok) {
+                                 qInfo().noquote() << QStringLiteral("  原因：%1").arg(msg.left(160));
+                                 QTimer::singleShot(50, &app, &QCoreApplication::quit);
+                                 return;
+                             }
+                             backend.loadPaged("probe", path, query);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::pagedReady, &app,
+                         [&app](const QString& tag, const QStringList& titles, const QStringList&) {
+                             if (tag != QStringLiteral("probe")) return;
+                             qInfo().noquote() << QStringLiteral("探测[%1]：%2 条%3")
+                                                      .arg(tag).arg(titles.size())
+                                                      .arg(titles.isEmpty()
+                                                               ? QString()
+                                                               : QStringLiteral("，首条：") +
+                                                                     titles.value(0).section('\n', 0, 0).left(60));
+                             QTimer::singleShot(50, &app, &QCoreApplication::quit);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::failed, &app, [&app](const QString& e) {
+            qInfo().noquote() << QStringLiteral("探测失败：%1").arg(e.left(160));
+            QTimer::singleShot(50, &app, &QCoreApplication::quit);
+        });
+        QTimer::singleShot(0, &backend, [&backend, user, pass] { backend.login(user, pass); });
+        QTimer::singleShot(60000, &app, [&app] {
+            qInfo().noquote() << QStringLiteral("探测超时（60 秒）");
+            app.quit();
+        });
+        return app.exec();
+    }
+
     // --selftest：不加载 QML，直接用后端跑真实数据链路（列表 -> 章节 -> 一页图），
     // 用于回答"QML 侧到底能不能拿到真实数据"这个问题（而不是只看窗口起没起）。
     if (argc >= 2 && std::string(argv[1]) == "--selftest") {

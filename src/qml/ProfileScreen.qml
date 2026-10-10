@@ -89,7 +89,7 @@ ColumnLayout {
         backend.loadPaged("settings", "setting", "app_img_shunt=1&lang=zh&t=" + Math.floor(Date.now() / 1000))
     }
 
-    Component.onCompleted: reload()
+    onVisibleChanged: if (visible) reload()
 
     Connections {
         target: backend

@@ -134,5 +134,6 @@ ColumnLayout {
         }
     }
 
-    Component.onCompleted: backend.loadPaged("week", "week", "")
+    // 同上：进入本屏才请求
+    onVisibleChanged: if (visible) backend.loadPaged("week", "week", "")
 }
