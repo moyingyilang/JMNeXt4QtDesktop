@@ -15,6 +15,13 @@ ApplicationWindow {
     // 列表数据：标题、aid、封面 URL（URL 由后端在取封面时给出，见 coverUrlReady）
     ListModel { id: listModel }
 
+    // 环境背景（对应 Kotlin 的 AmbientBackdrop）：铺满窗口，内容画在其上
+    AmbientBackdrop {
+        anchors.fill: parent
+        baseColor: root.cBg
+        glowColor: root.cAccent
+    }
+
     RowLayout {
         id: rootLayout
         anchors.fill: parent

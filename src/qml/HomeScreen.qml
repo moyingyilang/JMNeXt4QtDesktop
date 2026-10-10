@@ -55,16 +55,22 @@ ColumnLayout {
             }
         }
 
-        delegate: ComicCard {
-            title: model.title
-            aid: model.aid
-            coverUrl: model.coverUrl
-            hoverColor: home.hoverColor
-            textColor: home.textColor
-            cardRadius: home.cardRadius
-            onClicked: {
-                console.log("QML 点击作品 aid=" + aid)
-                home.cardClicked(aid)
+        // 入场动效（对应 Kotlin 的 ItemMotion）：按索引错开淡入+上移
+        delegate: ItemMotion {
+            width: ListView.view.width
+            index: model.index
+            ComicCard {
+                width: parent.width
+                title: model.title
+                aid: model.aid
+                coverUrl: model.coverUrl
+                hoverColor: home.hoverColor
+                textColor: home.textColor
+                cardRadius: home.cardRadius
+                onClicked: {
+                    console.log("QML 点击作品 aid=" + aid)
+                    home.cardClicked(aid)
+                }
             }
         }
     }
