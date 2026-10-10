@@ -2281,3 +2281,13 @@ POST 动作：action    → 收藏/点赞/追更/签到/评论
 `textReady` 里按 `true/false` 显示"已追更/未追更"）。
 
 **另外**：`--raw` 改为走 `fetchText`（原来走 `paged`，对对象型响应无效）→ 现在**任何响应形态**都能原样打印。
+
+## 第 75 轮：更多屏显示通知未读数（零 C++ 改动）
+
+用第 74 轮的 `fetchText` 通路 + 实测过的 `notifications/unreadCount`：
+
+- `MoreScreen` 可见时 `backend.fetch("unread","notifications/unreadCount","")`；
+- `textReady("unread")` 里把响应中的数字求和（`{"site_notice":1,"comic_follow":1}` → **2**），显示"通知未读： N"；
+- 未登录时该请求失败 → 不显示（如实，不假装有数字）。
+
+构建 0 错误、QML 截图正常。**界面上的实际数字需要登录后才能看到**（`--loggedx` 已证明接口返回正确）。

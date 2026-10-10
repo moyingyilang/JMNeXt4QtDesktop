@@ -22,6 +22,30 @@ Rectangle {
 
     signal closeRequested()
     signal entryClicked(string key)
+
+    /// 通知未读数（用 fetchText 拿 notifications/unreadCount；-1 表示未知）
+    property int unreadCount: -1
+
+    function refreshUnread() {
+        backend.fetch("unread", "notifications/unreadCount", "")
+    }
+
+    onVisibleChanged: if (visible) refreshUnread()
+
+    Connections {
+        target: backend
+        function onTextReady(tag, ok, text) {
+            if (tag !== "unread") return
+            if (!ok) { more.unreadCount = -1; return }
+            // 响应形如 {"site_notice":1,"comic_follow":1}：把里面的数字加起来
+            var total = 0
+            var re = /:\s*(\d+)/g
+            var m
+            while ((m = re.exec(text)) !== null) total += parseInt(m[1], 10)
+            more.unreadCount = total
+            console.log("QML 未读数：" + total + "（" + text + "）")
+        }
+    }
     /// 已实现项：由外层决定跳到哪一屏（见 Main.qml 的 onEntryClicked）
 
     color: more.surfaceColor
@@ -43,7 +67,7 @@ Rectangle {
         ListElement { key: "profile";  name: "我的";             ready: false }
         ListElement { key: "auth";     name: "登录 / 注册";      ready: true }
         ListElement { key: "checkin";  name: "每日签到";         ready: true }
-        ListElement { key: "notify";   name: "通知";             ready: true }
+        ListElement { key: "notify";   name: "通知（未读见下方）"; ready: true }
         ListElement { key: "comments"; name: "评论";             ready: false }
     }
 
