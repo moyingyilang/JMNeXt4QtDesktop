@@ -285,6 +285,9 @@ int main(int argc, char** argv) {
     if (argc >= 4 && std::string(argv[1]) == "--login") {
         const QString user = QString::fromUtf8(argv[2]);
         const QString pass = QString::fromUtf8(argv[3]);
+        // 可选：--login <u> <p> <path> [query] —— 只探这一个接口（单独排查失败项用）
+        const QString onlyPath = (argc >= 5) ? QString::fromUtf8(argv[4]) : QString();
+        const QString onlyQuery = (argc >= 6) ? QString::fromUtf8(argv[5]) : QString();
         struct Probe { const char* tag; const char* path; const char* query; };
         static const Probe probes[] = {
             {"favorite", "favorite", "page=1"},
@@ -306,7 +309,7 @@ int main(int argc, char** argv) {
                                                                      titles.value(0).section('\n', 0, 0).left(36));
                          });
         QObject::connect(&backend, &jmnext::qt::JmBackend::loginResult, &app,
-                         [&backend, &app, user, probeCount](bool ok, const QString& msg) {
+                         [&backend, &app, user, probeCount, onlyPath, onlyQuery](bool ok, const QString& msg) {
                              qInfo().noquote() << QStringLiteral("登录自检：%1（用户 %2）")
                                                       .arg(ok ? QStringLiteral("成功") : QStringLiteral("失败"), user);
                              if (!ok) {
@@ -315,6 +318,12 @@ int main(int argc, char** argv) {
                                  return;
                              }
                              // 错开发出，避免同时打满连接（每个探测单独一拍）
+                             if (!onlyPath.isEmpty()) {
+                                 QTimer::singleShot(150, &backend, [&backend, onlyPath, onlyQuery] {
+                                     backend.loadPaged("single", onlyPath, onlyQuery);
+                                 });
+                                 return;
+                             }
                              for (int i = 0; i < probeCount; ++i) {
                                  const auto p = probes[i];
                                  QTimer::singleShot(200 + i * 1200, &backend, [&backend, p] {
