@@ -21,6 +21,9 @@ ColumnLayout {
     property string apiQuery: ""
     property string tagId: ""
     property bool includeCovers: true
+    /// 分页：page 为当前已加载页（1 起）；query 里的 page= 会被本组件接管
+    property int page: 1
+    property bool hasMore: true
 
     property color titleColor: "#e6e6e6"
     property color bodyColor: "#b9bcc2"
@@ -87,6 +90,18 @@ ColumnLayout {
         onRetry: backend.loadPaged(screen.tagId, screen.apiPath, screen.apiQuery)
     }
 
+    LoadMoreFooter {
+        Layout.fillWidth: true
+        visible: comicModel.count > 0
+        exhausted: !screen.hasMore
+        textColor: screen.titleColor
+        secondaryColor: screen.bodyColor
+        onLoadMore: {
+            screen.page += 1
+            screen.request(screen.page)
+        }
+    }
+
     Button {
         text: "关闭"
         onClicked: screen.closeRequested()
@@ -96,19 +111,36 @@ ColumnLayout {
         target: backend
         function onPagedReady(tag, titles, ids) {
             if (tag !== screen.tagId) return
-            comicModel.clear()
+            // 第 1 页替换、后续页追加（与首页的 listReady/listAppended 语义一致）
+            if (screen.page <= 1) comicModel.clear()
             for (var i = 0; i < titles.length; ++i)
                 comicModel.append({ "title": titles[i], "aid": ids[i], "coverUrl": "" })
+            screen.hasMore = titles.length > 0
             console.log("QML 通用列表已填充：" + screen.title + " -> " + comicModel.count + " 条")
             if (screen.includeCovers && comicModel.count > 0) backend.loadCovers(20)
         }
     }
 
-    function reload() {
+    /// 把 query 里的 page= 去掉，由本组件按 page 拼 —— 否则"加载更多"会一直请求第 1 页
+    function baseQuery() {
+        var q = screen.apiQuery.replace(/(^|&)page=\d+/, "").replace(/^&/, "")
+        if (q.length > 0 && q.charAt(q.length - 1) === "&") q = q.slice(0, -1)
+        return q
+    }
+
+    function request(pageNo) {
         if (screen.apiPath.length === 0) return
+        screen.pageStatus = "正在载入第 " + pageNo + " 页：" + screen.title
+        var q = screen.baseQuery()
+        q = q.length > 0 ? q + "&page=" + pageNo : "page=" + pageNo
+        backend.loadPaged(screen.tagId, screen.apiPath, q)
+    }
+
+    function reload() {
+        screen.page = 1
+        screen.hasMore = true
         comicModel.clear()
-        screen.pageStatus = "正在载入：" + screen.title
-        backend.loadPaged(screen.tagId, screen.apiPath, screen.apiQuery)
+        request(1)
     }
 
     // 实例只创建一次，因此换接口靠属性变化触发重载（否则点第二个入口不会刷新）
