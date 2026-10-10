@@ -320,7 +320,7 @@ int main(int argc, char** argv) {
                              // 错开发出，避免同时打满连接（每个探测单独一拍）
                              if (!onlyPath.isEmpty()) {
                                  QTimer::singleShot(150, &backend, [&backend, onlyPath, onlyQuery] {
-                                     backend.loadPaged("single", onlyPath, onlyQuery);
+                                     backend.loadPaged("raw", onlyPath, onlyQuery);
                                  });
                                  return;
                              }
@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
             qInfo().noquote() << QStringLiteral("（失败）%1").arg(e.left(120));
         });
         QTimer::singleShot(0, &backend, [&backend, user, pass] { backend.login(user, pass); });
-        QTimer::singleShot(30000, &app, [&app] { app.quit(); });
+        QTimer::singleShot(60000, &app, [&app] { app.quit(); });
         return app.exec();
     }
 

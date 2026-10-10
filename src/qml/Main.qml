@@ -138,6 +138,7 @@ ApplicationWindow {
     property bool showLogin: false
     property bool showWeek: false
     property bool showComments: false
+    property bool showProfile: false
     property string commentAid: ""
     property string listTitle: ""
     property string listPath: ""
@@ -273,9 +274,11 @@ ApplicationWindow {
                         "tags":      ["标签收藏", "tags_favorite", ""],
                         "notify":    ["通知（需登录）", "notifications", ""],
                         "auth":      ["__login__", "", ""],
+                        "profile":   ["__profile__", "", ""],
                         "checkin":   ["__action__", "daily_chk", ""]
                     })[key]
                     if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
+                    if (m && m[1] === "__profile__") { root.showMore = false; root.showProfile = true; return }
                     if (m && m[1] === "__week__") { root.showMore = false; root.showWeek = true; return }
                     if (m && m[1] === "__action__") {
                         root.showMore = false
@@ -368,5 +371,18 @@ ApplicationWindow {
             surfaceColor: root.cSurface2
             accentColor: root.cAccent
             onCloseRequested: root.showComments = false
+        }
+
+        ProfileScreen {
+            id: profilePane
+            visible: root.showProfile
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            surfaceColor: root.cSurface2
+            accentColor: root.cAccent
+            onCloseRequested: root.showProfile = false
+            onLoginRequested: { root.showProfile = false; root.showLogin = true }
         }
 }
