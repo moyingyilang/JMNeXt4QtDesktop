@@ -63,6 +63,9 @@ public slots:
 
     /// 通用动作（tag 用于把结果对上是哪个动作）
     void action(const QString& tag, const QString& path, const QString& form);
+
+    /// 取原始正文（tag 用于对上是哪个请求）
+    void fetch(const QString& tag, const QString& path, const QString& query);
     /// 打开某作品的某章节并显示第 page 页；之后 step(±1) 翻页
     void openChapter(const QString& aid, int page);
     /// 按章节 id 直接打开（章节选择器用；跳过先取详情再取第一话那一步）
@@ -106,6 +109,9 @@ signals:
 
     /// 通用动作结果
     void actionDone(const QString& tag, bool ok, const QString& message);
+
+    /// 原始正文就绪
+    void textReady(const QString& tag, bool ok, const QString& text);
     void pageReady(const QImage& image, const QString& status);
     void status(const QString& text);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);

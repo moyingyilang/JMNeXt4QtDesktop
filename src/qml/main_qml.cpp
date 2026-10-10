@@ -156,6 +156,28 @@ int main(int argc, char** argv) {
 
     // --shot <png>：延时抓一张窗口图再退出（P0 用来证明"真的渲染出了画面"，P2 起用来看每屏效果）
 
+    // --loggedx <用户> <密码> <path> [query]：登录后用 fetch 取正文（对象型接口用）
+    if (argc >= 5 && std::string(argv[1]) == "--loggedx") {
+        const QString lu = QString::fromUtf8(argv[2]);
+        const QString lp = QString::fromUtf8(argv[3]);
+        const QString lpath = QString::fromUtf8(argv[4]);
+        const QString lquery = (argc >= 6) ? QString::fromUtf8(argv[5]) : QString();
+        QObject::connect(&backend, &jmnext::qt::JmBackend::loginResult, &app,
+                         [&backend, &app, lpath, lquery](bool ok, const QString& msg) {
+                             qInfo().noquote() << QStringLiteral("登录：%1").arg(ok ? QStringLiteral("成功") : msg.left(80));
+                             if (ok) backend.fetch("probe", lpath, lquery);
+                         });
+        QObject::connect(&backend, &jmnext::qt::JmBackend::textReady, &app,
+                         [&app](const QString& tag, bool ok, const QString& text) {
+                             if (tag != QStringLiteral("probe")) return;
+                             qInfo().noquote() << QStringLiteral("正文%1：%2").arg(ok ? QString() : QStringLiteral("(失败)"), text.left(220));
+                             QTimer::singleShot(50, &app, &QCoreApplication::quit);
+                         });
+        QTimer::singleShot(0, &backend, [&backend, lu, lp] { backend.login(lu, lp); });
+        QTimer::singleShot(45000, &app, [&app] { app.quit(); });
+        return app.exec();
+    }
+
     // --logged <用户> <密码> [path] [query]：**在 QML 加载之前**登录并探测一个接口。
     // 为什么需要它：写在 QML 加载之后的 --login/--paged/--raw 会被各屏的自动请求挤在队尾
     // （worker 单线程、每请求最长 20 秒），导致"既无响应也无失败"的假象。

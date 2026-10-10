@@ -21,6 +21,8 @@ Rectangle {
     property string albumAuthor: ""
     property string albumTags: ""
     property string pageStatus: ""
+    /// 追更状态（由 textReady("track") 更新；依据 JmRepository.isTracked）
+    property string trackStatus: ""
     // 章节模型：第 35 轮从 Main.qml 搬入（原先靠属性传进来，但填充它的回调也在这里，属于同一个归属）
     ListModel { id: chapterModel }
 
@@ -38,6 +40,12 @@ Rectangle {
     signal favoriteToggled(string aid)
     /// 追更开关（依据 JmRepository.toggleTracking：POST album_sertracking，参数 id）
     signal trackToggled(string aid)
+    /// 换作品时查询追更状态
+    function refreshTrackStatus() {
+        if (albumAid.length === 0) return
+        backend.fetch("track", "album_sertracking", "id=" + albumAid)
+    }
+    onAlbumAidChanged: refreshTrackStatus()
     /// 查看评论（依据 JmRepository.comments：GET forum，mode=all&page=1&aid=）
     signal commentsRequested(string aid)
 
@@ -88,6 +96,10 @@ Rectangle {
             Button {
                 text: "追更 / 取消"
                 onClicked: detail.trackToggled(detail.albumAid)
+            }
+            Text {
+                text: detail.trackStatus
+                color: detail.statusColor; font.pixelSize: 12
             }
             Button {
                 text: "评论"
@@ -142,6 +154,13 @@ Rectangle {
     // albumAid 仍由外层传入 —— 它来自"点击卡片"这一路由动作，不属于本屏逻辑。
     Connections {
         target: backend
+
+        // 追更状态（GET 返回对象，走 fetch 通路）
+        function onTextReady(tag, ok, text) {
+            if (tag !== "track") return
+            if (!ok) { detail.trackStatus = "追更状态未知"; return }
+            detail.trackStatus = text.indexOf("true") >= 0 ? "已追更" : "未追更"
+        }
 
         function onAlbumReady(name, author, tags) {
             detail.albumName = name

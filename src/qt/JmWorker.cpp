@@ -339,6 +339,14 @@ void JmWorker::reportCacheStats() {
 
 namespace jmnext::qt {
 
+void JmWorker::fetch(const QString& tag, const QString& path, const QString& query) {
+    if (!ensureStarted()) return;
+    std::string text;
+    const bool ok = client().fetchText(path.toStdString(), query.toStdString(), &text);
+    emit textReady(tag, ok, ok ? QString::fromStdString(text)
+                               : QString::fromStdString(client().lastError()));
+}
+
 void JmWorker::action(const QString& tag, const QString& path, const QString& form) {
     if (!ensureStarted()) return;
     std::string msg;

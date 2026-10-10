@@ -2255,3 +2255,29 @@ ctest --test-dir build                                   # 16 项
 
 **本段累计**（自 tag `port-62` 起）：**13 个提交**；QML 22 文件、组件 8/8、交互 4/6、屏幕 13、
 验证命令 8 条；登录链路实机打通（收藏 20 / 历史 19 / 评论 2 / 配置 4）。
+
+## 第 74 轮：第三条通用通路 `fetchText`（对象/标量型接口）+ 追更状态
+
+**问题**：`paged` 只能处理"列表"型响应；而 `album_sertracking`（返回 `false`）、
+`notifications/unreadCount`（返回 `{"site_notice":1,"comic_follow":1}`）这类**对象/标量**响应解析失败。
+
+**修法**：新增 `JmClient::fetchText(path, query, out)` → `JmWorker::fetch(tag,…)` + `textReady(tag, ok, text)`
+→ `JmBackend::fetch` + 信号转发。**这是第三条通用通路**：
+
+```
+GET  列表：paged     → ComicListScreen
+GET  正文：fetchText → 对象/标量型接口（追更状态、未读数…）
+POST 动作：action    → 收藏/点赞/追更/签到/评论
+```
+
+**实测（新自检 `--loggedx`，登录后走 fetch）**：
+
+| 接口 | 正文 |
+| --- | --- |
+| `album_sertracking?id=209827` | **`false`**（→ 详情页显示"未追更"） |
+| `notifications/unreadCount` | **`{"site_notice":1,"comic_follow":1}`** |
+
+**详情页**：新增追更状态显示（换作品时 `fetch("track","album_sertracking","id=…")`，
+`textReady` 里按 `true/false` 显示"已追更/未追更"）。
+
+**另外**：`--raw` 改为走 `fetchText`（原来走 `paged`，对对象型响应无效）→ 现在**任何响应形态**都能原样打印。

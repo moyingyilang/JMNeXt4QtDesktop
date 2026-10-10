@@ -47,6 +47,9 @@ public:
     /// 依据 shared/data/JmRepository.kt：这些接口都是 remote.post(路径, mapOf(...))。
     bool action(const std::string& path, const std::string& form, std::string* message = nullptr);
 
+    /// 取原始正文（GET）：用于返回**对象**而非列表的接口（追更状态 isTracked、通知未读数等）。
+    bool fetchText(const std::string& path, const std::string& query, std::string* out);
+
     /// 按分类筛选作品（分类浏览页点标签后用）。
     ///  c 分类标识；**为空时整个 c 参数必须省略** —— 实测发 `c=` 会让服务端返回
     ///          `Could not connect to mysql!` 错误页（不是 JSON）；省略才是合法的"不筛选"语义。

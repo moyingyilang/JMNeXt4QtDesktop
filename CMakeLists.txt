@@ -45,6 +45,7 @@ add_library(jmnext_qtlayer STATIC
     src/qt/ImageCodec.cpp src/qt/JmClient.cpp
     src/qt/JmClientAuth.cpp
     src/qt/JmClientSearch.cpp
+    src/qt/JmClientFetch.cpp
     src/qt/JmClientAction.cpp
     src/qt/QtHttpClient.cpp
     src/qt/QtHttpClientPost.cpp
