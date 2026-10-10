@@ -2383,3 +2383,60 @@ Qt 6.4 **无 `MultiEffect`**（做不了真共享元素），故用**封面放�
 **一次检查写错并已更正**：我用 `--paged favorite page=2` 验分页，但**收藏需要登录态**，
 该命令不带登录 → 报网络失败。正确的是 `--logged <用户> <密码> favorite page=2`。
 （与第 71 轮那次"排队假象"同源：**验证命令本身用错，会得出错误的接口结论** —— 这是本目标第 3 次同类教训。）
+
+---
+
+# 完成度审计（第 81 轮更新，替代第 57 轮旧表）
+
+## 一、Kotlin 25 个屏幕文件 → Qt 现状
+
+| Kotlin | Qt | 状态 |
+| --- | --- | --- |
+| `home/HomeScreen.kt` | `HomeScreen.qml` | **已对齐（功能面）**：列表/加载更多/下拉刷新/空态/页脚/随机 FAB；卡片悬停+按压动效 |
+| `home/RandomFab.kt` | `HomeScreen.qml` 内 FAB | **已对齐**（走 `random_recommend`，实测 30 条） |
+| `home/HomeViewModel.kt` | `JmWorker` | 已对齐（职责由 worker 承担） |
+| `search/SearchScreen.kt` | `SearchScreen.qml` | **部分**：搜索/结果替换已对齐；**筛选器未做** |
+| `search/SearchFilters.kt` | — | 未做（数据层已支持 `o`/`search_type`/`y`/`m`） |
+| `detail/DetailScreen.kt` | `DetailScreen.qml` | **部分**：封面/名称/作者/标签/章节 159 条/收藏/追更/追更状态/评论入口/封面过渡；**缺**评分·浏览数 |
+| `reader/ReaderScreen.kt` | `ReaderScreen.qml` | **已对齐（主要面）**：页图/翻页/手势/缩放/双页（实测）/状态行 |
+| `reader/ChapterPickerDialog.kt` | — | 未做（章节列表已在详情页） |
+| `reader/PageRatio.kt` | — | 未做 |
+| `category/CategoryScreen.kt` | `CategoryScreen.qml` | **已对齐**（标签 10 个 → 筛选 80 条 → `ComicCard` 渲染 + 分页） |
+| `comments/CommentsScreen.kt` | `CommentScreen.qml` | **部分**：能取到评论（实测 2 条）；**发表/删除评论未做** |
+| `about/AboutScreen.kt` | `AboutScreen.qml` | 已对齐（信息齐，外观待人工确认） |
+| `settings/BlockSettingsScreen.kt` | `SettingsScreen.qml` | **部分**：双页 + 屏蔽词已接后端 |
+| `profile/ProfileScreen.kt` | `ProfileScreen.qml` | **部分**：登录态 + `setting` 配置（4 条）；**用户资料明细未做** |
+| `favorites/FavoritesScreen.kt` | `ComicListScreen`（`favorite`） | **部分**：列表可取（实测 20 条）+ 分页；**收藏夹分组未做** |
+| `favorites/FolderDialogs.kt` | — | 未做 |
+| `week/WeekScreen.kt` | `WeekScreen.qml` | **已对齐**（刊期 260 → `week/filter` 20 条，两级） |
+| `auth/AuthScreen.kt` | `LoginScreen.qml` | **部分**：登录已实测可用；**注册未做、凭证未持久化** |
+| `more/MoreListScreen.kt` | `MoreScreen.qml` | **已对齐**（13 入口，未实现项如实标注） |
+| `creator/CreatorScreen.kt` | `ComicListScreen`（`creator_author`） | **部分**：列表可取（30 条）；画师详情页未做 |
+| `creator/CreatorWorkScreen.kt` | — | 未做 |
+| `random/RandomListScreen.kt` | `ComicListScreen`（`random_recommend`） | **已对齐**（30 条） |
+| `notifications/NotificationsScreen.kt` | `ComicListScreen` + 未读数 | **部分**：接口可用（未读数实测）、列表为空态 |
+| `tags/TagFavoritesScreen.kt` | `ComicListScreen`（`tags_favorite`） | **部分**：接口可用（该账号 0 条） |
+| `profile/DailyHistorySection.kt` | — | 未做 |
+
+**小计**：已对齐 **8** / 部分 **12** / 未做 **5**（第 57 轮为 1 / 7 / 17）。
+
+## 二、组件 8 个 → **8/8 全部落地**
+
+`ComicCard`、`StateBox`、`LoadMoreFooter`、`Glass`、`GlassTopBar`、`FloatingBottomBar`、`ItemMotion`、`AmbientBackdrop`。
+（`ItemMotion`/`AmbientBackdrop`/`GlassTopBar` 已落地但**尚未在各屏普遍接入**，属"有件未用"。）
+
+## 三、交互 6 类 → **6/6 覆盖**
+
+加载更多 ✓、分类筛选 ✓、翻页手势+缩放 ✓、下拉刷新 ✓、双页阅读 ✓、过场+封面过渡（共享元素的近似）✓。
+
+## 四、数据层
+
+已对齐：主机发现与签名、列表/搜索/详情/章节/翻页、反切片、解码与缓存、屏蔽词、双页、
+**登录（实机）**、收藏、历史、评论（读）、配置、追更状态、通知未读数、热门标签、分类筛选、随机、画师、周更。
+未做：发表/删除评论、收藏夹写入与分组、签到（动作通路已就绪，未在界面验证）、凭证持久化、本地 prefs 持久化。
+
+## 五、结论
+
+第 57 轮判定的"已对齐 1 / 未做 17"现为 **"已对齐 8 / 部分 12 / 未做 5"**；
+组件 8/8、交互 6/6。**仍未达成目标的"覆盖全部屏幕"**（5 屏完全未做 + 12 屏部分），
+且**未验证项**（界面点击类）已逐条记录。**目标不标记完成。**
