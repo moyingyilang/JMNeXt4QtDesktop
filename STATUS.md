@@ -2291,3 +2291,19 @@ POST 动作：action    → 收藏/点赞/追更/签到/评论
 - 未登录时该请求失败 → 不显示（如实，不假装有数字）。
 
 构建 0 错误、QML 截图正常。**界面上的实际数字需要登录后才能看到**（`--loggedx` 已证明接口返回正确）。
+
+## 第 76 轮：双页阅读的落点已探明（记录，供下一步直接实施）
+
+**已有基础**（`JmWorker`）：
+- `bool twoPage_`（第 124 行声明）；`setTwoPage(bool)` 里赋值（`:273`）；
+- 翻页时 `if (twoPage_) previewNext(index + 1);`（`:262`）——**双页的"右页"机制已经存在于 worker**；
+- `previewNext(index)` → `previewReady(index, image, status)`（`:90` 声明、`:125` 说明）；
+- `:280` 处有 `if (!twoPage_ || chapter_.images.empty()) return;`（预览的前置判断）。
+
+**缺的一环**：QML 显示图片靠**文件路径**（`JmBackend` 的 `Q_PROPERTY(QString pagePath)` + `pageSeq` 自增，
+见 `JmBackend.h:31/32/78/79/82`），而 `previewReady` 只给 `QImage`。
+→ 需要让 worker 在预览页就绪时**把图落到缓存目录**并发出路径（照现有页图落盘的同一手法），
+`JmBackend` 再加一对 `previewPath`/`previewSeq` 属性与 `previewChanged` 信号，`ReaderScreen.qml`
+在 `twoPage` 打开时并排显示 `pageUrl` 与 `previewUrl`。
+
+**下一步第一件事**：查 `setPagePath` 的调用点（本轮命令已打印），照它把预览路径接上。
