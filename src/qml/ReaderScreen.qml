@@ -19,6 +19,9 @@ Rectangle {
 
     property string pageUrl: ""
     property string pageStatus: ""
+    /// 双页模式（右页）；由 Main 传入 backend 的 previewPath/previewSeq
+    property string previewUrl: ""
+    property bool twoPage: false
     property color bgColor: "#1e1f22"
     property color secondaryColor: "#b9bcc2"
 
@@ -64,6 +67,11 @@ Rectangle {
         anchors.margins: 8
         spacing: 6
 
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 4
+
         Image {
             id: pageImage
             Layout.fillWidth: true
@@ -77,6 +85,20 @@ Rectangle {
                 console.log("QML 阅读页已显示：源 " + sourceSize.width + "x" + sourceSize.height
                             + "，实际绘制 " + Math.round(paintedWidth) + "x" + Math.round(paintedHeight))
             }
+        }
+
+        // 右页：仅双页模式且有预览图时显示
+        Image {
+            id: previewImage
+            visible: reader.twoPage && reader.previewUrl.length > 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            fillMode: Image.PreserveAspectFit
+            source: reader.previewUrl
+            scale: reader.zoom
+            onStatusChanged: if (status === Image.Ready)
+                console.log("QML 右页已显示：" + sourceSize.width + "x" + sourceSize.height)
+        }
         }
 
         RowLayout {

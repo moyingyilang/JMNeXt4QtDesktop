@@ -49,6 +49,17 @@ int main(int argc, char** argv) {
                                                   .filePath(QStringLiteral("jmnext-page-%1.png").arg(++seq % 2));
                          if (img.save(path, "PNG")) backend.setPagePath(path);
                      });
+    // 双页模式：右页（预览图）同样落盘再交给 QML
+    QObject::connect(&backend, &jmnext::qt::JmBackend::previewReady, &app,
+                     [&backend](int, const QImage& img, const QString&) {
+                         static int pseq = 0;
+                         const QString ppath = QDir(QDir::tempPath())
+                                                   .filePath(QStringLiteral("jmnext-preview-%1.png").arg(++pseq % 2));
+                         if (img.save(ppath, "PNG")) {
+                             backend.setPreviewPath(ppath);
+                             qInfo().noquote() << QStringLiteral("双页预览已就绪：%1x%2").arg(img.width()).arg(img.height());
+                         }
+                     });
 
     engine.rootContext()->setContextProperty(QStringLiteral("renderBackend"),
                                              QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
@@ -121,6 +132,11 @@ int main(int argc, char** argv) {
     // --page <png>：直接把本地图片喂给阅读器（**测试通道**，绕开网络）。
     // 用途：离线验证"阅读器能不能把图画出来、尺寸对不对"，不受 CDN 波动影响。
     for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--two-page") {
+            QTimer::singleShot(600, &backend, [&backend] { backend.setTwoPage(true); });
+            // 预览页只在翻页时生成，所以再补一次 step 以便无头验证
+            QTimer::singleShot(9000, &backend, [&backend] { backend.step(1); });
+        }
         if (std::string(argv[i]) == "--page") {
             const QString png = QString::fromUtf8(argv[i + 1]);
             QTimer::singleShot(500, &backend, [&backend, png] {

@@ -82,6 +82,8 @@ ApplicationWindow {
             bgColor: root.cBg
             secondaryColor: root.cTextSecondary
             onStepRequested: (delta) => backend.step(delta)
+            previewUrl: root.previewUrl
+            twoPage: root.twoPage
         }
 
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
@@ -154,6 +156,7 @@ ApplicationWindow {
                                 + "，绘制 " + Math.round(pageImage.paintedWidth) + "x" + Math.round(pageImage.paintedHeight))
     }
     property string pageUrl: ""
+    property string previewUrl: ""
     property string albumAid: ""
 
     Connections {
@@ -164,6 +167,13 @@ ApplicationWindow {
         function onStatus(text) { root.pageStatus = text }
         function onFailed(text) { root.pageStatus = "失败：" + text }
         function onPageReady(image, statusText) { root.pageStatus = statusText }
+
+        // 双页右页：与 pageUrl 同一套（读 backend 属性，不在绑定里直接读 context property）
+        function onPreviewChanged() {
+            root.previewUrl = backend.previewSeq > 0
+                    ? "file://" + backend.previewPath + "?v=" + backend.previewSeq
+                    : ""
+        }
 
         function onPageChanged() {
             root.reading = backend.pageSeq > 0

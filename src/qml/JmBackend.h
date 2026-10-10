@@ -30,6 +30,9 @@ public:
     // 阅读页：页面图在 GUI 线程落成临时 PNG 后，通过这两个属性给 QML（带 NOTIFY，绑定可用）
     Q_PROPERTY(QString pagePath READ pagePath NOTIFY pageChanged)
     Q_PROPERTY(int pageSeq READ pageSeq NOTIFY pageChanged)
+    // 双页模式的"右页"：与 pagePath 同一手法（预览图落盘后把路径给 QML）
+    Q_PROPERTY(QString previewPath READ previewPath NOTIFY previewChanged)
+    Q_PROPERTY(int previewSeq READ previewSeq NOTIFY previewChanged)
     Q_INVOKABLE void openChapterId(const QString& chapterId, int page = 0);
     Q_INVOKABLE void step(int delta);
     Q_INVOKABLE void setBlockWords(const QStringList& words);
@@ -62,8 +65,11 @@ signals:
     void albumCoverReady(const QImage& image);
     void currentAidChanged();
     void pageChanged();
+    void previewChanged();
     void chaptersReady(const QStringList& names, const QStringList& ids);
     void pageReady(const QImage& image, const QString& status);
+    /// 双页模式：右页就绪
+    void previewReady(int index, const QImage& image, const QString& status);
     void coverReady(int index, const QImage& image);
     void coverUrlReady(int index, const QString& url);
     void cacheStats(int imageHits, int imageMisses, int rawHits, int rawMisses);
@@ -77,12 +83,17 @@ private:
     QString currentAid_;
     QString pagePath() const { return pagePath_; }
     int pageSeq() const { return pageSeq_; }
+    QString previewPath() const { return previewPath_; }
+    int previewSeq() const { return previewSeq_; }
 public:
     /// 页面图落盘后调用（GUI 线程）
     void setPagePath(const QString& path) { pagePath_ = path; ++pageSeq_; emit pageChanged(); }
+    void setPreviewPath(const QString& path) { previewPath_ = path; ++previewSeq_; emit previewChanged(); }
 private:
     QString pagePath_;
     int pageSeq_ = 0;
+    QString previewPath_;
+    int previewSeq_ = 0;
     template <typename... Args>
     void invoke(const char* method, Args&&... args);
 };

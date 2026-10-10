@@ -2307,3 +2307,30 @@ POST 动作：action    → 收藏/点赞/追更/签到/评论
 在 `twoPage` 打开时并排显示 `pageUrl` 与 `previewUrl`。
 
 **下一步第一件事**：查 `setPagePath` 的调用点（本轮命令已打印），照它把预览路径接上。
+
+## 第 77 轮：双页阅读打通（实测）
+
+**链路**：`JmWorker::step` →（`twoPage_` 为真时）`previewNext(index+1)` → `previewReady(image)`
+→ `JmBackend::previewReady` → `main_qml` 把预览图**落盘**并 `setPreviewPath`（照页图同一手法）
+→ `Main.qml` 的 `onPreviewChanged` 算出 `previewUrl` → `ReaderScreen` 并排显示左页与右页。
+
+| 改动 | 位置 |
+| --- | --- |
+| `previewPath` / `previewSeq` / `previewChanged` / `setPreviewPath` | `JmBackend.h` |
+| `previewReady` 信号转发 | `JmBackend.h` + `.cpp`（`connect(worker_, &JmWorker::previewReady, …)`） |
+| 预览图落盘 + 日志 | `main_qml.cpp`（`img.save(...)` → `setPreviewPath`） |
+| `previewUrl` 派生 + 传入阅读器 | `Main.qml`（`onPreviewChanged`，与 `onPageChanged` 同款：不在绑定里读 context property） |
+| 右页 `Image` + `twoPage`/`previewUrl` 属性 | `ReaderScreen.qml` |
+| `--two-page` 开关（含自动 `step(1)` 便于无头验证） | `main_qml.cpp` |
+
+**实测证据**（`--shot … 45000 --two-page --read 209827`）：
+
+```
+QML 阅读页已显示：源 852x1280        ← 左页
+双页预览已就绪：904x1320             ← 预览页落盘成功
+QML 右页已显示：904x1320             ← 右页在界面上显示
+```
+
+**踩到的一个坑（值得记）**：`--two-page` 原先放在命令行**末尾**时**不生效** ——
+因为既有参数循环是 `for (int i = 1; i + 1 < argc; ++i)`，要求每个开关后面**必须还有参数**。
+把开关放到 `--read 209827` 之前即可。写自检脚本时要注意这个约束。
