@@ -66,6 +66,16 @@ Rectangle {
             source: detail.albumAid.length > 0 ? "image://jm/albumcover?" + detail.albumAid : ""
             onStatusChanged: if (status === Image.Ready)
                 console.log("QML 详情封面已加载：" + sourceSize.width + "x" + sourceSize.height)
+            // 共享元素过渡的近似：Qt 6.4 无 MultiEffect（做不了真共享元素），
+            // 改用"封面放大淡入"逼近 Kotlin 侧从卡片到详情封面的观感
+            opacity: 0.0
+            scale: 0.86
+            onSourceChanged: coverPop.restart()
+            ParallelAnimation {
+                id: coverPop
+                NumberAnimation { target: detailCover; property: "opacity"; from: 0.0; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation { target: detailCover; property: "scale"; from: 0.86; to: 1.0; duration: 240; easing.type: Easing.OutCubic }
+            }
             Rectangle {
                 anchors.fill: parent; color: detail.placeholderColor
                 border.color: detail.strokeColor; border.width: 1

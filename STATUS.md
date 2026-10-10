@@ -2334,3 +2334,22 @@ QML 右页已显示：904x1320             ← 右页在界面上显示
 **踩到的一个坑（值得记）**：`--two-page` 原先放在命令行**末尾**时**不生效** ——
 因为既有参数循环是 `for (int i = 1; i + 1 < argc; ++i)`，要求每个开关后面**必须还有参数**。
 把开关放到 `--read 209827` 之前即可。写自检脚本时要注意这个约束。
+
+## 第 78 轮：共享元素过渡的近似实现 + 提速段收尾
+
+**共享元素过渡**：Kotlin 侧用 shared-element 把卡片封面过渡到详情封面。
+Qt 6.4 **无 `MultiEffect`**（做不了真共享元素），故用**封面放大淡入**逼近同款观感：
+`DetailScreen.qml` 的封面在 `onSourceChanged` 时从 `scale 0.86 / opacity 0` 动画到 `1.0`（200–240ms，OutCubic）。
+实测：`--open 209827` 出图正常，日志「详情封面已加载：400x533 / 收到详情：魔都精兵的奴隸…（标签 5）」。
+
+### 提速段最终清单（接手可直接照做）
+
+| 能力 | 位置 / 命令 |
+| --- | --- |
+| 三条通用数据通路 | `paged`（列表）/ `fetchText`（对象标量）/ `action`（POST 动作） |
+| 登录 | `JmClient::login`（令牌字段 **`s`**，POST 走信封+时间戳解密）；`--login` / `--logged` / `--loggedx` 三条自检 |
+| 通用列表屏 | `ComicListScreen.qml`（改 `MoreScreen` 表里一行 = 加一屏） |
+| 已实测可用 | latest / search / album / chapters / 页图 / hot_tags / categories-filter / random_recommend / creator_author / week / week-filter / **favorite 20** / **watch_list 19** / **forum 2** / **setting 4** / album_sertracking / notifications-unread |
+| 交互 | 加载更多、分类筛选、翻页手势+缩放、下拉刷新、**双页阅读**、过场、封面放大淡入（共享元素的近似） |
+| **待你决定** | 登录凭证持久化（加密存本地 / 每次启动登录） |
+| 未做 | 收藏夹分组、详情页评分/浏览数（需扩 `AlbumInfo`/`parseAlbum`）、搜索筛选器（`SearchFilters.kt`）、壁纸、`ItemMotion` 全量接入 |
