@@ -53,29 +53,21 @@ Rectangle {
         anchors.margins: 14
         spacing: 12
 
-        Text {
+        UiSectionTitle {
             text: "设置"
-            color: settings.titleColor; font.pixelSize: 18; font.bold: true
+            titleColor: settings.titleColor
             Layout.fillWidth: true
-
         }
 
         // 缓存统计：后端 reportCacheStats() 会发 cacheStats(图片命中/未命中, 原始字节命中/未命中)。
         // 之前这个接口没有界面入口，用户无法判断缓存是否在起作用。
-        RowLayout {
+        UiRow {
             Layout.fillWidth: true
-            spacing: 12
-            Button {
-                text: "缓存统计"
-                onClicked: backend.reportCacheStats()
-            }
-            Text {
-                text: settings.cacheText
-                color: settings.bodyColor
-                font.pixelSize: 12
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-            }
+            title: "缓存统计"
+            subtitle: settings.cacheText
+            titleColor: settings.titleColor
+            subtitleColor: settings.bodyColor
+            onClicked: backend.reportCacheStats()
         }
         // 用可展开选项行而不是横排按钮（主项目 2.2.2 已统一成这个交互）。
         ExpandableOptionRow {

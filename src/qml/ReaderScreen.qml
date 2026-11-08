@@ -26,12 +26,17 @@ Rectangle {
     property color secondaryColor: "#b9bcc2"
 
     signal stepRequested(int delta)
+    /// 当前作品的章节（由 Main 在 chaptersReady 时灌入），用于章节选择器
+    property var chapterNames: []
+    property var chapterIds: []
+    signal chapterChosen(string cid)
 
     /// 缩放倍率（1.0 原始）；手势与滚轮改它
     property real zoom: 1.0
     readonly property real zoomMin: 1.0
     readonly property real zoomMax: 3.0
     property real dragAccum: 0
+    property bool chapterPickerOpen: false
 
     color: reader.bgColor
 
@@ -106,11 +111,88 @@ Rectangle {
             spacing: 8
             Button { text: "上一页"; onClicked: reader.stepRequested(-1) }
             Button { text: "下一页"; onClicked: reader.stepRequested(1) }
+            Button {
+                text: "章节（" + reader.chapterIds.length + "）"
+                enabled: reader.chapterIds.length > 0
+                onClicked: reader.chapterPickerOpen = !reader.chapterPickerOpen
+            }
             Text {
                 Layout.fillWidth: true
                 text: reader.pageStatus
                 color: reader.secondaryColor; font.pixelSize: 12
                 elide: Text.ElideRight
+            }
+        }
+    }
+
+    // 章节选择器（对应主项目 ChapterPickerDialog）：覆盖在阅读区上，点条目跳转。
+    Rectangle {
+        id: chapterPicker
+        visible: reader.chapterPickerOpen
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.55)
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 96, 520)
+            height: Math.min(parent.height - 96, 520)
+            radius: 12
+            color: Qt.rgba(0.12, 0.13, 0.15, 0.98)
+            border.color: reader.secondaryColor
+            border.width: 1
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 8
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: "章节（共 " + reader.chapterIds.length + "）"
+                        color: reader.secondaryColor
+                        font.pixelSize: 14
+                        Layout.fillWidth: true
+                    }
+                    Button {
+                        text: "关闭"
+                        onClicked: reader.chapterPickerOpen = false
+                    }
+                }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    model: reader.chapterNames
+                    spacing: 2
+
+                    delegate: Rectangle {
+                        width: ListView.view.width
+                        height: 36
+                        radius: 6
+                        color: chapterMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+
+                        MouseArea {
+                            id: chapterMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                reader.chapterPickerOpen = false
+                                reader.chapterChosen(reader.chapterIds[index])
+                            }
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: (index + 1) + ". " + modelData
+                            color: reader.secondaryColor
+                            font.pixelSize: 13
+                        }
+                    }
+                }
             }
         }
     }

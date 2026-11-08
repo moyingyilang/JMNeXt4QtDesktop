@@ -117,6 +117,9 @@ ApplicationWindow {
             onStepRequested: (delta) => backend.step(delta)
             previewUrl: root.previewUrl
             twoPage: root.twoPage
+            chapterNames: root.chapterNames
+            chapterIds: root.chapterIds
+            onChapterChosen: (cid) => backend.openChapterId(cid, 0)
         }
 
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
@@ -227,6 +230,9 @@ ApplicationWindow {
     property string previewUrl: ""
     property string albumAid: ""
     property string albumName: ""
+    // 章节缓存：给阅读器的章节选择器用（chaptersReady 时写入）
+    property var chapterNames: []
+    property var chapterIds: []
 
     /// 把当前 themeInit 的 token 复制到根属性（启动与运行时切换都走这里）。
     function applyThemeTokens() {
@@ -269,6 +275,8 @@ ApplicationWindow {
         }
         function onChaptersReady(names, ids) {
             if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+            root.chapterNames = names
+            root.chapterIds = ids
         }
 
         function onStatus(text) { root.pageStatus = text }

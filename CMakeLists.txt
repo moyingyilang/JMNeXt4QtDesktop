@@ -170,6 +170,11 @@ set(JMNEXT_QML_FILES
     src/qml/ComicCard.qml
     src/qml/ExpandableOptionRow.qml
     src/qml/ThemeModeIcon.qml
+    src/qml/UiEmptyState.qml
+    src/qml/UiChip.qml
+    src/qml/UiDivider.qml
+    src/qml/UiSectionTitle.qml
+    src/qml/UiRow.qml
     src/qml/StateBox.qml
     src/qml/LoadMoreFooter.qml
     src/qml/HomeScreen.qml
