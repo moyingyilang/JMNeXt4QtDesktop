@@ -24,6 +24,8 @@ ColumnLayout {
     property string pageStatus: ""
     property bool loading: false
     property bool exhausted: false
+    /// 是否显示首页头部（标题 + 刷新/加载更多）：搜索页不显示
+    property bool showHeader: true
     /** 阅读中：左栏不应再显示“列表为空/失败”的状态与页脚（阅读时列表已被清空）。 */
     property bool reading: false
 
@@ -41,6 +43,44 @@ ColumnLayout {
     signal moreClicked()
     /// 随机作品的入口（对应 Kotlin 版 home/RandomFab.kt）
     signal randomClicked()
+
+    // 首页头部：对齐 Kotlin 桌面版（「首页 80/0」+ 刷新/加载更多 胶囊 + 已加载计数）
+    RowLayout {
+        visible: home.showHeader
+        Layout.fillWidth: true
+        Layout.leftMargin: Tokens.space16
+        Layout.rightMargin: Tokens.space16
+        Layout.topMargin: Tokens.space8
+        spacing: Tokens.space8
+
+        Text {
+            text: "首页 " + home.listModel.count + "/0"
+            color: home.textColor
+            font.pixelSize: 20
+            font.bold: true
+            Layout.fillWidth: true
+        }
+
+        UiPillButton {
+            text: "刷新"
+            primary: true
+            onClicked: home.requestReload()
+        }
+
+        UiPillButton {
+            text: "加载更多"
+            primary: false
+            enabled: !home.exhausted
+            onClicked: home.moreClicked()
+        }
+
+        Text {
+            text: "已加载 " + home.listModel.count + " / 0"
+            color: home.secondaryColor
+            font.pixelSize: 12
+            Layout.leftMargin: Tokens.space8
+        }
+    }
 
     // 封面网格（对齐 Kotlin 桌面版首页）：一屏 6 列，卡片竖排「封面 + 标题 + 作者」。
     // 标题里带作者与分类（后端格式 "名称\n   作者　[分类]"），这里拆成两行显示。
@@ -95,8 +135,10 @@ ColumnLayout {
     }
 
     LoadMoreFooter {
+        // 头部已有「加载更多」胶囊，页脚不再重复（Kotlin 版也只有头部一处置）；
+        // 保留组件是为了 loading 状态还能驱动文案，只是不再显示。
         // 列表为空时不显示页脚：此时 StateBox 已占满列表区，再显示"加载更多"既无意义也会打架
-        visible: home.listModel.count > 0 && !home.reading
+        visible: false
         Layout.fillWidth: true
         loading: home.loading
         exhausted: home.exhausted

@@ -106,8 +106,11 @@ ApplicationWindow {
                 }
             }
 
+            // 搜索栏只在「搜索」页显示：Kotlin 桌面版的首页没有搜索框与排序行，
+            // 它们属于搜索页（此前 Qt 版把它们常驻在首页，是布局差异之一）。
             SearchScreen {
                 id: searchScreen
+                visible: root.navKey === "search"
                 showNavButtons: false
                 Layout.fillWidth: true
                 listModel: listModel
@@ -127,6 +130,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 listModel: listModel
+                showHeader: root.navKey === "home"
                 pageStatus: root.pageStatus
                 reading: root.reading
                 hoverColor: root.cSurface2
