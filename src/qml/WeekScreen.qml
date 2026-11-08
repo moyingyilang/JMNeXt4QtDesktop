@@ -13,7 +13,8 @@ import QtQuick.Layouts
  * 数据走通用通路 JmBackend.loadPaged(tag,...) -> pagedReady(tag,...)：
  *   一级 tag "week"，二级 tag "weekworks"。
  */
-ColumnLayout {
+Column {
+
     id: week
 
     property color titleColor: "#e6e6e6"

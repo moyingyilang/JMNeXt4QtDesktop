@@ -12,7 +12,8 @@ import QtQuick.Layouts
  * 现状（如实）：本屏显示**登录态**与**应用配置**两类信息；用户资料明细（头像/等级/经验）
  * 需要把登录返回体解析成成员模型，尚未做 —— 这里不假装有。
  */
-ColumnLayout {
+Column {
+
     id: profile
 
     property color titleColor: "#e6e6e6"

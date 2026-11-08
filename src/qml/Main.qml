@@ -30,6 +30,7 @@ ApplicationWindow {
         baseColor: root.cBg
         glowColor: root.cAccent
         wallpaper: root.wallpaperSource
+        wallpaperPreset: root.wallpaperPreset
         wallpaperDim: root.wallpaperDimLevel
         Component.onCompleted: root.appBackdrop = ambientBg
     }
@@ -41,6 +42,8 @@ ApplicationWindow {
         anchors.fill: parent
         tint: root.cSurface2
         tintAlpha: root.glassAlpha
+        // 外观页「壁纸模糊」滑杆：0 表示跟随材质默认，>0 时覆盖
+        blurRadiusPx: root.blurDpValue > 0 ? root.blurDpValue * 2 : -1
         strokeColor: "transparent"
         radiusMd: 0
     }
@@ -231,6 +234,17 @@ ApplicationWindow {
         }
     }
 
+    // 全屏面板层：面板定义在 RowLayout 内部会被布局当成一列（宽度只有内容宽），
+    // 所以统一把 parent 指到这里，脱离布局、按 anchors.fill 铺满窗口。
+    Item {
+        id: overlayLayer
+        anchors.fill: parent
+        visible: root.showAbout || root.showAppearance || root.showSettings
+                 || root.showHistory || root.showFavorites || root.showNotifications
+                 || root.showCategory || root.showMore || root.showList
+                 || root.showLogin || root.showWeek || root.showComments || root.showProfile
+    }
+
     // 状态行（后端 status 信号）
     // 主题 token（由 C++ 在 load 之前以 QVariantMap 传入，onCompleted 里复制过来）
     property string cBg: "#1e1f22"
@@ -265,6 +279,7 @@ ApplicationWindow {
     property real glassAlpha: 0.72
     property real wallpaperDimLevel: 0.0
     property real blurDpValue: 5
+    property string wallpaperPreset: ""
     property bool showHistory: false
     property bool showFavorites: false
     property bool showNotifications: false
@@ -408,6 +423,7 @@ ApplicationWindow {
     }
 
         AboutScreen {
+            parent: overlayLayer
             id: aboutPane
             visible: root.showAbout
             opacity: visible ? 1 : 0
@@ -425,6 +441,7 @@ ApplicationWindow {
         }
 
         AppearanceScreen {
+            parent: overlayLayer
             id: appearancePane
             visible: root.showAppearance
             opacity: visible ? 1 : 0
@@ -445,11 +462,15 @@ ApplicationWindow {
             onBlurEdited: (dp) => root.blurDpValue = dp
             onPanelAlphaEdited: (v) => root.glassAlpha = v
             onDimEdited: (v) => root.wallpaperDimLevel = v
-            onSwatchSelected: (key) => console.log("QML 外观：选择壁纸色板 " + key + "（渐变壁纸暂未接入）")
+            onSwatchSelected: (key) => {
+                root.wallpaperPreset = key
+                console.log("QML 外观：壁纸色板 -> " + key)
+            }
             onCloseRequested: root.showAppearance = false
         }
 
         SettingsScreen {
+            parent: overlayLayer
             id: settingsPane
             visible: root.showSettings
             opacity: visible ? 1 : 0
@@ -473,6 +494,7 @@ ApplicationWindow {
         }
 
         HistoryScreen {
+            parent: overlayLayer
             id: historyPane
             visible: root.showHistory
             opacity: visible ? 1 : 0
@@ -493,6 +515,7 @@ ApplicationWindow {
         }
 
         FavoritesScreen {
+            parent: overlayLayer
             id: favoritesPane
             visible: root.showFavorites
             opacity: visible ? 1 : 0
@@ -513,6 +536,7 @@ ApplicationWindow {
         }
 
         NotificationsScreen {
+            parent: overlayLayer
             id: notificationsPane
             visible: root.showNotifications
             opacity: visible ? 1 : 0
@@ -528,6 +552,7 @@ ApplicationWindow {
         }
 
         CategoryScreen {
+            parent: overlayLayer
             id: categoryPane
             visible: root.showCategory
             opacity: visible ? 1 : 0
@@ -557,6 +582,7 @@ ApplicationWindow {
         }
 
         MoreScreen {
+            parent: overlayLayer
             id: morePane
             visible: root.showMore
             opacity: visible ? 1 : 0
@@ -612,6 +638,7 @@ ApplicationWindow {
         }
 
         ComicListScreen {
+            parent: overlayLayer
             id: comicListPane
             visible: root.showList
             opacity: visible ? 1 : 0
@@ -636,6 +663,7 @@ ApplicationWindow {
         }
 
         LoginScreen {
+            parent: overlayLayer
             id: loginPane
             visible: root.showLogin
             opacity: visible ? 1 : 0
@@ -656,46 +684,73 @@ ApplicationWindow {
             }
         }
 
-        WeekScreen {
+        // @wrap WeekScreen：根是布局（ColumnLayout），布局不接受 anchors，
+        // 直接 anchors.fill 会被忽略、只剩内容宽；包一层 Item 才能铺满。
+        Item {
+            parent: overlayLayer
             anchors.fill: parent
+            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
-            id: weekPane
-            visible: root.showWeek
-            titleColor: root.cText
-            bodyColor: root.cTextSecondary
-            surfaceColor: root.cSurface2
-            accentColor: root.cAccent
-            onCloseRequested: root.showWeek = false
-            onComicClicked: (aid) => {
-                root.albumAid = aid
-                backend.loadAlbum(aid)
-                root.showWeek = false
+
+            WeekScreen {
+                anchors.fill: parent
+                anchors.margins: 32
+                id: weekPane
+                visible: root.showWeek
+                titleColor: root.cText
+                bodyColor: root.cTextSecondary
+                surfaceColor: root.cSurface2
+                accentColor: root.cAccent
+                onCloseRequested: root.showWeek = false
+                onComicClicked: (aid) => {
+                    root.albumAid = aid
+                    backend.loadAlbum(aid)
+                    root.showWeek = false
+                }
             }
         }
 
-        CommentScreen {
+        // @wrap CommentScreen：根是布局（ColumnLayout），布局不接受 anchors，
+        // 直接 anchors.fill 会被忽略、只剩内容宽；包一层 Item 才能铺满。
+        Item {
+            parent: overlayLayer
             anchors.fill: parent
+            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
-            id: commentPane
-            visible: root.showComments
-            aid: root.commentAid
-            titleColor: root.cText
-            bodyColor: root.cTextSecondary
-            surfaceColor: root.cSurface2
-            accentColor: root.cAccent
-            onCloseRequested: root.showComments = false
+
+            CommentScreen {
+                anchors.fill: parent
+                anchors.margins: 32
+                id: commentPane
+                visible: root.showComments
+                aid: root.commentAid
+                titleColor: root.cText
+                bodyColor: root.cTextSecondary
+                surfaceColor: root.cSurface2
+                accentColor: root.cAccent
+                onCloseRequested: root.showComments = false
+            }
         }
 
-        ProfileScreen {
+        // @wrap ProfileScreen：根是布局（ColumnLayout），布局不接受 anchors，
+        // 直接 anchors.fill 会被忽略、只剩内容宽；包一层 Item 才能铺满。
+        Item {
+            parent: overlayLayer
             anchors.fill: parent
+            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
-            id: profilePane
-            visible: root.showProfile
-            titleColor: root.cText
-            bodyColor: root.cTextSecondary
-            surfaceColor: root.cSurface2
-            accentColor: root.cAccent
-            onCloseRequested: root.showProfile = false
-            onLoginRequested: { root.showProfile = false; root.showLogin = true }
+
+            ProfileScreen {
+                anchors.fill: parent
+                anchors.margins: 32
+                id: profilePane
+                visible: root.showProfile
+                titleColor: root.cText
+                bodyColor: root.cTextSecondary
+                surfaceColor: root.cSurface2
+                accentColor: root.cAccent
+                onCloseRequested: root.showProfile = false
+                onLoginRequested: { root.showProfile = false; root.showLogin = true }
+            }
         }
 }

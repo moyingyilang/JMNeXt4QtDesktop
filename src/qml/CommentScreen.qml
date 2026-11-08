@@ -12,7 +12,8 @@ import QtQuick.Layouts
  * 数据走通用通路 loadPaged(tag,...)：tag 用 "comments"。
  * 评论行的字段名与作品列表不同，故这里直接显示原始行（后续按 DTO 细化）。
  */
-ColumnLayout {
+Column {
+
     id: comments
 
     property color titleColor: "#e6e6e6"
