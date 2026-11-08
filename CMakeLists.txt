@@ -178,6 +178,7 @@ set(JMNEXT_QML_FILES
     src/qml/UiRow.qml
     src/qml/UiInfoRow.qml
     src/qml/NavSidebar.qml
+    src/qml/PageHeader.qml
     src/qml/AppearanceScreen.qml
     src/qml/UiPillButton.qml
     src/qml/ui/Tokens.js

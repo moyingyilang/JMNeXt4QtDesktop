@@ -1,29 +1,29 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "ui/Tokens.js" as Tokens
 
 /*
- * 阅读历史（对应主项目 profile 里的 DailyHistorySection 与本地 HistoryStore）。
+ * 阅读历史（本地 HistoryStore）—— 与收藏页同一套列表页形态：
+ * 头部（标题 + 计数 + 清空/关闭）+ 封面网格。
  *
- * 数据来源是**本地**（core/HistoryStore.h）：打开作品时写入，断网也在。
- * 此前「更多 → 阅读历史」走的是服务端 watch_list 接口（需登录），
- * 这里改为本地优先，未登录也能用 —— 与主项目「本地是唯一数据源」的结论一致。
+ * 历史在打开作品时写入（见 Main 的 onAlbumReady），断网也在；
+ * 封面用图片提供器的 albumcover 兜底，命中磁盘缓存时秒出。
  */
 Rectangle {
     id: historyPane
 
-    property color surfaceColor: "#26282c"
-    property color strokeColor: "#3a3d43"
-    property color titleColor: "#e6e6e6"
-    property color bodyColor: "#b9bcc2"
-    property color accentColor: "#5b8def"
+    property color surfaceColor: "#fef7ff"
+    property color strokeColor: "#cac4d0"
+    property color titleColor: "#1d1b20"
+    property color bodyColor: "#49454f"
+    property color accentColor: "#6750a4"
 
     signal closeRequested()
     signal comicClicked(string aid)
 
     color: Qt.rgba(surfaceColor.r, surfaceColor.g, surfaceColor.b, 1.0)
-    border.color: strokeColor
-    border.width: 1
+    radius: 12
 
     ListModel { id: historyModel }
 
@@ -50,52 +50,40 @@ Rectangle {
         anchors.margins: 24
         spacing: 12
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
-            Text {
-                text: "阅读历史（本地，共 " + historyModel.count + " 条）"
-                color: historyPane.titleColor
-                font.pixelSize: 18
-                font.bold: true
-                Layout.fillWidth: true
-            }
-            Button {
-                text: "清空"
-                enabled: historyModel.count > 0
-                onClicked: {
-                    backend.clearHistory()
-                    historyPane.reload()
-                }
-            }
-            Button {
-                text: "关闭"
-                onClicked: historyPane.closeRequested()
+        PageHeader {
+            title: "阅读历史"
+            countText: "共 " + historyModel.count + " 条"
+            description: historyModel.count > 0
+                         ? "点击卡片重新打开作品。"
+                         : "还没有记录。打开任意作品后，这里会出现它。"
+            titleColor: historyPane.titleColor
+            bodyColor: historyPane.bodyColor
+            accentColor: historyPane.accentColor
+            actions: [
+                { key: "clear", label: "清空", primary: false },
+                { key: "close", label: "关闭", primary: false }
+            ]
+            onActionClicked: (key) => {
+                if (key === "clear") backend.clearHistory()
+                else if (key === "close") historyPane.closeRequested()
             }
         }
 
-        Text {
-            text: historyModel.count === 0
-                  ? "还没有记录。打开任意作品后，这里会出现它。"
-                  : "点击条目可重新打开该作品。"
-            color: historyPane.bodyColor
-            font.pixelSize: 12
-            Layout.fillWidth: true
-        }
-
-        ListView {
+        GridView {
+            id: historyGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
             model: historyModel
-            spacing: 2
+            cellWidth: 176
+            cellHeight: 268
 
-            delegate: UiRow {
-                width: ListView.view.width
+            delegate: ComicGridCard {
+                width: 160
                 title: model.title
-                subtitle: "aid " + model.aid
+                aid: model.aid
                 titleColor: historyPane.titleColor
-                subtitleColor: historyPane.bodyColor
+                authorColor: historyPane.bodyColor
                 onClicked: historyPane.comicClicked(model.aid)
             }
         }
