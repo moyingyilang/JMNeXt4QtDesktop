@@ -87,14 +87,21 @@ Rectangle {
             color: detail.titleColor; font.pixelSize: 18; wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
-        Text {
-            text: detail.albumAuthor
-            color: detail.authorColor; font.pixelSize: 13
-        }
-        Text {
-            text: detail.albumTags
-            color: detail.tagColor; font.pixelSize: 12; wrapMode: Text.WordWrap
+        UiInfoRow {
             Layout.fillWidth: true
+            label: "作者"
+            value: detail.albumAuthor.length > 0 ? detail.albumAuthor : "未知"
+            labelColor: detail.tagColor
+            valueColor: detail.authorColor
+        }
+
+        UiInfoRow {
+            Layout.fillWidth: true
+            label: "标签"
+            // albumTags 由后端拼成「标签：a、b」，这里剥掉前缀，避免与左侧标签重复
+            value: detail.albumTags.length > 0 ? detail.albumTags.replace(/^标签：/, "") : "无"
+            labelColor: detail.tagColor
+            valueColor: detail.tagColor
         }
         RowLayout {
             Layout.fillWidth: true

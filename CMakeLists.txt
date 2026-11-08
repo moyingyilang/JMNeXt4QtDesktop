@@ -175,6 +175,7 @@ set(JMNEXT_QML_FILES
     src/qml/UiDivider.qml
     src/qml/UiSectionTitle.qml
     src/qml/UiRow.qml
+    src/qml/UiInfoRow.qml
     src/qml/ui/Tokens.js
     src/qml/StateBox.qml
     src/qml/LoadMoreFooter.qml
