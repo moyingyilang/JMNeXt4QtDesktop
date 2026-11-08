@@ -151,6 +151,7 @@ qt_add_executable(jmnext4qml
     src/qml/JmImageProvider.cpp
     src/qml/JmBackend.cpp
     src/qml/main_qml.cpp
+    src/qt/ThemeController.cpp
     src/qt/Theme.h
     src/qt/ThemeTokens.h
 )
@@ -167,6 +168,7 @@ endif()
 set(JMNEXT_QML_FILES
     src/qml/Main.qml
     src/qml/ComicCard.qml
+    src/qml/ExpandableOptionRow.qml
     src/qml/StateBox.qml
     src/qml/LoadMoreFooter.qml
     src/qml/HomeScreen.qml

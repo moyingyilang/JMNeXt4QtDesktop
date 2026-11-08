@@ -27,7 +27,9 @@ Rectangle {
     signal twoPageToggled(bool on)
     signal blockWordsChanged(var words)
 
-    color: settings.surfaceColor
+    // 面板是不透明模态：surfaceColor 带 alpha（cSurface1 只有约 5% 白），
+    // 直接用作底色会让列表文字透上来（展开选项时尤其明显）。模态面板取完全不透明。
+    color: Qt.rgba(settings.surfaceColor.r, settings.surfaceColor.g, settings.surfaceColor.b, 1.0)
     border.color: settings.strokeColor
     border.width: 1
 
@@ -40,6 +42,44 @@ Rectangle {
             text: "设置"
             color: settings.titleColor; font.pixelSize: 18; font.bold: true
             Layout.fillWidth: true
+
+        }
+        // 用可展开选项行而不是横排按钮（主项目 2.2.2 已统一成这个交互）。
+        ExpandableOptionRow {
+            Layout.fillWidth: true
+            title: "界面风格"
+            titleColor: settings.titleColor
+            valueColor: settings.bodyColor
+            accentColor: settings.accentColor
+            current: (typeof themeController !== "undefined" && themeController) ? themeController.style : ""
+            options: [
+                { value: "windowGlass", label: "WindowGlass（半透明 + 描边）" },
+                { value: "translucent", label: "Translucent（更高透明度）" },
+                { value: "flatBlur", label: "FlatBlur（模糊壁纸）" },
+                { value: "miuix", label: "Miuix（不透明）" }
+            ]
+            onSelected: function (v) {
+                themeController.apply(v, themeController.dark)
+                themeController.savePreference()
+            }
+
+        }
+
+        ExpandableOptionRow {
+            Layout.fillWidth: true
+            title: "深浅色"
+            titleColor: settings.titleColor
+            valueColor: settings.bodyColor
+            accentColor: settings.accentColor
+            current: (typeof themeController !== "undefined" && themeController) ? themeController.dark : true
+            options: [
+                { value: true, label: "深色" },
+                { value: false, label: "浅色" }
+            ]
+            onSelected: function (v) {
+                themeController.apply(themeController.style, v)
+                themeController.savePreference()
+            }
         }
 
         RowLayout {

@@ -217,6 +217,28 @@ ApplicationWindow {
     property string previewUrl: ""
     property string albumAid: ""
 
+    /// 把当前 themeInit 的 token 复制到根属性（启动与运行时切换都走这里）。
+    function applyThemeTokens() {
+        if (typeof themeInit === "undefined" || !themeInit) return
+        root.cBg = themeInit.surfaceMica
+        root.cSurface1 = themeInit.surface1
+        root.cSurface2 = themeInit.surface2
+        root.cText = themeInit.text
+        root.cTextSecondary = themeInit.textSecondary
+        root.cAccent = themeInit.accent
+        root.cStroke = themeInit.stroke
+        root.radiusMd = themeInit.radiusMd
+    }
+
+    // 运行时切换主题后重读 token（ThemeController::apply 会重写 themeInit 并发 applied）。
+    Connections {
+        target: (typeof themeController !== "undefined") ? themeController : null
+        function onApplied() {
+            root.applyThemeTokens()
+            console.log("QML 主题已切换：" + themeName + " / " + (darkTheme ? "深色" : "浅色"))
+        }
+    }
+
     Connections {
         target: backend
 
@@ -256,16 +278,7 @@ ApplicationWindow {
     Component.onCompleted: {
         // --search 带词时不加载首页（否则会把搜索结果覆盖掉——第一次验证时就撞上了）
         if (typeof initialSearch === "undefined" || initialSearch.length === 0) {
-            if (typeof themeInit !== "undefined" && themeInit) {
-            root.cBg = themeInit.surfaceMica
-            root.cSurface1 = themeInit.surface1
-            root.cSurface2 = themeInit.surface2
-            root.cText = themeInit.text
-            root.cTextSecondary = themeInit.textSecondary
-            root.cAccent = themeInit.accent
-            root.cStroke = themeInit.stroke
-            root.radiusMd = themeInit.radiusMd
-        }
+            root.applyThemeTokens()
         console.log("QML 动效：列表悬停过渡与按压弹性已启用")
         console.log("QML 主题：" + themeName + " 背景 " + root.cBg + " 强调 " + root.cAccent
                     + " 文字 " + root.cText + " 圆角 " + root.radiusMd)
@@ -279,8 +292,10 @@ ApplicationWindow {
             visible: root.showAbout
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            // 这些全屏面板是 ApplicationWindow 的直接子项，不在布局里，
+            // Layout.fill* 对它们无效，尺寸会塌成一小块（截图里挤在左上角）。
+            anchors.fill: parent
+            anchors.margins: 32
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             titleColor: root.cText
@@ -294,8 +309,10 @@ ApplicationWindow {
             visible: root.showSettings
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            // 全屏面板是 ApplicationWindow 的直接子项，不在布局内，
+            // Layout.fill* 对它无效，尺寸会塌成左上角一小块（截图里已复现）。
+            anchors.fill: parent
+            anchors.margins: 32
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             titleColor: root.cText

@@ -14,6 +14,7 @@
 #include "qt/StartupInfo.h"
 #include "qml/JmBackend.h"
 #include "qml/JmImageProvider.h"
+#include "qt/ThemeController.h"
 
 int main(int argc, char** argv) {
     QGuiApplication app(argc, argv);
@@ -107,41 +108,20 @@ int main(int argc, char** argv) {
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
     // 实测真实 URL 是 qrc:/JMNeXt/src/qml/Main.qml（见 build/.rcc/*_raw_qml_0.qrc）
     // 主题 token 传入 QML（必须在 engine.load 之前，见下面的顺序说明）。
-    // 用 QVariantMap：QML 在 Component.onCompleted 里把它复制到根属性，之后绑定只读根属性 ——
-    // 因为编译后的 QML 绑定读不到 context property（会当 null），这个坑在 P2 阅读器里踩过一次。
+    // 主题控制器：启动时把当前风格推给 QML，运行时可通过 themeController.apply(style, dark) 切换。
+    // token 表的生成逻辑在 ThemeController.cpp，启动与切换共用同一份，避免两处数值漂移。
     {
-        using namespace jmnext::qt;
-        // 从已经设好的 context property 读回风格名：不依赖任何局部变量名，避免与
-        // Theme.h 的函数 styleName(Style) 撞名（撞了两次）。
-        const QString styleKey =
-            engine.rootContext()->contextProperty(QStringLiteral("themeName")).toString();
-        const auto pal = [styleKey, dark] {
-            if (styleKey == QLatin1String("translucent")) return tokens::translucent(dark);
-            if (styleKey == QLatin1String("flatBlur"))    return tokens::flatBlur(dark);
-            if (styleKey == QLatin1String("miuix"))       return tokens::miuix(dark);
-            return tokens::windowGlass(dark);
-        }();
-        const auto rad = (styleKey == QLatin1String("flatBlur")) ? tokens::flatBlurRadius()
-                       : (styleKey == QLatin1String("miuix"))    ? tokens::miuixRadius()
-                                                                  : tokens::windowGlassRadius();
-        QVariantMap m;
-        const auto put = [&m](const char* k, const char* v) { m.insert(QString::fromLatin1(k), QString::fromUtf8(v ? v : "")); };
-        put("accent", pal.accent);            put("accentHover", pal.accentHover);
-        put("accentActive", pal.accentActive); put("accentFg", pal.accentFg);
-        put("accentSoft", pal.accentSoft);     put("surfaceMica", pal.surfaceMica);
-        put("surface1", pal.surface1);         put("surface2", pal.surface2);
-        put("surface3", pal.surface3);         put("surfaceSunken", pal.surfaceSunken);
-        put("surfaceHover", pal.surfaceHover); put("surfaceActive", pal.surfaceActive);
-        put("stroke", pal.stroke);             put("strokeStrong", pal.strokeStrong);
-        put("strokeInner", pal.strokeInner);   put("text", pal.text);
-        put("textSecondary", pal.textSecondary); put("textTertiary", pal.textTertiary);
-        put("textOnAccent", pal.textOnAccent); put("error", pal.error);
-        m.insert(QStringLiteral("radiusXs"), rad.xs);
-        m.insert(QStringLiteral("radiusSm"), rad.sm);
-        m.insert(QStringLiteral("radiusMd"), rad.md);
-        m.insert(QStringLiteral("radiusLg"), rad.lg);
-        put("styleName", styleKey.toUtf8().constData());
-        engine.rootContext()->setContextProperty(QStringLiteral("themeInit"), m);
+        // --ui-style 优先（无头截图对比用），否则用 --theme 解析出的 style。
+        // 必须在这里就决定，否则控制器构造时推的 token 会把后面 --ui-style 设的
+        // themeName 覆盖掉（只改了名字，token 还是旧的）。
+        QString styleKey = QString::fromUtf8(jmnext::qt::styleName(style));
+        for (int i = 1; i + 1 < argc; ++i) {
+            if (std::string(argv[i]) == "--ui-style")
+                styleKey = QString::fromUtf8(argv[i + 1]);
+        }
+        auto* themeController = new jmnext::qt::ThemeController(&engine, &engine);
+        engine.rootContext()->setContextProperty(QStringLiteral("themeController"), themeController);
+        themeController->apply(styleKey, dark);
     }
 
     // 先扫一遍参数、只设置 QML 启动时就要读到的属性。
