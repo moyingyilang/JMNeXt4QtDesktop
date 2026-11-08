@@ -59,6 +59,13 @@ public:
     /// 历史变化（新增或清空后发出）
     Q_SIGNAL void historyChanged();
 
+    /// 本地收藏（与历史同一套形态：本地优先，断网/未登录也可见）
+    Q_INVOKABLE QVariantList favorites() const;
+    Q_INVOKABLE void rememberFavorite(const QString& aid, const QString& title, const QString& folder);
+    Q_INVOKABLE void removeFavorite(const QString& aid);
+    Q_INVOKABLE void clearFavorites();
+    Q_SIGNAL void favoritesChanged();
+
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
     void listAppended(const QStringList& titles, const QStringList& ids);

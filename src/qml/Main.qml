@@ -129,7 +129,11 @@ ApplicationWindow {
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             onChapterClicked: (cid) => backend.openChapterId(cid, 0)
-                onFavoriteToggled: (aid) => backend.action("favorite", "favorite", "aid=" + aid)
+                onFavoriteToggled: (aid) => {
+                    backend.action("favorite", "favorite", "aid=" + aid)
+                    // 本地也记一份：断网或未登录时收藏页仍有内容（对应主项目 FavoriteStore）
+                    backend.rememberFavorite(aid, root.albumName ? root.albumName : "", "")
+                }
                 onTrackToggled: (aid) => backend.action("track", "album_sertracking", "id=" + aid)
                 onCommentsRequested: (aid) => { root.commentAid = aid; root.showComments = true }
         }
@@ -192,6 +196,8 @@ ApplicationWindow {
     property bool showAbout: false
     property bool showSettings: false
     property bool showHistory: false
+    property bool showFavorites: false
+    property bool showNotifications: false
     property bool showCategory: false
     property bool showMore: false
     /// 通用列表屏（第 61 轮）：任意"作品列表"型接口共用一屏
@@ -217,6 +223,7 @@ ApplicationWindow {
     property string pageUrl: ""
     property string previewUrl: ""
     property string albumAid: ""
+    property string albumName: ""
 
     /// 把当前 themeInit 的 token 复制到根属性（启动与运行时切换都走这里）。
     function applyThemeTokens() {
@@ -252,6 +259,7 @@ ApplicationWindow {
         }
         function onAlbumReady(name, author, tags) {
             if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+            root.albumName = name
             // 本地历史：打开作品即记录（对应主项目 HistoryStore 的写入时机）
             if (typeof backend !== "undefined" && backend)
                 backend.rememberHistory(backend.currentAid, name)
@@ -280,6 +288,16 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // --panel：启动即打开指定面板（favorites/notifications/history/settings/about/week）
+        if (typeof startupPanel !== "undefined" && startupPanel) {
+            if (startupPanel === "favorites") root.showFavorites = true
+            else if (startupPanel === "notifications") root.showNotifications = true
+            else if (startupPanel === "history") root.showHistory = true
+            else if (startupPanel === "settings") root.showSettings = true
+            else if (startupPanel === "about") root.showAbout = true
+            else if (startupPanel === "week") root.showWeek = true
+        }
+
         // --search 带词时不加载首页（否则会把搜索结果覆盖掉——第一次验证时就撞上了）
         if (typeof initialSearch === "undefined" || initialSearch.length === 0) {
             root.applyThemeTokens()
@@ -351,6 +369,41 @@ ApplicationWindow {
             }
         }
 
+        FavoritesScreen {
+            id: favoritesPane
+            visible: root.showFavorites
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            anchors.fill: parent
+            anchors.margins: 32
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showFavorites = false
+            onComicClicked: (aid) => {
+                root.showFavorites = false
+                root.albumAid = aid
+                backend.loadAlbum(aid)
+            }
+        }
+
+        NotificationsScreen {
+            id: notificationsPane
+            visible: root.showNotifications
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            anchors.fill: parent
+            anchors.margins: 32
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showNotifications = false
+        }
+
         CategoryScreen {
             id: categoryPane
             visible: root.showCategory
@@ -364,7 +417,20 @@ ApplicationWindow {
             bodyColor: root.cTextSecondary
             accentColor: root.cAccent
             onCloseRequested: root.showCategory = false
-            onTagClicked: (tag) => console.log("QML 分类标签被点击（筛选待接）：" + tag)
+            onTagClicked: (tag) => {
+                // 标签点击后把结果页接上（此前只打日志，点标签没有反应）
+                root.listTitle = "标签：" + tag
+                root.listPath = "tag"
+                root.listQuery = tag
+                root.listTag = "tag"
+                root.showCategory = false
+                root.showList = true
+            }
+            onResultClicked: (aid) => {
+                root.showCategory = false
+                root.albumAid = aid
+                backend.loadAlbum(aid)
+            }
         }
 
         MoreScreen {
@@ -390,10 +456,10 @@ ApplicationWindow {
                         "random":    ["随机推荐", "random_recommend", ""],
                         "creator":   ["画师列表", "creator_author", "page=1"],
                         "week":      ["__week__", "", ""],
-                        "favorites": ["我的收藏（需登录）", "favorite", "page=1"],
+                        "favorites": ["__favorites__", "", ""],
                         "history":   ["__history__", "", ""],
                         "tags":      ["标签收藏", "tags_favorite", ""],
-                        "notify":    ["通知（需登录）", "notifications", ""],
+                        "notify":    ["__notify__", "", ""],
                         "auth":      ["__login__", "", ""],
                         "profile":   ["__profile__", "", ""],
                         "checkin":   ["__action__", "daily_chk", ""]
@@ -402,6 +468,8 @@ ApplicationWindow {
                     if (m && m[1] === "__profile__") { root.showMore = false; root.showProfile = true; return }
                     if (m && m[1] === "__week__") { root.showMore = false; root.showWeek = true; return }
                     if (m && m[1] === "__history__") { root.showMore = false; root.showHistory = true; return }
+                    if (m && m[1] === "__favorites__") { root.showMore = false; root.showFavorites = true; return }
+                    if (m && m[1] === "__notify__") { root.showMore = false; root.showNotifications = true; return }
                     if (m && m[1] === "__action__") {
                         root.showMore = false
                         backend.action("checkin", m[1], m[2])
@@ -466,6 +534,8 @@ ApplicationWindow {
         }
 
         WeekScreen {
+            anchors.fill: parent
+            anchors.margins: 32
             id: weekPane
             visible: root.showWeek
             titleColor: root.cText
@@ -481,6 +551,8 @@ ApplicationWindow {
         }
 
         CommentScreen {
+            anchors.fill: parent
+            anchors.margins: 32
             id: commentPane
             visible: root.showComments
             aid: root.commentAid
@@ -492,6 +564,8 @@ ApplicationWindow {
         }
 
         ProfileScreen {
+            anchors.fill: parent
+            anchors.margins: 32
             id: profilePane
             visible: root.showProfile
             titleColor: root.cText

@@ -4,6 +4,7 @@
 #include <QThread>
 
 #include "qt/JmWorker.h"
+#include "core/FavoriteStore.h"
 #include "core/HistoryStore.h"
 
 namespace jmnext::qt {
@@ -104,5 +105,34 @@ void JmBackend::clearHistory() {
 void JmBackend::rememberHistory(const QString& aid, const QString& title) {
     jmnext::core::HistoryStore::instance().remember(aid, title);
     emit historyChanged();
+}
+
+// ── 本地收藏 ────────────────────────────────────────────────────
+QVariantList JmBackend::favorites() const {
+    QVariantList out;
+    for (const auto& e : jmnext::core::FavoriteStore::instance().list()) {
+        QVariantMap m;
+        m.insert(QStringLiteral("aid"), e.aid);
+        m.insert(QStringLiteral("title"), e.title);
+        m.insert(QStringLiteral("folder"), e.folder);
+        m.insert(QStringLiteral("ts"), static_cast<qlonglong>(e.timestamp));
+        out.append(m);
+    }
+    return out;
+}
+
+void JmBackend::rememberFavorite(const QString& aid, const QString& title, const QString& folder) {
+    jmnext::core::FavoriteStore::instance().remember(aid, title, folder);
+    emit favoritesChanged();
+}
+
+void JmBackend::removeFavorite(const QString& aid) {
+    jmnext::core::FavoriteStore::instance().remove(aid);
+    emit favoritesChanged();
+}
+
+void JmBackend::clearFavorites() {
+    jmnext::core::FavoriteStore::instance().clear();
+    emit favoritesChanged();
 }
 }  // namespace jmnext::qt

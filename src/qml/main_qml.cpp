@@ -101,6 +101,12 @@ int main(int argc, char** argv) {
     engine.rootContext()->setContextProperty(
         QStringLiteral("glassForceOff"),
         qgetenv("JMNEXT_GLASS_FORCE_OFF") == QByteArrayLiteral("1"));
+    // --panel <名称>：启动即打开某个面板（无头截图验证用，避免靠坐标点击）
+    for (int i = 1; i + 1 < argc; ++i) {
+        if (std::string(argv[i]) == "--panel")
+            engine.rootContext()->setContextProperty(QStringLiteral("startupPanel"),
+                                                     QString::fromUtf8(argv[i + 1]));
+    }
     // 玻璃调试：JMNEXT_GLASS_DEBUG=1 时由 Glass.qml 打印材质判定结果
     engine.rootContext()->setContextProperty(
         QStringLiteral("glassDebug"),

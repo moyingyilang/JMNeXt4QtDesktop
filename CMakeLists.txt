@@ -182,6 +182,8 @@ set(JMNEXT_QML_FILES
     src/qml/MoreScreen.qml
     src/qml/ComicListScreen.qml
     src/qml/HistoryScreen.qml
+    src/qml/FavoritesScreen.qml
+    src/qml/NotificationsScreen.qml
     src/qml/LoginScreen.qml
     src/qml/WeekScreen.qml
     src/qml/CommentScreen.qml
@@ -201,3 +203,11 @@ qt_add_qml_module(jmnext4qml
     VERSION 1.0
     QML_FILES ${JMNEXT_QML_FILES}
 )
+
+# ── 单元测试（本地存储）────────────────────────────────────────────
+# 独立可执行，不安装；直接运行即可（失败返回非零）。
+if (TARGET Qt6::Core)
+    add_executable(jmnext4store-tests src/tests/store_tests.cpp)
+    target_include_directories(jmnext4store-tests PRIVATE src)
+    target_link_libraries(jmnext4store-tests PRIVATE Qt6::Core)
+endif()
