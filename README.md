@@ -297,3 +297,34 @@ scripts/package-linux.sh            # 产出 dist/JMNeXt4QtDesktop-<版本>-linu
 
 尚未产出。需要 Windows 原生 Qt 工具链（MSVC + Qt 6.11）或 MXE 交叉编译，
 不采用「JVM 打包」那条路。
+
+### Windows（交叉编译，可出包）
+
+```sh
+# 一次性准备（容器内）
+apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nsis p7zip-full
+# Qt 6.7.3 mingw_64（Windows 目标）+ 同版本 linux_gcc_arm64（宿主 moc/rcc/qmlcachegen）
+# 见 scripts/package-windows.sh 顶部的路径约定：/root/qt-win、/root/qt-host
+
+cmake -B /root/qt-build-win -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain-mingw64.cmake \
+  -DQT_HOST_PATH=/root/qt-host/6.7.3/gcc_arm64 \
+  -DCMAKE_PREFIX_PATH=/root/qt-win/6.7.3/mingw_64 \
+  -DCMAKE_BUILD_TYPE=Release
+ninja -C /root/qt-build-win
+
+scripts/package-windows.sh        # 便携 zip（自带 Qt 与 MinGW 运行库）
+scripts/package-windows-exe.sh    # NSIS 单文件安装包
+```
+
+为什么要 Qt 6.7.3：**Qt 6.8 起官方不再提供 MinGW 版 Windows 构建**（只剩 MSVC），
+而 MSVC 无法在 Linux/arm64 上交叉编译。6.7.3 是最后带 MinGW 包的版本。
+宿主工具必须与目标版本一致，因此另装 linux_gcc_arm64 的 6.7.3 作为 QT_HOST_PATH。
+
+实测（2026-11-08）：交叉编译产出 jmnext4qml.exe（3.2 MB）；
+便携 zip 36 MB / 解包 103 MB；NSIS 安装包 26 MB。
+依赖检查（objdump 传递依赖）除 Windows 系统 DLL 外无缺失。
+
+**未验证**：本机没有 Windows 也无法运行 wine（arm64 容器里跑 x86_64 PE 不可行），
+因此安装包与 exe **没有实际运行过**；只能确认编译、打包与依赖闭合。
+首次在真机上运行时若报缺 DLL，按错误补对应 Qt 插件即可。
