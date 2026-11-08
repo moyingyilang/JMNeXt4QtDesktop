@@ -49,12 +49,27 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 0
 
+        // 左侧导航 —— 对齐 Kotlin 桌面版的 Shell（此前 Qt 版没有侧栏）
+        NavSidebar {
+            id: navSidebar
+            Layout.fillHeight: true
+            Layout.preferredWidth: 220
+            current: root.navKey
+            surfaceColor: root.cBg
+            textColor: root.cText
+            accentColor: root.cAccent
+            selectedColor: Qt.rgba(root.cAccent.r, root.cAccent.g, root.cAccent.b, 0.16)
+            onNavigate: (key) => root.navigateTo(key)
+        }
+
         // 左栏：作品列表
         ColumnLayout {
             id: leftColumn
-            Layout.preferredWidth: 380
-            Layout.minimumWidth: 380
-            Layout.maximumWidth: 380
+            // 首页时左栏铺满（对齐 Kotlin 桌面版的整宽内容区）；
+            // 打开作品后收窄成列表栏，右侧给详情与阅读器。
+            Layout.preferredWidth: root.albumAid === "" ? -1 : 380
+            Layout.minimumWidth: root.albumAid === "" ? 0 : 380
+            Layout.maximumWidth: root.albumAid === "" ? 16777215 : 380
             Layout.fillHeight: true
             spacing: 8
 
@@ -104,8 +119,8 @@ ApplicationWindow {
 
         // 右栏：阅读器（有页面后覆盖详情视图）
         ReaderScreen {
-            id: readerPane
             visible: root.reading
+            id: readerPane
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
@@ -125,7 +140,7 @@ ApplicationWindow {
         // 右栏：详情视图（封面图待扩展图片提供器后补上；本轮先文字 + 章节列表）
         DetailScreen {
             id: rightPane
-            visible: !root.reading
+            visible: root.albumAid !== "" && !root.reading
             opacity: visible ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Layout.fillWidth: true
@@ -134,7 +149,11 @@ ApplicationWindow {
             pageStatus: root.pageStatus
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
-            onChapterClicked: (cid) => backend.openChapterId(cid, 0)
+            onChapterClicked: (cid) => {
+                // 空 cid 表示「无章节列表，直接读」：走按 aid 打开首页的通路
+                if (cid.length === 0) backend.openChapter(root.albumAid, 0)
+                else backend.openChapterId(cid, 0)
+            }
                 onFavoriteToggled: (aid) => {
                     backend.action("favorite", "favorite", "aid=" + aid)
                     // 本地也记一份：断网或未登录时收藏页仍有内容（对应主项目 FavoriteStore）
@@ -200,6 +219,7 @@ ApplicationWindow {
     property bool reading: false
     /// 是否显示"关于"屏（第 37 轮新增）
     property bool showAbout: false
+    property string navKey: "home"
     property bool showSettings: false
     property bool showHistory: false
     property bool showFavorites: false
@@ -233,6 +253,21 @@ ApplicationWindow {
     // 章节缓存：给阅读器的章节选择器用（chaptersReady 时写入）
     property var chapterNames: []
     property var chapterIds: []
+
+    /// 侧栏导航：把 key 映射到已有面板/列表页。
+    function navigateTo(key) {
+        root.navKey = key
+        root.showAbout = (key === "about")
+        root.showSettings = (key === "appearance" || key === "block")
+        root.showCategory = (key === "category")
+        root.showWeek = (key === "week")
+        root.showFavorites = (key === "favorites")
+        root.showHistory = (key === "history")
+        root.showNotifications = (key === "notifications")
+        root.showProfile = (key === "profile")
+        root.showList = false
+        if (key === "home") { root.albumAid = "" }
+    }
 
     /// 把当前 themeInit 的 token 复制到根属性（启动与运行时切换都走这里）。
     function applyThemeTokens() {

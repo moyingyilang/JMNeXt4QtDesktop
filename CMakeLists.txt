@@ -176,6 +176,8 @@ set(JMNEXT_QML_FILES
     src/qml/UiSectionTitle.qml
     src/qml/UiRow.qml
     src/qml/UiInfoRow.qml
+    src/qml/NavSidebar.qml
+    src/qml/UiPillButton.qml
     src/qml/ui/Tokens.js
     src/qml/StateBox.qml
     src/qml/LoadMoreFooter.qml

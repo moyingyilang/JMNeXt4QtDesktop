@@ -129,10 +129,24 @@ Rectangle {
             }
         }
 
-        Text {
+        UiSectionTitle {
             text: "章节（" + chapterModel.count + "）"
-            color: detail.tagColor; font.pixelSize: 12
+            titleColor: detail.tagColor
+            Layout.fillWidth: true
             Layout.topMargin: 8
+        }
+
+        // 少数作品（单话/图集）章节接口返回 0 条；此前只显示「章节（0）」，
+        // 看起来像加载失败。这里说清楚原因，并给一个直接阅读入口。
+        // 少数作品（单话/图集）章节接口返回 0 条。实测这类作品没有可用的章节 id，
+        // 直接按 aid 打开会「解密失败」，所以这里只说明情况，不给假入口。
+        Text {
+            Layout.fillWidth: true
+            visible: chapterModel.count === 0
+            text: "这个作品没有章节列表（可能是单话或图集），暂不支持直接阅读。"
+            color: detail.tagColor
+            font.pixelSize: 12
+            wrapMode: Text.WordWrap
         }
         ListView {
             id: chapterView
