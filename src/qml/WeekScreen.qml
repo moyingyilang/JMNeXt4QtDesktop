@@ -56,7 +56,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: 10
+        spacing: 12
 
         // 一级：刊期
         ListView {
@@ -71,7 +71,7 @@ ColumnLayout {
                 color: issueMouse.containsMouse ? week.surfaceColor : "transparent"
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left; anchors.leftMargin: 6
+                    anchors.left: parent.left; anchors.leftMargin: 8
                     text: name
                     color: week.titleColor; font.pixelSize: 13; elide: Text.ElideRight
                     width: parent.width - 12

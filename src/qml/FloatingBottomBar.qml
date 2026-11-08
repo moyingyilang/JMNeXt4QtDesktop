@@ -5,7 +5,7 @@ import QtQuick
 Glass {
     id: bottomBar
     property color textColor: "#e6e6e6"
-    property int spacing: 10
+    property int spacing: 12
     implicitHeight: 52
     radiusMd: 16
     default property alias items: row.data

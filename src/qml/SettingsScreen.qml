@@ -34,7 +34,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 14
-        spacing: 10
+        spacing: 12
 
         Text {
             text: "设置"
@@ -44,7 +44,7 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: 12
             CheckBox {
                 text: "双页模式"
                 checked: settings.twoPage
@@ -68,7 +68,7 @@ Rectangle {
         }
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: 8
             TextField {
                 id: blockField
                 Layout.fillWidth: true

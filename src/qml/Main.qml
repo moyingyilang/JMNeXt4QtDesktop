@@ -56,7 +56,7 @@ ApplicationWindow {
             Layout.minimumWidth: 380
             Layout.maximumWidth: 380
             Layout.fillHeight: true
-            spacing: 6
+            spacing: 8
 
             SearchScreen {
                 id: searchScreen
@@ -139,15 +139,15 @@ ApplicationWindow {
     FloatingBottomBar {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.rightMargin: 16
-        anchors.bottomMargin: 16
+        anchors.rightMargin: 24
+        anchors.bottomMargin: 24
         visible: listModel.count > 0
         tint: root.cSurface2
         strokeColor: root.cStroke
         Button {
             text: "随机"
             background: null
-            padding: 14
+            padding: 16
             contentItem: Text {
                 text: parent.text
                 color: root.cText

@@ -70,7 +70,7 @@ ColumnLayout {
             color: "transparent"
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left; anchors.leftMargin: 6
+                anchors.left: parent.left; anchors.leftMargin: 8
                 text: name
                 color: profile.titleColor; font.pixelSize: 13; elide: Text.ElideRight
                 width: parent.width - 12

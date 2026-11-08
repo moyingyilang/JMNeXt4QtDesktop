@@ -125,7 +125,7 @@ Rectangle {
         Text {
             text: "章节（" + chapterModel.count + "）"
             color: detail.tagColor; font.pixelSize: 12
-            Layout.topMargin: 6
+            Layout.topMargin: 8
         }
         ListView {
             id: chapterView
@@ -139,7 +139,7 @@ Rectangle {
                 color: chapterMouse.containsMouse ? detail.hoverColor : "transparent"
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left; anchors.leftMargin: 6
+                    anchors.left: parent.left; anchors.leftMargin: 8
                     text: (index + 1) + ". " + name
                     color: detail.titleColor; font.pixelSize: 13
                 }

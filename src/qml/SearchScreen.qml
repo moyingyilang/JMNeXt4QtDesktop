@@ -35,7 +35,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.topMargin: 8
-        spacing: 6
+        spacing: 8
 
         Button {
             text: "关于"
@@ -60,7 +60,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 8; Layout.rightMargin: 8
-        spacing: 6
+        spacing: 8
 
         TextField {
             id: searchField
@@ -78,6 +78,6 @@ ColumnLayout {
     Text {
         text: "作品列表（" + search.listModel.count + " 条）"
         color: search.secondaryColor; font.pixelSize: 12
-        Layout.leftMargin: 10; Layout.topMargin: 8
+        Layout.leftMargin: 12; Layout.topMargin: 8
     }
 }

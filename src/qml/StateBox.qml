@@ -64,7 +64,7 @@ Item {
         id: descText
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: titleText.bottom
-        anchors.topMargin: 6
+        anchors.topMargin: 8
         width: parent.width - 16
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
@@ -77,7 +77,7 @@ Item {
     Button {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: descText.visible ? descText.bottom : titleText.bottom
-        anchors.topMargin: 10
+        anchors.topMargin: 12
         visible: box.canRetry
         text: "重试"
         onClicked: box.retry()

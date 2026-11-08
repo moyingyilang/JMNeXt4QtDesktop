@@ -65,7 +65,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 8
-        spacing: 6
+        spacing: 8
 
         RowLayout {
             Layout.fillWidth: true

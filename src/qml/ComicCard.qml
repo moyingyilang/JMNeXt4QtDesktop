@@ -60,7 +60,7 @@ Rectangle {
 
     Text {
         anchors.left: cover.right
-        anchors.leftMargin: 10
+        anchors.leftMargin: 12
         anchors.right: parent.right
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter

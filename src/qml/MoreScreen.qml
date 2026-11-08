@@ -74,7 +74,7 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 14
-        spacing: 6
+        spacing: 8
 
         Text {
             text: "更多"

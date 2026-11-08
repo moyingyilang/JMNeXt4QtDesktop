@@ -13,7 +13,7 @@ Glass {
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 8; anchors.rightMargin: 8
-        spacing: 6
+        spacing: 8
         Button {
             text: "返回"
             visible: topBar.canBack
@@ -24,7 +24,7 @@ Glass {
             color: topBar.titleColor; font.pixelSize: 16; font.bold: true
             Layout.fillWidth: true; elide: Text.ElideRight
         }
-        Row { id: actionsSlot; spacing: 6 }
+        Row { id: actionsSlot; spacing: 8 }
         default property alias actions: actionsSlot.data
     }
 }
