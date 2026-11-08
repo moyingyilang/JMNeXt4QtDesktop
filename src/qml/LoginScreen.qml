@@ -1,87 +1,102 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "ui/Tokens.js" as Tokens
 
 /*
- * 登录 / 注册（对应 Kotlin 版 ui/screens/auth/AuthScreen.kt 的登录部分）。
+ * 登录 / 注册（对应 Kotlin 版 auth/AuthScreen.kt 的登录部分）。
  *
- * 依据 shared/data/JmRepository.kt：
- *   login(username, password) -> POST "login"（表单），成功取 jwtToken 作为凭证，
- *   之后所有请求自动带 Authorization: Bearer <jwt>。
- *
- * 现状（如实）：登录成功后凭证只在**进程内**生效，未落盘、未加密
- * （Kotlin 侧用 Android Keystore 加密存 SharedPreferences，桌面端待做）。
- * 注册接口本轮未接（Kotlin 侧注册不返回 token，需再登录一次）。
+ * 数据：backend.login(user, pass) -> loginResult(ok, message)
+ * 现状：凭证只在进程内生效（未落盘、未加密）；注册接口未接。
  */
 Rectangle {
     id: login
 
-    property color surfaceColor: "#26282c"
-    property color strokeColor: "#3a3d43"
-    property color titleColor: "#e6e6e6"
-    property color bodyColor: "#b9bcc2"
-    property color accentColor: "#5b8def"
+    property color surfaceColor: "#fef7ff"
+    property color strokeColor: "#cac4d0"
+    property color titleColor: "#1d1b20"
+    property color bodyColor: "#49454f"
+    property color accentColor: "#6750a4"
     property string message: ""
 
     signal closeRequested()
     signal submit(string username, string password)
     signal logoutRequested()
 
-    // 模态面板要不透明：surfaceColor 带 alpha，直接当底色会让背后列表透上来
-    color: Qt.rgba(login.surfaceColor.r, login.surfaceColor.g, login.surfaceColor.b, 1.0)
-    border.color: login.strokeColor
-    border.width: 1
+    color: Qt.rgba(surfaceColor.r, surfaceColor.g, surfaceColor.b, 1.0)
+    radius: 12
+
+    Connections {
+        target: backend
+        function onLoginResult(ok, msg) {
+            login.message = (ok ? "登录成功：" : "登录失败：") + msg
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 8
+        anchors.margins: 24
+        spacing: 16
 
-        Text {
-            text: "登录"
-            color: login.titleColor; font.pixelSize: 18; font.bold: true
-            Layout.fillWidth: true
+        PageHeader {
+            title: "登录"
+            countText: "JMNeXt 账号"
+            description: "凭证只在本进程内有效；注册接口未接（Kotlin 侧注册后也要再登录一次）。"
+            titleColor: login.titleColor
+            bodyColor: login.bodyColor
+            accentColor: login.accentColor
+            actions: [ { key: "close", label: "关闭", primary: false } ]
+            onActionClicked: (key) => { if (key === "close") login.closeRequested() }
         }
-        TextField {
-            id: userField
-            Layout.fillWidth: true
-            placeholderText: "用户名"
-        }
-        TextField {
-            id: passField
-            Layout.fillWidth: true
-            placeholderText: "密码"
-            echoMode: TextInput.Password
-            onAccepted: login.submit(userField.text, passField.text)
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-            Button {
-                text: "登录"
-                onClicked: login.submit(userField.text, passField.text)
+
+        // 表单限制宽度：Kotlin 桌面版也是居中窄表单，不是整宽输入框
+        ColumnLayout {
+            Layout.preferredWidth: 420
+            Layout.maximumWidth: 420   // 不设上限会被外层 ColumnLayout 拉满整宽
+            Layout.alignment: Qt.AlignLeft
+            spacing: 12
+
+            UiSectionTitle { text: "账号"; titleColor: login.titleColor }
+
+            TextField {
+                id: userField
+                Layout.fillWidth: true
+                placeholderText: "用户名"
             }
-            Button {
-                text: "退出登录"
-                onClicked: login.logoutRequested()
+
+            TextField {
+                id: passField
+                Layout.fillWidth: true
+                placeholderText: "密码"
+                echoMode: TextInput.Password
             }
-        }
-        Text {
-            text: login.message
-            color: login.accentColor; font.pixelSize: 12; wrapMode: Text.WordWrap
-            Layout.fillWidth: true
-        }
-        Text {
-            text: "说明：凭证当前仅保存在进程内（未落盘/未加密）；收藏、历史、通知等接口需要登录后才可用。"
-            color: login.bodyColor; font.pixelSize: 11; wrapMode: Text.WordWrap
-            Layout.fillWidth: true
-        }
 
-        Item { Layout.fillHeight: true }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 12
 
-        Button {
-            text: "关闭"
-            onClicked: login.closeRequested()
+                UiPillButton {
+                    text: "登录"
+                    primary: true
+                    accentColor: login.accentColor
+                    onClicked: login.submit(userField.text, passField.text)
+                }
+
+                UiPillButton {
+                    text: "退出登录"
+                    primary: false
+                    accentColor: login.accentColor
+                    onClicked: login.logoutRequested()
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                text: login.message
+                color: login.message.indexOf("失败") >= 0 ? "#b3261e" : login.bodyColor
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
         }
     }
 }
