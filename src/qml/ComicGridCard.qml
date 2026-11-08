@@ -35,7 +35,10 @@ Item {
 
         Image {
             anchors.fill: parent
-            source: card.coverUrl
+            // 没有显式封面地址时直接用图片提供器的专辑封面（按 aid 拼 URL，命中磁盘缓存）
+            source: card.coverUrl.length > 0
+                    ? card.coverUrl
+                    : (card.aid.length > 0 ? "image://jm/albumcover?" + card.aid : "")
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             visible: status === Image.Ready
