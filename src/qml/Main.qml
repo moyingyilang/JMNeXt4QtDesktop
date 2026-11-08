@@ -76,6 +76,7 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 listModel: listModel
                 pageStatus: root.pageStatus
+                reading: root.reading
                 hoverColor: root.cSurface2
                 textColor: root.cText
                 secondaryColor: root.cTextSecondary

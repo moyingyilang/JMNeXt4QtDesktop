@@ -23,6 +23,8 @@ ColumnLayout {
     property string pageStatus: ""
     property bool loading: false
     property bool exhausted: false
+    /** 阅读中：左栏不应再显示“列表为空/失败”的状态与页脚（阅读时列表已被清空）。 */
+    property bool reading: false
 
     // 主题色由调用方注入（token 是 Main.qml 的运行时属性，写死会让四套风格切换失效）
     // 列表分页状态：全部由本组件维护（原在 Main.qml，第 31–33 轮下沉）
@@ -78,7 +80,7 @@ ColumnLayout {
     // 空/失败状态：列表为空时给出明确说明与重试入口（对应 Kotlin 的 ErrorBox / MessageState）
     StateBox {
         anchors.fill: listView
-        visible: home.listModel.count === 0
+        visible: home.listModel.count === 0 && !home.reading
         kind: home.pageStatus.indexOf("失败") >= 0 ? "error" : "message"
         title: home.pageStatus.length > 0 ? home.pageStatus : "还没有内容"
         description: "点“重试”重新载入列表"
@@ -90,7 +92,7 @@ ColumnLayout {
 
     LoadMoreFooter {
         // 列表为空时不显示页脚：此时 StateBox 已占满列表区，再显示"加载更多"既无意义也会打架
-        visible: home.listModel.count > 0
+        visible: home.listModel.count > 0 && !home.reading
         Layout.fillWidth: true
         loading: home.loading
         exhausted: home.exhausted
