@@ -32,6 +32,8 @@ Rectangle {
     property bool pending: false
     // 最近一次 textReady 的 ok
     property bool fetchOk: false
+    /** 原始响应是否展开（默认折叠：错误态下先把结论说清楚，原文按需看） */
+    property bool rawOpen: false
     // 服务端回传的原始文本；失败时也留着原样显示，便于排查
     property string rawText: ""
 
@@ -84,21 +86,39 @@ Rectangle {
             }
         }
 
+        // 结论区：失败用统一的 UiEmptyState（标题 + 说明 + 重试），成功时只留一行说明
+        UiEmptyState {
+            visible: !notifyPane.pending && !notifyPane.fetchOk
+            Layout.fillWidth: true
+            title: "没取到通知"
+            description: "这个接口需要登录；也可能是服务端解密失败。原文可在下方展开核对。"
+            actionText: "重试"
+            titleColor: notifyPane.titleColor
+            bodyColor: notifyPane.bodyColor
+            accentColor: notifyPane.accentColor
+            onAction: notifyPane.reload()
+        }
+
         Text {
-            text: notifyPane.pending
-                  ? "正在请求通知…"
-                  : (notifyPane.fetchOk
-                     ? (notifyPane.rawText.length === 0
-                        ? "没有通知。"
-                        : "以下为原始响应，临时展示，后续再解析。")
-                     : "没取到通知（可能需要登录）")
-            color: notifyPane.fetchOk ? notifyPane.bodyColor : notifyPane.accentColor
+            visible: notifyPane.pending || (notifyPane.fetchOk && notifyPane.rawText.length === 0)
+            text: notifyPane.pending ? "正在请求通知…" : "没有通知。"
+            color: notifyPane.bodyColor
             font.pixelSize: 12
-            wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
 
+        UiRow {
+            Layout.fillWidth: true
+            visible: notifyPane.rawText.length > 0
+            title: "原始响应"
+            subtitle: notifyPane.rawOpen ? "点击折叠" : "点击展开（临时展示，后续解析成列表）"
+            titleColor: notifyPane.titleColor
+            subtitleColor: notifyPane.bodyColor
+            onClicked: notifyPane.rawOpen = !notifyPane.rawOpen
+        }
+
         Rectangle {
+            visible: notifyPane.rawOpen
             // 可滚动文本区：只读 TextArea 放进 ScrollView，长 JSON 也能翻
             Layout.fillWidth: true
             Layout.fillHeight: true
