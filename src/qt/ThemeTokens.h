@@ -278,4 +278,65 @@ inline Radius windowGlassRadius() { return Radius{2,4,6,8,12}; }
 inline Radius flatBlurRadius() { return Radius{8,12,16,20,28}; }
 inline Radius miuixRadius() { return Radius{4,8,12,16,24}; }
 
+// Material 3 baseline（主项目 Material 风格直接用 Material You 3 的颜色角色，
+// 本表此前没有它，导致外观页只能给四套；这里按 M3 baseline 补一套）。
+inline Palette material(bool dark) {
+    static const Palette lightPal = [] {
+        Palette p{};
+        p.accent = "#FF6750A4";
+        p.accentHover = "#FF7C67B4";
+        p.accentActive = "#FF5A458F";
+        p.accentFg = "#FFFFFFFF";
+        p.accentSoft = "#1F6750A4";
+        p.accentGlow = "#4D6750A4";
+        p.surfaceMica = "#FFFEF7FF";
+        p.surface1 = "#FFFFFFFF";
+        p.surface2 = "#FFF7F2FA";
+        p.surface3 = "#FFF2ECF4";
+        p.surfaceSunken = "#0F000000";
+        p.surfaceHover = "#0A6750A4";
+        p.surfaceActive = "#146750A4";
+        p.stroke = "#FFCAC4D0";
+        p.strokeStrong = "#FF79747E";
+        p.strokeInner = "#1F000000";
+        p.text = "#FF1D1B20";
+        p.textSecondary = "#FF49454F";
+        p.textTertiary = "#FF79747E";
+        p.textOnAccent = "#FFFFFFFF";
+        p.error = "#FFB3261E";
+        p.errorFg = "#FFFFFFFF";
+        p.tintWarm = "#00000000";
+        return p;
+    }();
+    static const Palette darkPal = [] {
+        Palette p{};
+        p.accent = "#FFD0BCFF";
+        p.accentHover = "#FFE0D2FF";
+        p.accentActive = "#FFB69DF8";
+        p.accentFg = "#FF381E72";
+        p.accentSoft = "#33D0BCFF";
+        p.accentGlow = "#4DD0BCFF";
+        p.surfaceMica = "#FF141218";
+        p.surface1 = "#FF1D1B20";
+        p.surface2 = "#FF211F26";
+        p.surface3 = "#FF2B2930";
+        p.surfaceSunken = "#1FFFFFFF";
+        p.surfaceHover = "#14D0BCFF";
+        p.surfaceActive = "#1FD0BCFF";
+        p.stroke = "#FF49454F";
+        p.strokeStrong = "#FF938F99";
+        p.strokeInner = "#1FFFFFFF";
+        p.text = "#FFE6E1E5";
+        p.textSecondary = "#FFCAC4D0";
+        p.textTertiary = "#FF938F99";
+        p.textOnAccent = "#FF381E72";
+        p.error = "#FFF2B8B5";
+        p.errorFg = "#FF601410";
+        p.tintWarm = "#00000000";
+        return p;
+    }();
+    return dark ? darkPal : lightPal;
+}
+
+inline Radius materialRadius() { return Radius{4, 8, 12, 16, 28}; }
 }  // namespace jmnext::qt::tokens

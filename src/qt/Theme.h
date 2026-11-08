@@ -87,13 +87,14 @@ QLabel#albumInfo { color: #2a2d33; font-size: 13px; padding: 2px 0; }
 // 行高、壁纸压暗/背光 —— QSS 没有这些能力，需 QML 或自绘合成。
 // Material 未接入：主项目里它直接用 Material You 3 的颜色角色，本表没有它的配色。
 // ---------------------------------------------------------------------------
-enum class Style { WindowGlass, Translucent, FlatBlur, Miuix };
+    enum class Style { WindowGlass, Translucent, FlatBlur, Miuix, Material };
 
 inline const char* styleName(Style s) {
     switch (s) {
         case Style::Translucent: return "translucent";
         case Style::FlatBlur:    return "flatBlur";
         case Style::Miuix:       return "miuix";
+        case Style::Material:    return "material";
         case Style::WindowGlass: break;
     }
     return "windowGlass";
@@ -105,6 +106,7 @@ inline Style styleFromName(const QString& name) {
     if (n == QStringLiteral("translucent")) return Style::Translucent;
     if (n == QStringLiteral("flatblur"))    return Style::FlatBlur;
     if (n == QStringLiteral("miuix"))       return Style::Miuix;
+    if (n == QStringLiteral("material"))    return Style::Material;
     return Style::WindowGlass;
 }
 

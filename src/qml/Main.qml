@@ -30,6 +30,7 @@ ApplicationWindow {
         baseColor: root.cBg
         glowColor: root.cAccent
         wallpaper: root.wallpaperSource
+        wallpaperDim: root.wallpaperDimLevel
         Component.onCompleted: root.appBackdrop = ambientBg
     }
 
@@ -39,7 +40,7 @@ ApplicationWindow {
         id: windowGlass
         anchors.fill: parent
         tint: root.cSurface2
-        tintAlpha: 0.72
+        tintAlpha: root.glassAlpha
         strokeColor: "transparent"
         radiusMd: 0
     }
@@ -260,6 +261,10 @@ ApplicationWindow {
     property string navKey: "home"
     property bool loggedIn: false
     property bool showSettings: false
+    property bool showAppearance: false
+    property real glassAlpha: 0.72
+    property real wallpaperDimLevel: 0.0
+    property real blurDpValue: 5
     property bool showHistory: false
     property bool showFavorites: false
     property bool showNotifications: false
@@ -297,7 +302,8 @@ ApplicationWindow {
     function navigateTo(key) {
         root.navKey = key
         root.showAbout = (key === "about")
-        root.showSettings = (key === "appearance" || key === "block")
+        root.showSettings = (key === "block")
+        root.showAppearance = (key === "appearance")
         root.showCategory = (key === "category")
         root.showWeek = (key === "week")
         root.showFavorites = (key === "favorites")
@@ -379,6 +385,7 @@ ApplicationWindow {
             else if (startupPanel === "notifications") root.showNotifications = true
             else if (startupPanel === "history") root.showHistory = true
             else if (startupPanel === "settings") root.showSettings = true
+            else if (startupPanel === "appearance") root.showAppearance = true
             else if (startupPanel === "about") root.showAbout = true
             else if (startupPanel === "week") root.showWeek = true
             else if (startupPanel === "category") root.showCategory = true
@@ -415,6 +422,31 @@ ApplicationWindow {
             bodyColor: root.cTextSecondary
             accentColor: root.cAccent
             onCloseRequested: root.showAbout = false
+        }
+
+        AppearanceScreen {
+            id: appearancePane
+            visible: root.showAppearance
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            anchors.fill: parent
+            anchors.margins: 32
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            styleName: (typeof themeController !== "undefined" && themeController) ? themeController.style : "windowGlass"
+            dark: (typeof themeController !== "undefined" && themeController) ? themeController.dark : false
+            onStyleSelected: (key) => {
+                themeController.apply(key, themeController.dark)
+                themeController.savePreference()
+            }
+            onBlurEdited: (dp) => root.blurDpValue = dp
+            onPanelAlphaEdited: (v) => root.glassAlpha = v
+            onDimEdited: (v) => root.wallpaperDimLevel = v
+            onSwatchSelected: (key) => console.log("QML 外观：选择壁纸色板 " + key + "（渐变壁纸暂未接入）")
+            onCloseRequested: root.showAppearance = false
         }
 
         SettingsScreen {

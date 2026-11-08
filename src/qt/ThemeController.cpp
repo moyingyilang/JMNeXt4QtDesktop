@@ -13,9 +13,11 @@ QVariantMap themeTokens(const QString& styleIn, bool dark) {
     const auto pal = (styleKey == QLatin1String("translucent")) ? tokens::translucent(dark)
                    : (styleKey == QLatin1String("flatBlur"))    ? tokens::flatBlur(dark)
                    : (styleKey == QLatin1String("miuix"))       ? tokens::miuix(dark)
+                   : (styleKey == QLatin1String("material"))    ? tokens::material(dark)
                                                                 : tokens::windowGlass(dark);
     const auto rad = (styleKey == QLatin1String("flatBlur")) ? tokens::flatBlurRadius()
                    : (styleKey == QLatin1String("miuix"))    ? tokens::miuixRadius()
+                   : (styleKey == QLatin1String("material")) ? tokens::materialRadius()
                                                              : tokens::windowGlassRadius();
     QVariantMap m;
     const auto put = [&m](const char* k, const char* v) {
