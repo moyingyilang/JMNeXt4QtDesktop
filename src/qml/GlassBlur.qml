@@ -33,6 +33,8 @@ Item {
 
     clip: true
 
+    Component.onCompleted: console.log("GlassBlur 已加载：真背景模糊生效（blurMax=" + root.blurRadiusPx + "px）")
+
     // 抓取 backdrop 与本控件重叠的区域。映射到 backdrop 坐标系后再取矩形，
     // 这样滚动时模糊内容跟着动，而不是抓一张静止快照。
     ShaderEffectSource {

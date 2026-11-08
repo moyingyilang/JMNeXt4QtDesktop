@@ -3,6 +3,7 @@
 // 清洗规则来源：主项目 shared/.../crypto/JmCrypto.kt 的 sanitizeBase64：
 // **只保留** A-Z a-z 0-9 + / =，其余（换行、空格、引号等）一律丢弃再解码。
 #pragma once
+#include <cstdint>
 #include <string>
 #include <vector>
 

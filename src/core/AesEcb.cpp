@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "core/AesEcb.h"
 
 #include <vector>

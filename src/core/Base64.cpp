@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "core/Base64.h"
 
 #include <vector>

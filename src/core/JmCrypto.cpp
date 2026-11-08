@@ -1,3 +1,4 @@
+#include <cstdint>
 #include "core/JmCrypto.h"
 
 #include "core/AesEcb.h"
