@@ -70,6 +70,10 @@ int main(int argc, char** argv) {
 #else
     engine.rootContext()->setContextProperty(QStringLiteral("hasMultiEffect"), false);
 #endif
+    // 玻璃调试：JMNEXT_GLASS_DEBUG=1 时由 Glass.qml 打印材质判定结果
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("glassDebug"),
+        qgetenv("JMNEXT_GLASS_DEBUG") == QByteArrayLiteral("1"));
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
     // 实测真实 URL 是 qrc:/JMNeXt/src/qml/Main.qml（见 build/.rcc/*_raw_qml_0.qrc）
     // 主题 token 传入 QML（必须在 engine.load 之前，见下面的顺序说明）。

@@ -163,9 +163,6 @@ endif()
 # QML 文件列表先放进变量：GlassBlur.qml 只在 Qt 6.5+ 参与编译。
 # 不能用生成器表达式（Qt 6.4 的 Qt6QmlMacros 不接受 genex，会报
 # "Error evaluating generator expression"）。
-# AppBackdrop 是单例（pragma Singleton）。这一行必须在 qt_add_qml_module 之前执行，
-# 否则生成的 qmldir 会把它登记成普通类型，QML 侧取 .item 得到 undefined。
-set_source_files_properties(src/qml/AppBackdrop.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 set(JMNEXT_QML_FILES
     src/qml/Main.qml
@@ -186,7 +183,6 @@ set(JMNEXT_QML_FILES
     src/qml/CommentScreen.qml
     src/qml/ProfileScreen.qml
     src/qml/Glass.qml
-    src/qml/AppBackdrop.qml
     src/qml/GlassTopBar.qml
     src/qml/FloatingBottomBar.qml
     src/qml/ItemMotion.qml

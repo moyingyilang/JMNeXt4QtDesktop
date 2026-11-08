@@ -10,6 +10,11 @@ ApplicationWindow {
     width: 1180; height: 780
     visible: true
     title: "JMNeXt4QtDesktop (QML) " + appVersion
+
+    /** 全局背景引用：供 Glass 做真背景模糊（Qt 6.5+）。 */
+    property Item appBackdrop: null
+    /** 玻璃调试输出计数（JMNEXT_GLASS_DEBUG=1 时最多打印 4 条）。 */
+    property int glassDebugCount: 0
     color: root.cBg
 
     // 列表数据：标题、aid、封面 URL（URL 由后端在取封面时给出，见 coverUrlReady）
@@ -21,7 +26,7 @@ ApplicationWindow {
         anchors.fill: parent
         baseColor: root.cBg
         glowColor: root.cAccent
-        Component.onCompleted: AppBackdrop.item = ambientBg
+        Component.onCompleted: root.appBackdrop = ambientBg
     }
 
     RowLayout {
