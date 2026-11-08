@@ -11,3 +11,6 @@ dist/
 /.verify.sh
 /.health.sh
 /.shots*.sh
+.pack-stage/
+build-release/
+dist/
