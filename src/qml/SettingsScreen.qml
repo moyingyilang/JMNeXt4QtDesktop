@@ -70,6 +70,12 @@ Rectangle {
             onClicked: backend.reportCacheStats()
         }
         // 用可展开选项行而不是横排按钮（主项目 2.2.2 已统一成这个交互）。
+        UiSectionTitle {
+            text: "外观"
+            titleColor: settings.titleColor
+            Layout.fillWidth: true
+        }
+
         ExpandableOptionRow {
             Layout.fillWidth: true
             title: "界面风格"
@@ -113,6 +119,14 @@ Rectangle {
             }
         }
 
+        UiDivider { lineColor: settings.strokeColor }
+
+        UiSectionTitle {
+            text: "通用"
+            titleColor: settings.titleColor
+            Layout.fillWidth: true
+        }
+
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
@@ -132,6 +146,13 @@ Rectangle {
             }
         }
 
+        UiDivider { lineColor: settings.strokeColor }
+
+        UiSectionTitle {
+            text: "屏蔽"
+            titleColor: settings.titleColor
+            Layout.fillWidth: true
+        }
         Text {
             text: "屏蔽词（空格分隔；命中作品名/作者即隐藏）"
             color: settings.bodyColor; font.pixelSize: 12

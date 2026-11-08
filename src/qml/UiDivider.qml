@@ -8,6 +8,4 @@ Rectangle {
     color: lineColor
     opacity: 0.6
     implicitHeight: 1
-    topPadding: 0
-    bottomPadding: 0
 }
