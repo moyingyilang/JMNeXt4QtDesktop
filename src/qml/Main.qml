@@ -375,7 +375,11 @@ ApplicationWindow {
         }
 
         function onStatus(text) { root.pageStatus = text }
-        function onFailed(text) { root.pageStatus = "失败：" + text }
+        function onFailed(text) {
+            root.pageStatus = "失败：" + text
+            // 失败原因必须留在日志里：界面只在底部显示一行，关掉面板就看不到
+            console.log("QML 失败：" + text)
+        }
         function onPageReady(image, statusText) { root.pageStatus = statusText }
 
         // 双页右页：与 pageUrl 同一套（读 backend 属性，不在绑定里直接读 context property）

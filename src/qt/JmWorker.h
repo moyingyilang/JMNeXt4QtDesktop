@@ -95,6 +95,7 @@ signals:
     /// 与 coverReady 配套：先告知该下标的封面 URL（QML 侧图片提供器据此命中同一份磁盘缓存）
     void coverUrlReady(int index, const QString& url);
 
+
     /// 热门标签就绪（纯字符串数组）
     void hotTagsReady(const QStringList& tags);
 
@@ -132,6 +133,14 @@ private:
     std::vector<std::string> blockWords_;   // 屏蔽关键词（本地规则）
     QString currentAid_;
     int pageIndex_ = -1;
+private slots:
+    /// 封面分片加载：每次事件循环只取一张，避免长时间占住 worker 线程
+    /// （否则热门标签等请求会排在 20 张封面后面，界面看起来像"没反应"）。
+    void loadNextCover();
+
+private:
+    int coverCursor_ = 0;
+    int coverLimit_ = 0;
 };
 
 }  // namespace jmnext::qt

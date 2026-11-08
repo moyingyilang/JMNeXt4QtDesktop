@@ -123,7 +123,7 @@ ColumnLayout {
 
     // 空/失败状态：列表为空时给出明确说明与重试入口（对应 Kotlin 的 ErrorBox / MessageState）
     StateBox {
-        anchors.fill: listView
+        anchors.fill: gridView
         visible: home.listModel.count === 0 && !home.reading
         kind: home.pageStatus.indexOf("失败") >= 0 ? "error" : "message"
         title: home.pageStatus.length > 0 ? home.pageStatus : "还没有内容"

@@ -117,6 +117,10 @@ Rectangle {
 
     Connections {
         target: backend
+        function onFailed(text) {
+            // 分类页自己接失败：否则用户只看到「0 个热门标签」，不知道是解密失败
+            if (text.indexOf("热门标签") >= 0) category.pageStatus = "失败：" + text
+        }
         function onHotTagsReady(tags) {
             tagModel.clear()
             for (var i = 0; i < tags.length; ++i)
@@ -132,4 +136,5 @@ Rectangle {
     }
 
     onVisibleChanged: if (visible) backend.loadHotTags()
+
 }
