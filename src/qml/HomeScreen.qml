@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "ui/Tokens.js" as Tokens
 
 /*
  * 首页（从 Main.qml 抽出的第一屏，对应 Kotlin 版 ui/screens/home/HomeScreen.kt）。
@@ -41,38 +42,41 @@ ColumnLayout {
     /// 随机作品的入口（对应 Kotlin 版 home/RandomFab.kt）
     signal randomClicked()
 
-    ListView {
-        id: listView
+    // 封面网格（对齐 Kotlin 桌面版首页）：一屏 6 列，卡片竖排「封面 + 标题 + 作者」。
+    // 标题里带作者与分类（后端格式 "名称\n   作者　[分类]"），这里拆成两行显示。
+    GridView {
+        id: gridView
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         model: home.listModel
-        spacing: 2
-        // 下拉刷新（对应 Kotlin 首页的 pullToRefresh）：在顶部继续下拉超过 60px 即重载
-        property real pullAccum: 0
-        onMovementEnded: {
-            if (atYBeginning && contentY < -60) {
-                console.log("QML 首页下拉刷新")
-                home.requestReload()
-            }
-        }
+        cellWidth: 176
+        cellHeight: 268
+        flow: GridView.FlowLeftToRight
+        leftMargin: Tokens.space16
+        topMargin: Tokens.space8
+        boundsBehavior: Flickable.StopAtBounds
 
-        // 入场动效（对应 Kotlin 的 ItemMotion）：按索引错开淡入+上移
-        delegate: ItemMotion {
-            width: ListView.view.width
-            index: model.index
-            ComicCard {
-                width: parent.width
-                title: model.title
-                aid: model.aid
-                coverUrl: model.coverUrl
-                hoverColor: home.hoverColor
-                textColor: home.textColor
-                cardRadius: home.cardRadius
-                onClicked: {
-                    console.log("QML 点击作品 aid=" + aid)
-                    home.cardClicked(aid)
-                }
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+        delegate: ComicGridCard {
+            width: gridView.cellWidth - Tokens.space16
+            title: {
+                var parts = ("" + model.title).split("\n")
+                return parts[0]
+            }
+            author: {
+                var parts = ("" + model.title).split("\n")
+                return parts.length > 1 ? parts[1].trim() : ""
+            }
+            aid: model.aid
+            coverUrl: model.coverUrl
+            titleColor: home.textColor
+            authorColor: home.secondaryColor
+            placeholderColor: home.hoverColor
+            onClicked: {
+                console.log("QML 点击作品 aid=" + aid)
+                home.cardClicked(aid)
             }
         }
     }

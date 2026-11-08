@@ -27,6 +27,9 @@ ColumnLayout {
     signal searchRequested(string word)
     signal searchOrderedRequested(string word, string order)
     /// 打开"关于"屏（第 37 轮新增，零数据层成本的入口）
+    /// 导航按钮行是否显示：侧栏上线后由 Main 传 false（Kotlin 桌面版把入口放在侧栏）
+    property bool showNavButtons: true
+
     signal aboutRequested()
     /// 打开设置屏（第 39 轮）
     signal settingsRequested()
@@ -38,6 +41,7 @@ ColumnLayout {
     // 导航行：四个入口单独一行。原来它们和搜索框挤在同一行，左栏只有 380px，
     // 结果「更多」被裁成「更」——拆成两行后每行都不溢出。
     RowLayout {
+        visible: search.showNavButtons
         Layout.fillWidth: true
         Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.topMargin: 8
         spacing: 8

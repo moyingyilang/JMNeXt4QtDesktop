@@ -168,6 +168,7 @@ endif()
 set(JMNEXT_QML_FILES
     src/qml/Main.qml
     src/qml/ComicCard.qml
+    src/qml/ComicGridCard.qml
     src/qml/ExpandableOptionRow.qml
     src/qml/ThemeModeIcon.qml
     src/qml/UiEmptyState.qml

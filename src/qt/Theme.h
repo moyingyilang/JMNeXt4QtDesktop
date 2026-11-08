@@ -204,7 +204,9 @@ inline QString darkPrefPath() {
 }
 inline bool loadSavedDark() {
     QFile f(darkPrefPath());
-    if (!f.open(QIODevice::ReadOnly)) return true;          // 没有记录就用深色（当前默认）
+    // 没有记录就用浅色：Kotlin 桌面版默认浅色（淡紫底 + 深色文字），
+    // 深色此前是 Qt 版自己定的默认，与主项目不一致。
+    if (!f.open(QIODevice::ReadOnly)) return false;
     return f.readAll().trimmed() != QByteArray("light");
 }
 inline void saveDark(bool dark) {

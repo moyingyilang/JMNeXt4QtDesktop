@@ -73,8 +73,42 @@ ApplicationWindow {
             Layout.fillHeight: true
             spacing: 8
 
+            // 顶部状态条：对齐 Kotlin 桌面版（左侧「JMNeXt 未登录」，右侧「登录」）
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+                Layout.topMargin: 8
+
+                Text {
+                    text: "JMNeXt"
+                    color: root.cAccent
+                    font.pixelSize: 16
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                Text {
+                    text: root.loggedIn ? "已登录" : "未登录"
+                    color: root.cTextSecondary
+                    font.pixelSize: 12
+                    Layout.leftMargin: 8
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                Item { Layout.fillWidth: true }
+                UiPillButton {
+                    text: root.loggedIn ? "退出" : "登录"
+                    primary: false
+                    accentColor: root.cAccent
+                    onClicked: {
+                        if (root.loggedIn) backend.logout()
+                        else root.showLogin = true
+                    }
+                }
+            }
+
             SearchScreen {
                 id: searchScreen
+                showNavButtons: false
                 Layout.fillWidth: true
                 listModel: listModel
                 secondaryColor: "#9aa0a8"
@@ -220,6 +254,7 @@ ApplicationWindow {
     /// 是否显示"关于"屏（第 37 轮新增）
     property bool showAbout: false
     property string navKey: "home"
+    property bool loggedIn: false
     property bool showSettings: false
     property bool showHistory: false
     property bool showFavorites: false
