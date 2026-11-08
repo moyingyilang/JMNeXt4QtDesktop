@@ -11,6 +11,9 @@ ApplicationWindow {
     visible: true
     title: "JMNeXt4QtDesktop (QML) " + appVersion
 
+    /** 壁纸地址（file://…），空则只用渐变。由 --wallpaper 或设置页写入。 */
+    property url wallpaperSource: (typeof startupWallpaper !== "undefined") ? startupWallpaper : ""
+
     /** 全局背景引用：供 Glass 做真背景模糊（Qt 6.5+）。 */
     property Item appBackdrop: null
     /** 玻璃调试输出计数（JMNEXT_GLASS_DEBUG=1 时最多打印 4 条）。 */
@@ -26,7 +29,19 @@ ApplicationWindow {
         anchors.fill: parent
         baseColor: root.cBg
         glowColor: root.cAccent
+        wallpaper: root.wallpaperSource
         Component.onCompleted: root.appBackdrop = ambientBg
+    }
+
+    // 整窗玻璃层：对应主项目的 WindowGlass 材质。
+    // 它铺在壁纸之上、内容之下，于是"玻璃模糊壁纸"这件事在界面上直接可见。
+    Glass {
+        id: windowGlass
+        anchors.fill: parent
+        tint: root.cSurface2
+        tintAlpha: 0.72
+        strokeColor: "transparent"
+        radiusMd: 0
     }
 
     RowLayout {

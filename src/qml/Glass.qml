@@ -69,6 +69,7 @@ Item {
     /** 只有「支持 MultiEffect」且「非实心材质」且「有背景」时才做真模糊。 */
     readonly property bool usesBlur:
         (typeof hasMultiEffect !== "undefined" && hasMultiEffect)
+        && !(typeof glassForceOff !== "undefined" && glassForceOff)
         && !opaqueMaterial && effectiveBackdrop !== null
 
     Component.onCompleted: {

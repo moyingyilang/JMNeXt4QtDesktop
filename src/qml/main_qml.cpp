@@ -70,6 +70,36 @@ int main(int argc, char** argv) {
 #else
     engine.rootContext()->setContextProperty(QStringLiteral("hasMultiEffect"), false);
 #endif
+    // 壁纸：--wallpaper <路径> 优先；否则读上次保存的路径。
+    // 玻璃（GlassBlur）模糊的就是这一层，所以壁纸是"能否看出玻璃"的前提。
+    {
+        const QString cfgDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        QDir().mkpath(cfgDir);
+        const QString cfgFile = cfgDir + QStringLiteral("/wallpaper.txt");
+        QString wall;
+        for (int i = 1; i + 1 < argc; ++i) {
+            if (std::string(argv[i]) == "--wallpaper") {
+                wall = QString::fromUtf8(argv[i + 1]);
+                QFile f(cfgFile);
+                if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    f.write(wall.toUtf8());
+            }
+        }
+        if (wall.isEmpty()) {
+            QFile f(cfgFile);
+            if (f.open(QIODevice::ReadOnly))
+                wall = QString::fromUtf8(f.readAll()).trimmed();
+        }
+        if (!wall.isEmpty()) {
+            const QUrl u = wall.startsWith(QLatin1String("file:")) ? QUrl(wall) : QUrl::fromLocalFile(wall);
+            engine.rootContext()->setContextProperty(QStringLiteral("startupWallpaper"), u);
+            qInfo().noquote() << QStringLiteral("壁纸：%1").arg(u.toString());
+        }
+    }
+    // 对比用：JMNEXT_GLASS_FORCE_OFF=1 强制关闭玻璃（验证模糊是否真的生效）
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("glassForceOff"),
+        qgetenv("JMNEXT_GLASS_FORCE_OFF") == QByteArrayLiteral("1"));
     // 玻璃调试：JMNEXT_GLASS_DEBUG=1 时由 Glass.qml 打印材质判定结果
     engine.rootContext()->setContextProperty(
         QStringLiteral("glassDebug"),
