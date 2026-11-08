@@ -64,6 +64,9 @@ ApplicationWindow {
                 listModel: listModel
                 secondaryColor: "#9aa0a8"
                 onSearchRequested: (word) => backend.search(word, 1)
+                onSearchOrderedRequested: (word, order) => backend.searchOrdered(word, 1, order)
+                titleColor: root.cText
+                accentColor: root.cAccent
                 onAboutRequested: root.showAbout = true
                 onSettingsRequested: root.showSettings = true
                 onCategoryRequested: root.showCategory = true

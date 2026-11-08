@@ -20,7 +20,12 @@ ColumnLayout {
     property var listModel
     property color secondaryColor: "#9aa0a8"
 
+    property string orderKey: ""
+    property color titleColor: "#e6e6e6"
+    property color accentColor: "#5b8def"
+
     signal searchRequested(string word)
+    signal searchOrderedRequested(string word, string order)
     /// 打开"关于"屏（第 37 轮新增，零数据层成本的入口）
     signal aboutRequested()
     /// 打开设置屏（第 39 轮）
@@ -71,7 +76,36 @@ ColumnLayout {
         }
         Button {
             text: "搜索"
-            onClicked: search.searchRequested(searchField.text)
+            onClicked: {
+                if (search.orderKey === "")
+                    search.searchRequested(searchField.text)
+                else
+                    search.searchOrderedRequested(searchField.text, search.orderKey)
+            }
+        }
+    }
+
+    // 排序：对应主项目 SearchFilters.Order。空串表示「最新」（接口省略 o 参数）。
+    ExpandableOptionRow {
+        Layout.fillWidth: true
+        Layout.leftMargin: 8
+        Layout.rightMargin: 8
+        title: "排序"
+        titleColor: search.titleColor
+        valueColor: search.secondaryColor
+        accentColor: search.accentColor
+        current: search.orderKey
+        options: [
+            { value: "", label: "最新" },
+            { value: "mv", label: "最多点阅" },
+            { value: "mp", label: "最多图片" },
+            { value: "tf", label: "最多爱心" },
+            { value: "old", label: "最旧" }
+        ]
+        onSelected: function (v) {
+            search.orderKey = v
+            if (searchField.text.length > 0)
+                search.searchOrderedRequested(searchField.text, v)
         }
     }
 

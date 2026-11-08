@@ -28,10 +28,19 @@ Rectangle {
                                     ? themeController.dark
                                     : (Qt.styleHints.colorScheme === Qt.Dark)
     property string noticeText: ""
+    property string cacheText: "（点左侧按钮查看）"
 
     signal closeRequested()
     signal twoPageToggled(bool on)
     signal blockWordsChanged(var words)
+
+    Connections {
+        target: backend
+        function onCacheStats(imageHits, imageMisses, rawHits, rawMisses) {
+            settings.cacheText = "图片 " + imageHits + " 命中 / " + imageMisses
+                                  + " 未命中；原始字节 " + rawHits + " / " + rawMisses
+        }
+    }
 
     // 面板是不透明模态：surfaceColor 带 alpha（cSurface1 只有约 5% 白），
     // 直接用作底色会让列表文字透上来（展开选项时尤其明显）。模态面板取完全不透明。
@@ -49,6 +58,24 @@ Rectangle {
             color: settings.titleColor; font.pixelSize: 18; font.bold: true
             Layout.fillWidth: true
 
+        }
+
+        // 缓存统计：后端 reportCacheStats() 会发 cacheStats(图片命中/未命中, 原始字节命中/未命中)。
+        // 之前这个接口没有界面入口，用户无法判断缓存是否在起作用。
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 12
+            Button {
+                text: "缓存统计"
+                onClicked: backend.reportCacheStats()
+            }
+            Text {
+                text: settings.cacheText
+                color: settings.bodyColor
+                font.pixelSize: 12
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+            }
         }
         // 用可展开选项行而不是横排按钮（主项目 2.2.2 已统一成这个交互）。
         ExpandableOptionRow {
