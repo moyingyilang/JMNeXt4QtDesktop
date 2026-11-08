@@ -5,15 +5,14 @@ import QtQuick.Layouts
 /*
  * 我的（对应 Kotlin 版 ui/screens/profile/ProfileScreen.kt）。
  *
- * 依据 shared/data/JmRepository.kt：
- *   settings() -> GET "setting"，参数 app_img_shunt / lang / t（实测返回 4 条，首条「图源1」）
- *   login()    -> 登录后用户信息（uid/username/coin/level/album_favorites…）
+ * 结构：Rectangle 根（负责底色与圆角）+ ColumnLayout 内容。
+ * 早先根直接是 ColumnLayout，导致面板被布局当成一列、宽度只有内容宽：
+ * Layout 类型自己管尺寸，anchors 会被忽略。改成 Rectangle 根后锚定才生效。
  *
- * 现状（如实）：本屏显示**登录态**与**应用配置**两类信息；用户资料明细（头像/等级/经验）
- * 需要把登录返回体解析成成员模型，尚未做 —— 这里不假装有。
+ * 数据：settings() 取应用配置（实测 4 条）；登录态来自 login()。
+ * 用户资料明细（头像/等级/经验）尚未解析，这里不假装有。
  */
-Column {
-
+Rectangle {
     id: profile
 
     property color titleColor: "#e6e6e6"
@@ -27,61 +26,79 @@ Column {
     signal closeRequested()
     signal loginRequested()
 
+    color: Qt.rgba(surfaceColor.r, surfaceColor.g, surfaceColor.b, 1.0)
+    radius: 12
+
     ListModel { id: configModel }
 
-    RowLayout {
-        Layout.fillWidth: true
-        Text {
-            text: "我的"
-            color: profile.titleColor; font.pixelSize: 18; font.bold: true
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 24
+        spacing: 12
+
+        RowLayout {
             Layout.fillWidth: true
-        }
-        Button {
-            text: profile.loggedIn ? "已登录：" + profile.userName : "去登录"
-            onClicked: profile.loginRequested()
-        }
-    }
+            spacing: 8
 
-    Text {
-        text: profile.loggedIn
-              ? "登录状态：已登录（凭证仅在本次运行内有效）"
-              : "登录状态：未登录 —— 收藏 / 历史 / 通知 / 签到 / 追更 需要登录"
-        color: profile.loggedIn ? profile.accentColor : profile.bodyColor
-        font.pixelSize: 12; wrapMode: Text.WordWrap
-        Layout.fillWidth: true
-    }
-    Text {
-        text: profile.pageStatus
-        color: profile.bodyColor; font.pixelSize: 12
-        Layout.fillWidth: true; elide: Text.ElideRight
-    }
-
-    Text {
-        text: "应用配置"
-        color: profile.bodyColor; font.pixelSize: 13
-    }
-    ListView {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        clip: true
-        model: configModel
-        spacing: 2
-        delegate: Rectangle {
-            width: ListView.view.width; height: 28
-            color: "transparent"
             Text {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left; anchors.leftMargin: 8
-                text: name
-                color: profile.titleColor; font.pixelSize: 13; elide: Text.ElideRight
-                width: parent.width - 12
+                text: "我的"
+                color: profile.titleColor
+                font.pixelSize: 24
+                font.bold: true
+                Layout.fillWidth: true
+            }
+            UiPillButton {
+                text: profile.loggedIn ? ("已登录：" + profile.userName) : "去登录"
+                primary: !profile.loggedIn
+                accentColor: profile.accentColor
+                onClicked: profile.loginRequested()
+            }
+            UiPillButton {
+                text: "关闭"
+                primary: false
+                accentColor: profile.accentColor
+                onClicked: profile.closeRequested()
             }
         }
-    }
 
-    Button {
-        text: "关闭"
-        onClicked: profile.closeRequested()
+        Text {
+            Layout.fillWidth: true
+            text: profile.loggedIn
+                  ? "登录状态：已登录（凭证仅在本次运行内有效）"
+                  : "登录状态：未登录 —— 收藏 / 历史 / 通知 / 签到 / 追更 需要登录"
+            color: profile.loggedIn ? profile.accentColor : profile.bodyColor
+            font.pixelSize: 12
+            wrapMode: Text.WordWrap
+        }
+
+        Text {
+            Layout.fillWidth: true
+            text: profile.pageStatus
+            color: profile.bodyColor
+            font.pixelSize: 12
+            elide: Text.ElideRight
+        }
+
+        UiSectionTitle {
+            Layout.fillWidth: true
+            text: "应用配置"
+            titleColor: profile.titleColor
+        }
+
+        ListView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            model: configModel
+            spacing: 2
+
+            delegate: UiRow {
+                width: ListView.view.width
+                title: name
+                titleColor: profile.titleColor
+                subtitleColor: profile.bodyColor
+            }
+        }
     }
 
     function reload() {

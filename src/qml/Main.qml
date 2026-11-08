@@ -689,7 +689,6 @@ ApplicationWindow {
         Item {
             parent: overlayLayer
             anchors.fill: parent
-            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
 
             WeekScreen {
@@ -715,7 +714,6 @@ ApplicationWindow {
         Item {
             parent: overlayLayer
             anchors.fill: parent
-            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
 
             CommentScreen {
@@ -737,7 +735,6 @@ ApplicationWindow {
         Item {
             parent: overlayLayer
             anchors.fill: parent
-            Rectangle { anchors.fill: parent; color: root.cSurface1; radius: 12 }
             anchors.margins: 32
 
             ProfileScreen {
