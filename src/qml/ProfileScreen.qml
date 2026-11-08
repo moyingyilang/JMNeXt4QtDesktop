@@ -114,8 +114,11 @@ Rectangle {
         function onPagedReady(tag, titles, ids) {
             if (tag !== "settings") return
             configModel.clear()
-            for (var i = 0; i < titles.length; ++i)
-                configModel.append({ "name": titles[i] })
+            for (var i = 0; i < titles.length; ++i) {
+                // 后端标题形如 "图源1\n[]"，空分类要剥掉，否则界面上多一行 "[]"
+                var clean = ("" + titles[i]).replace(/\n\s*\[\s*\]\s*$/, "")
+                configModel.append({ "name": clean })
+            }
             profile.pageStatus = "配置项 " + configModel.count + " 条"
         }
         function onLoginResult(ok, msg) {

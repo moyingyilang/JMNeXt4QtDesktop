@@ -12,8 +12,7 @@ import QtQuick.Layouts
  * 数据走通用通路 loadPaged(tag,...)：tag 用 "comments"。
  * 评论行的字段名与作品列表不同，故这里直接显示原始行（后续按 DTO 细化）。
  */
-Column {
-
+Rectangle {
     id: comments
 
     property color titleColor: "#e6e6e6"
@@ -25,70 +24,79 @@ Column {
 
     signal closeRequested()
 
+    color: Qt.rgba(surfaceColor.r, surfaceColor.g, surfaceColor.b, 1.0)
+    radius: 12
+
     ListModel { id: commentModel }
 
-    RowLayout {
-        Layout.fillWidth: true
-        Text {
-            text: comments.aid.length > 0 ? ("评论（作品 " + comments.aid + "）") : "评论"
-            color: comments.titleColor; font.pixelSize: 18; font.bold: true
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 24
+        spacing: 12
+    
+        RowLayout {
             Layout.fillWidth: true
-        }
-        Button {
-            text: "刷新"
-            onClicked: comments.reload()
-        }
-    }
-    Text {
-        text: comments.pageStatus
-        color: comments.bodyColor; font.pixelSize: 12
-        Layout.fillWidth: true; elide: Text.ElideRight
-    }
-
-    ListView {
-        id: commentView
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        clip: true
-        model: commentModel
-        spacing: 4
-        delegate: Rectangle {
-            width: ListView.view.width
-            height: Math.max(38, lineText.implicitHeight + 16)
-            color: index % 2 === 0 ? "transparent" : comments.surfaceColor
             Text {
-                id: lineText
-                anchors.fill: parent
-                anchors.margins: 8
-                text: name
-                color: comments.titleColor; font.pixelSize: 13
-                wrapMode: Text.WordWrap; elide: Text.ElideRight
+                text: comments.aid.length > 0 ? ("评论（作品 " + comments.aid + "）") : "评论"
+                color: comments.titleColor; font.pixelSize: 18; font.bold: true
+                Layout.fillWidth: true
+            }
+            Button {
+                text: "刷新"
+                onClicked: comments.reload()
+            }
+        }
+        Text {
+            text: comments.pageStatus
+            color: comments.bodyColor; font.pixelSize: 12
+            Layout.fillWidth: true; elide: Text.ElideRight
+        }
+    
+        ListView {
+            id: commentView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            model: commentModel
+            spacing: 4
+            delegate: Rectangle {
+                width: ListView.view.width
+                height: Math.max(38, lineText.implicitHeight + 16)
+                color: index % 2 === 0 ? "transparent" : comments.surfaceColor
+                Text {
+                    id: lineText
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    text: name
+                    color: comments.titleColor; font.pixelSize: 13
+                    wrapMode: Text.WordWrap; elide: Text.ElideRight
+                }
+            }
+        }
+    
+        Button {
+            text: "关闭"
+            onClicked: comments.closeRequested()
+        }
+    
+        function reload() {
+            if (comments.aid.length === 0) { comments.pageStatus = "未选择作品"; return }
+            commentModel.clear()
+            comments.pageStatus = "正在载入评论…"
+            backend.loadPaged("comments", "forum", "mode=all&page=1&aid=" + comments.aid)
+        }
+    
+    
+        Connections {
+            target: backend
+            function onPagedReady(tag, titles, ids) {
+                if (tag !== "comments") return
+                commentModel.clear()
+                for (var i = 0; i < titles.length; ++i)
+                    commentModel.append({ "name": titles[i] })
+                comments.pageStatus = "评论 " + commentModel.count + " 条"
             }
         }
     }
-
-    Button {
-        text: "关闭"
-        onClicked: comments.closeRequested()
-    }
-
-    function reload() {
-        if (comments.aid.length === 0) { comments.pageStatus = "未选择作品"; return }
-        commentModel.clear()
-        comments.pageStatus = "正在载入评论…"
-        backend.loadPaged("comments", "forum", "mode=all&page=1&aid=" + comments.aid)
-    }
-
     onAidChanged: reload()
-
-    Connections {
-        target: backend
-        function onPagedReady(tag, titles, ids) {
-            if (tag !== "comments") return
-            commentModel.clear()
-            for (var i = 0; i < titles.length; ++i)
-                commentModel.append({ "name": titles[i] })
-            comments.pageStatus = "评论 " + commentModel.count + " 条"
-        }
-    }
 }
