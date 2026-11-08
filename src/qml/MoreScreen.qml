@@ -48,7 +48,8 @@ Rectangle {
     }
     /// 已实现项：由外层决定跳到哪一屏（见 Main.qml 的 onEntryClicked）
 
-    color: more.surfaceColor
+    // 模态面板要不透明：surfaceColor 带 alpha，直接当底色会让背后列表透上来
+    color: Qt.rgba(more.surfaceColor.r, more.surfaceColor.g, more.surfaceColor.b, 1.0)
     border.color: more.strokeColor
     border.width: 1
 
@@ -94,30 +95,21 @@ Rectangle {
             clip: true
             model: entryModel
             spacing: 2
-            delegate: Rectangle {
-                width: ListView.view.width; height: 34
-                color: entryMouse.containsMouse ? "#2f3237" : "transparent"
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 8; anchors.rightMargin: 8
-                    Text {
-                        text: name
-                        color: ready ? more.titleColor : more.bodyColor
-                        font.pixelSize: 14
-                        Layout.fillWidth: true
-                    }
-                    Text {
-                        text: ready ? "" : "未实现"
-                        color: more.accentColor; font.pixelSize: 11
-                    }
+            delegate: UiRow {
+                width: ListView.view.width
+                title: name
+                titleColor: ready ? more.titleColor : more.bodyColor
+                onClicked: {
+                    console.log("QML 更多：点击 " + key + "（ready=" + ready + "）")
+                    more.entryClicked(key)
                 }
-                MouseArea {
-                    id: entryMouse
-                    anchors.fill: parent; hoverEnabled: true
-                    onClicked: {
-                        console.log("QML 更多：点击 " + key + "（ready=" + ready + "）")
-                        more.entryClicked(key)
-                    }
+
+                Text {
+                    visible: !ready
+                    text: "未实现"
+                    color: more.accentColor
+                    font.pixelSize: 11
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }

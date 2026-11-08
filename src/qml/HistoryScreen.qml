@@ -90,38 +90,13 @@ Rectangle {
             model: historyModel
             spacing: 2
 
-            delegate: Rectangle {
+            delegate: UiRow {
                 width: ListView.view.width
-                height: 44
-                radius: 6
-                color: rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
-
-                MouseArea {
-                    id: rowMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: historyPane.comicClicked(model.aid)
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: model.title
-                    color: historyPane.titleColor
-                    font.pixelSize: 14
-                    elide: Text.ElideRight
-                    width: parent.width - 120
-                }
-
-                Text {
-                    anchors.right: parent.right
-                    anchors.rightMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "aid " + model.aid
-                    color: historyPane.bodyColor
-                    font.pixelSize: 11
-                }
+                title: model.title
+                subtitle: "aid " + model.aid
+                titleColor: historyPane.titleColor
+                subtitleColor: historyPane.bodyColor
+                onClicked: historyPane.comicClicked(model.aid)
             }
         }
     }

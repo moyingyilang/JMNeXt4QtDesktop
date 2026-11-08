@@ -105,63 +105,18 @@ Rectangle {
             model: favoritesModel
             spacing: 2
 
-            delegate: Rectangle {
+            delegate: UiRow {
                 width: ListView.view.width
-                height: 44
-                radius: 6
-                color: rowMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
-
-                MouseArea {
-                    id: rowMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: favoritesPane.comicClicked(model.aid)
-                }
-
-                ColumnLayout {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 12
-                    anchors.right: folderText.left
-                    anchors.rightMargin: 12
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-
-                    Text {
-                        text: model.title
-                        color: favoritesPane.titleColor
-                        font.pixelSize: 14
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-                    Text {
-                        // 第二行放 aid，便于排查「标题对不上是哪个作品」
-                        text: "aid " + model.aid
-                        color: favoritesPane.bodyColor
-                        font.pixelSize: 11
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-                }
-
-                Text {
-                    id: folderText
-                    anchors.right: parent.right
-                    anchors.rightMargin: 76
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: model.folder
-                    color: favoritesPane.bodyColor
-                    font.pixelSize: 11
-                }
+                title: model.title
+                subtitle: "aid " + model.aid + (model.folder ? ("　·　" + model.folder) : "　·　默认")
+                titleColor: favoritesPane.titleColor
+                subtitleColor: favoritesPane.bodyColor
+                onClicked: favoritesPane.comicClicked(model.aid)
 
                 Button {
-                    // 逐条移除：removeFavorite 此前没有调用方（文档核对时发现）
-                    anchors.right: parent.right
-                    anchors.rightMargin: 8
-                    anchors.verticalCenter: parent.verticalCenter
+                    text: "移除"
                     width: 56
                     height: 28
-                    text: "移除"
-                    enabled: !rowMouse.containsMouse || true
                     onClicked: backend.removeFavorite(model.aid)
                 }
             }

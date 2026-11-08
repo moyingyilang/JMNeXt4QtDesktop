@@ -307,6 +307,12 @@ ApplicationWindow {
             else if (startupPanel === "settings") root.showSettings = true
             else if (startupPanel === "about") root.showAbout = true
             else if (startupPanel === "week") root.showWeek = true
+            else if (startupPanel === "category") root.showCategory = true
+            else if (startupPanel === "more") root.showMore = true
+            else if (startupPanel === "login") root.showLogin = true
+            else if (startupPanel === "profile") root.showProfile = true
+            else if (startupPanel === "comments") root.showComments = true
+            else if (startupPanel === "list") root.showList = true
         }
 
         // --search 带词时不加载首页（否则会把搜索结果覆盖掉——第一次验证时就撞上了）

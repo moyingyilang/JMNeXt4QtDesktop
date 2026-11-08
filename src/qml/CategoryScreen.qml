@@ -30,7 +30,8 @@ Rectangle {
     property string activeTag: ""
     property int resultCount: 0
 
-    color: category.surfaceColor
+    // 模态面板要不透明：surfaceColor 带 alpha，直接当底色会让背后列表透上来
+    color: Qt.rgba(category.surfaceColor.r, category.surfaceColor.g, category.surfaceColor.b, 1.0)
     border.color: category.strokeColor
     border.width: 1
 
@@ -81,31 +82,35 @@ Rectangle {
             }
         }
 
-        ListView {
-            id: tagView
+        // 标签用流式胶囊（对应主项目分类页的标签云），而不是竖排列表：
+        // 竖排一行一个标签在宽窗口里浪费宽度，也不像「分类」。
+        Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            model: tagModel
-            spacing: 2
-            delegate: Rectangle {
-                width: ListView.view.width; height: 32
-                color: tagMouse.containsMouse ? "#2f3237" : "transparent"
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left; anchors.leftMargin: 8
-                    text: name
-                    color: category.titleColor; font.pixelSize: 14
-                }
-                MouseArea {
-                    id: tagMouse
-                    anchors.fill: parent; hoverEnabled: true
-                    onClicked: {
-                        console.log("QML 点击分类标签：" + name)
-                        category.activeTag = name
-                        category.tagClicked(name)
-                        // 真的取筛选结果（数据链路已由 --category-filter 自检验证）
-                        backend.categoryFilter(name, 1)
+            contentWidth: width
+            contentHeight: tagFlow.height
+
+            Flow {
+                id: tagFlow
+                width: parent.width
+                spacing: 8
+
+                Repeater {
+                    model: tagModel
+
+                    delegate: UiChip {
+                        text: name
+                        selected: category.activeTag === name
+                        textColor: category.titleColor
+                        accentColor: category.accentColor
+                        borderColor: category.strokeColor
+                        onClicked: {
+                            console.log("QML 点击分类标签：" + name)
+                            category.activeTag = name
+                            category.tagClicked(name)
+                            backend.categoryFilter(name, 1)
+                        }
                     }
                 }
             }

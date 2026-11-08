@@ -27,7 +27,8 @@ Rectangle {
     signal submit(string username, string password)
     signal logoutRequested()
 
-    color: login.surfaceColor
+    // 模态面板要不透明：surfaceColor 带 alpha，直接当底色会让背后列表透上来
+    color: Qt.rgba(login.surfaceColor.r, login.surfaceColor.g, login.surfaceColor.b, 1.0)
     border.color: login.strokeColor
     border.width: 1
 
