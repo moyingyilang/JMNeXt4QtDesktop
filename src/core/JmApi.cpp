@@ -8,6 +8,19 @@
 
 namespace jmnext::core {
 namespace {
+namespace {
+
+/// 部分接口（实测 hot_tags）直接回明文 JSON，不再走 AES 信封。
+/// 以前一律先解密再重试，结果把"本来就是明文"误判成"解密失败"。
+bool looksLikeJson(const std::string& s) {
+    for (char c : s) {
+        if (c == ' ' || c == '\n' || c == '\r' || c == '\t') continue;
+        return c == '{' || c == '[';
+    }
+    return false;
+}
+
+}  // namespace
 
 // 真实响应是信封：{"code":200,"data":"<base64 密文>"}（已用真实网络确认）。
 // data 里是**密文**，且 JSON 会把 "/" 转义成 "\/" —— 必须还原回 "/"，否则 base64 会错。
@@ -98,6 +111,7 @@ std::optional<JmApi::Result> JmApi::post(const std::string& path, const std::str
         return resp.body;
     }();
     if (auto text = decryptApiData(payload, usedTime)) return Result{resp.status, *text, false};
+    if (looksLikeJson(payload)) return Result{resp.status, payload, false};
 
     session_.refresh(usedTime + 1);          // 时间戳可能过期：换一个再试一次
     const auto second = doPost(session_.time());
@@ -142,6 +156,10 @@ std::optional<JmApi::Result> JmApi::doRequest(const std::string& url, bool allow
         return Result{resp.status, *text, /*retried=*/false};
     }
 
+    // 明文兜底：少数接口（实测 hot_tags）直接回 JSON，不进 AES 信封，
+    // 这时"解密失败"是误判，直接把它当正文。
+    if (looksLikeJson(payload)) return Result{resp.status, payload, /*retried=*/false};
+
     // 解密失败 → 时间戳可能过期，重算一次再试（只重试一次）
     if (allowRetry) {
         session_.refresh(usedTime + 1);                // 由上层决定"现在"；这里只保证换一个新值
@@ -155,6 +173,9 @@ std::optional<JmApi::Result> JmApi::doRequest(const std::string& url, bool allow
                 return Result{second.status, *text, /*retried=*/true};
             }
         }
+        // 诊断：失败时把响应体前 200 字节打到 stderr（仅 JMNEXT_API_DEBUG=1）
+    if (std::getenv("JMNEXT_API_DEBUG"))
+        std::fprintf(stderr, "[api-debug] 解密失败 body=%.200s\n", payload.c_str());
         lastError_ = "解密失败（已重试一次）";
         return std::nullopt;
     }

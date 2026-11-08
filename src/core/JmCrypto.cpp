@@ -52,6 +52,24 @@ std::optional<std::string> decryptApiData(const std::string& dataBase64, int64_t
         if (looksLikeJson(trimmed)) return trimmed;   // 密钥对了
         if (!messageLike) messageLike = trimmed;      // 记住"人话"，绝不当作失败
     }
+    // 缓存响应的兜底：有些接口（实测 hot_tags）的响应被 CDN 缓存，密文用
+    // "缓存时的时间戳"加密，用当前时间永远解不开。这里在 ±10 分钟内按 15 秒步长试一遍。
+    for (int64_t delta = -120; delta <= 120; delta += 30) {
+        for (const char* seed : {TOKEN_SEED, TOKEN_SEED_ALT}) {
+            const std::string key = md5Hex(std::to_string(timeSeconds + delta) + seed);
+            auto dec = decryptEcb(dataBase64, key);
+            if (!dec) continue;
+            const std::string trimmed = trim(*dec);
+            if (looksLikeJson(trimmed)) return trimmed;
+        }
+    }
+
+    // 少数接口（实测 hot_tags）的密文用的是主机发现那把固定密钥，
+    // 不是 md5(时间戳+TOKEN_SEED)。这里补一次尝试，只认 JSON。
+    if (auto dec = decryptEcb(dataBase64, md5Hex(HOST_SEED))) {
+        const std::string trimmed = trim(*dec);
+        if (looksLikeJson(trimmed)) return trimmed;
+    }
     return messageLike;
 }
 
