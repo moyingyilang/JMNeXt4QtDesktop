@@ -181,6 +181,7 @@ set(JMNEXT_QML_FILES
     src/qml/CategoryScreen.qml
     src/qml/MoreScreen.qml
     src/qml/ComicListScreen.qml
+    src/qml/HistoryScreen.qml
     src/qml/LoginScreen.qml
     src/qml/WeekScreen.qml
     src/qml/CommentScreen.qml

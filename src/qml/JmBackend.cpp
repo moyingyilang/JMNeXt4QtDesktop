@@ -4,6 +4,7 @@
 #include <QThread>
 
 #include "qt/JmWorker.h"
+#include "core/HistoryStore.h"
 
 namespace jmnext::qt {
 
@@ -82,4 +83,26 @@ void JmBackend::setTwoPage(bool on) { invoke("setTwoPage", Q_ARG(bool, on)); }
 void JmBackend::loadCovers(int n) { invoke("loadCovers", Q_ARG(int, n)); }
 void JmBackend::reportCacheStats() { invoke("reportCacheStats"); }
 
+// ── 本地阅读历史 ────────────────────────────────────────────────
+QVariantList JmBackend::history() const {
+    QVariantList out;
+    for (const auto& e : jmnext::core::HistoryStore::instance().list()) {
+        QVariantMap m;
+        m.insert(QStringLiteral("aid"), e.aid);
+        m.insert(QStringLiteral("title"), e.title);
+        m.insert(QStringLiteral("ts"), static_cast<qlonglong>(e.timestamp));
+        out.append(m);
+    }
+    return out;
+}
+
+void JmBackend::clearHistory() {
+    jmnext::core::HistoryStore::instance().clear();
+    emit historyChanged();
+}
+
+void JmBackend::rememberHistory(const QString& aid, const QString& title) {
+    jmnext::core::HistoryStore::instance().remember(aid, title);
+    emit historyChanged();
+}
 }  // namespace jmnext::qt

@@ -191,6 +191,7 @@ ApplicationWindow {
     /// 是否显示"关于"屏（第 37 轮新增）
     property bool showAbout: false
     property bool showSettings: false
+    property bool showHistory: false
     property bool showCategory: false
     property bool showMore: false
     /// 通用列表屏（第 61 轮）：任意"作品列表"型接口共用一屏
@@ -251,6 +252,9 @@ ApplicationWindow {
         }
         function onAlbumReady(name, author, tags) {
             if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+            // 本地历史：打开作品即记录（对应主项目 HistoryStore 的写入时机）
+            if (typeof backend !== "undefined" && backend)
+                backend.rememberHistory(backend.currentAid, name)
         }
         function onChaptersReady(names, ids) {
             if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
@@ -327,13 +331,33 @@ ApplicationWindow {
             onBlockWordsChanged: (words) => backend.setBlockWords(words)
         }
 
+        HistoryScreen {
+            id: historyPane
+            visible: root.showHistory
+            opacity: visible ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            anchors.fill: parent
+            anchors.margins: 32
+            surfaceColor: root.cSurface1
+            strokeColor: root.cStroke
+            titleColor: root.cText
+            bodyColor: root.cTextSecondary
+            accentColor: root.cAccent
+            onCloseRequested: root.showHistory = false
+            onComicClicked: (aid) => {
+                root.showHistory = false
+                root.albumAid = aid
+                backend.loadAlbum(aid)
+            }
+        }
+
         CategoryScreen {
             id: categoryPane
             visible: root.showCategory
             opacity: visible ? 1 : 0
+            anchors.fill: parent
+            anchors.margins: 32
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             titleColor: root.cText
@@ -347,9 +371,9 @@ ApplicationWindow {
             id: morePane
             visible: root.showMore
             opacity: visible ? 1 : 0
+            anchors.fill: parent
+            anchors.margins: 32
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             titleColor: root.cText
@@ -367,7 +391,7 @@ ApplicationWindow {
                         "creator":   ["画师列表", "creator_author", "page=1"],
                         "week":      ["__week__", "", ""],
                         "favorites": ["我的收藏（需登录）", "favorite", "page=1"],
-                        "history":   ["阅读历史（需登录）", "watch_list", "page=1"],
+                        "history":   ["__history__", "", ""],
                         "tags":      ["标签收藏", "tags_favorite", ""],
                         "notify":    ["通知（需登录）", "notifications", ""],
                         "auth":      ["__login__", "", ""],
@@ -377,6 +401,7 @@ ApplicationWindow {
                     if (m && m[1] === "__login__") { root.showMore = false; root.showLogin = true; return }
                     if (m && m[1] === "__profile__") { root.showMore = false; root.showProfile = true; return }
                     if (m && m[1] === "__week__") { root.showMore = false; root.showWeek = true; return }
+                    if (m && m[1] === "__history__") { root.showMore = false; root.showHistory = true; return }
                     if (m && m[1] === "__action__") {
                         root.showMore = false
                         backend.action("checkin", m[1], m[2])
@@ -399,9 +424,9 @@ ApplicationWindow {
             id: comicListPane
             visible: root.showList
             opacity: visible ? 1 : 0
+            anchors.fill: parent
+            anchors.margins: 32
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             title: root.listTitle
             apiPath: root.listPath
             apiQuery: root.listQuery
@@ -423,9 +448,9 @@ ApplicationWindow {
             id: loginPane
             visible: root.showLogin
             opacity: visible ? 1 : 0
+            anchors.fill: parent
+            anchors.margins: 32
             Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             surfaceColor: root.cSurface1
             strokeColor: root.cStroke
             titleColor: root.cText
@@ -443,8 +468,6 @@ ApplicationWindow {
         WeekScreen {
             id: weekPane
             visible: root.showWeek
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             titleColor: root.cText
             bodyColor: root.cTextSecondary
             surfaceColor: root.cSurface2
@@ -460,8 +483,6 @@ ApplicationWindow {
         CommentScreen {
             id: commentPane
             visible: root.showComments
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             aid: root.commentAid
             titleColor: root.cText
             bodyColor: root.cTextSecondary
@@ -473,8 +494,6 @@ ApplicationWindow {
         ProfileScreen {
             id: profilePane
             visible: root.showProfile
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             titleColor: root.cText
             bodyColor: root.cTextSecondary
             surfaceColor: root.cSurface2

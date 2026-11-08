@@ -6,6 +6,7 @@
 #pragma once
 #include <QObject>
 #include <QStringList>
+#include <QVariantList>
 
 class QThread;
 
@@ -50,6 +51,13 @@ public:
     Q_INVOKABLE void action(const QString& tag, const QString& path, const QString& form);
     Q_INVOKABLE void fetch(const QString& tag, const QString& path, const QString& query);
     Q_INVOKABLE void reportCacheStats();
+
+    /// 本地阅读历史（打开作品时记录，供“观看历史”页显示）
+    Q_INVOKABLE QVariantList history() const;
+    Q_INVOKABLE void clearHistory();
+    Q_INVOKABLE void rememberHistory(const QString& aid, const QString& title);
+    /// 历史变化（新增或清空后发出）
+    Q_SIGNAL void historyChanged();
 
 signals:
     void listReady(const QStringList& titles, const QStringList& ids);
