@@ -565,16 +565,7 @@ ApplicationWindow {
             bodyColor: root.cTextSecondary
             accentColor: root.cAccent
             onCloseRequested: root.showCategory = false
-            onTagClicked: (tag) => {
-                // 标签点击后把结果页接上（此前只打日志，点标签没有反应）
-                root.listTitle = "标签：" + tag
-                root.listPath = "tag"
-                root.listQuery = tag
-                root.listTag = "tag"
-                root.showCategory = false
-                root.showList = true
-            }
-            onResultClicked: (aid) => {
+            onComicClicked: (aid) => {
                 root.showCategory = false
                 root.albumAid = aid
                 backend.loadAlbum(aid)

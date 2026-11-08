@@ -13,7 +13,7 @@ Rectangle {
 
     property string text: ""
     property bool primary: true
-    property bool enabled: true
+    property bool buttonEnabled: true
     property color accentColor: "#2f6fe4"
     property color textColor: "#ffffff"
     property color tonalColor: "#e2e1f6"
@@ -24,7 +24,7 @@ Rectangle {
     implicitWidth: label.implicitWidth + Tokens.space24 * 2
     implicitHeight: 40
     radius: height / 2
-    color: !pill.enabled ? pill.disabledColor
+    color: !pill.buttonEnabled ? pill.disabledColor
            : (pill.primary ? pill.accentColor : pill.tonalColor)
 
     Text {
@@ -33,13 +33,13 @@ Rectangle {
         text: pill.text
         color: pill.primary ? pill.textColor : "#2b2b33"
         font.pixelSize: Tokens.fontBody
-        opacity: pill.enabled ? 1.0 : 0.5
+        opacity: pill.buttonEnabled ? 1.0 : 0.5
     }
 
     MouseArea {
         anchors.fill: parent
-        enabled: pill.enabled
-        cursorShape: pill.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        enabled: pill.buttonEnabled
+        cursorShape: pill.buttonEnabled ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: pill.clicked()
     }
 }

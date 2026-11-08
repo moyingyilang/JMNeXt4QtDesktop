@@ -70,7 +70,7 @@ ColumnLayout {
         UiPillButton {
             text: "加载更多"
             primary: false
-            enabled: !home.exhausted
+            buttonEnabled: !home.exhausted
             onClicked: home.moreClicked()
         }
 

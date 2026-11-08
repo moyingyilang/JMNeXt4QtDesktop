@@ -1,92 +1,64 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "ui/Tokens.js" as Tokens
 
 /*
- * 分类（对应 Kotlin 版 ui/screens/category/CategoryScreen.kt）。
+ * 分类（热门标签）—— 对齐 Kotlin 桌面版的列表页形态：
+ * 头部（标题 + 计数 + 刷新/关闭）+ 标签胶囊云 + 该标签下的作品网格。
  *
- * 数据源依据 shared/data/JmRepository.kt 的说明：**公开分类导航用 hot_tags**
- * （纯字符串数组），而 `categories` 是登录用户的收藏夹分类，不适合做公开导航。
- *
- * 本屏自己收 hotTagsReady（数据链路已由 --hot-tags 自检验证：实测取回 10 个真实标签）。
- * 点标签后的筛选结果（`categories/filter`）**尚未接** —— 点击目前只发信号，
- * 由外层记录；接筛选时要遵守一条协议细节：`c` 为空时**必须省略整个参数**
- * （发 `c=` 会返回错误页而非 JSON，见 JmRepository.kt 注释）。
+ * 数据：backend.loadHotTags() -> hotTagsReady(tags)
+ *       backend.categoryFilter(tag, page) -> categoryReady(titles, ids)
  */
 Rectangle {
     id: category
 
-    property color surfaceColor: "#26282c"
-    property color strokeColor: "#3a3d43"
-    property color titleColor: "#e6e6e6"
-    property color bodyColor: "#b9bcc2"
-    property color accentColor: "#5b8def"
-
-    signal closeRequested()
-    signal tagClicked(string tag)
-    /// 点击筛选结果里的作品（外层负责打开详情）
-    signal resultClicked(string aid)
+    property color titleColor: "#1d1b20"
+    property color bodyColor: "#49454f"
+    property color surfaceColor: "#fef7ff"
+    property color strokeColor: "#cac4d0"
+    property color accentColor: "#6750a4"
 
     property string activeTag: ""
-    property int resultCount: 0
+    property string pageStatus: ""
 
-    // 模态面板要不透明：surfaceColor 带 alpha，直接当底色会让背后列表透上来
-    color: Qt.rgba(category.surfaceColor.r, category.surfaceColor.g, category.surfaceColor.b, 1.0)
-    border.color: category.strokeColor
-    border.width: 1
+    signal closeRequested()
+    signal comicClicked(string aid)
+
+    color: Qt.rgba(surfaceColor.r, surfaceColor.g, surfaceColor.b, 1.0)
+    radius: 12
+
+    ListModel { id: tagModel }
+    ListModel { id: resultModel }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 14
-        spacing: 8
+        anchors.margins: 24
+        spacing: 12
 
-        RowLayout {
-            Layout.fillWidth: true
-            Text {
-                text: "分类（热门标签）"
-                color: category.titleColor; font.pixelSize: 18; font.bold: true
-                Layout.fillWidth: true
-            }
-            Button {
-                text: "刷新"
-                onClicked: backend.loadHotTags()
-            }
-        }
-
-        ListModel { id: tagModel }
-
-        // 筛选结果列表（第 53 轮补上渲染；数据链路与处理器此前已验证）
-        ListModel { id: resultModel }
-
-        ListView {
-            id: resultView
-            Layout.fillWidth: true
-            Layout.fillHeight: resultModel.count > 0
-            clip: true
-            model: resultModel
-            spacing: 2
-            visible: resultModel.count > 0
-
-            delegate: ComicCard {
-                width: ListView.view.width
-                title: model.title
-                aid: model.aid
-                coverUrl: model.coverUrl
-                hoverColor: "#2f3237"
-                textColor: category.titleColor
-                cardRadius: 6
-                onClicked: {
-                    console.log("QML 分类结果点击作品 aid=" + aid)
-                    category.resultClicked(aid)
-                }
+        PageHeader {
+            title: "分类"
+            countText: category.activeTag.length > 0
+                       ? ("标签：" + category.activeTag + "，作品 " + resultModel.count + " 条")
+                       : (tagModel.count + " 个热门标签")
+            description: "点标签筛选作品；热门标签来自接口，每次进入刷新。"
+            titleColor: category.titleColor
+            bodyColor: category.bodyColor
+            accentColor: category.accentColor
+            actions: [
+                { key: "refresh", label: "刷新", primary: true },
+                { key: "close", label: "关闭", primary: false }
+            ]
+            onActionClicked: (key) => {
+                if (key === "refresh") backend.loadHotTags()
+                else if (key === "close") category.closeRequested()
             }
         }
 
-        // 标签用流式胶囊（对应主项目分类页的标签云），而不是竖排列表：
-        // 竖排一行一个标签在宽窗口里浪费宽度，也不像「分类」。
+        // 标签云（最多两行高度，可滚动）
         Flickable {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: Math.min(tagFlow.height + 8, 120)
             clip: true
             contentWidth: width
             contentHeight: tagFlow.height
@@ -100,16 +72,15 @@ Rectangle {
                     model: tagModel
 
                     delegate: UiChip {
-                        text: name
-                        selected: category.activeTag === name
+                        text: model.name
+                        selected: category.activeTag === model.name
                         textColor: category.titleColor
                         accentColor: category.accentColor
                         borderColor: category.strokeColor
                         onClicked: {
-                            console.log("QML 点击分类标签：" + name)
-                            category.activeTag = name
-                            category.tagClicked(name)
-                            backend.categoryFilter(name, 1)
+                            category.activeTag = model.name
+                            category.pageStatus = "正在筛选：" + model.name
+                            backend.categoryFilter(model.name, 1)
                         }
                     }
                 }
@@ -117,42 +88,48 @@ Rectangle {
         }
 
         Text {
-            id: hint
-            text: "共 " + tagModel.count + " 个标签"
-                  + (category.activeTag.length > 0
-                     ? "；分类「" + category.activeTag + "」：" + category.resultCount + " 条" : "")
-            color: category.bodyColor; font.pixelSize: 12
             Layout.fillWidth: true
+            visible: category.pageStatus.length > 0
+            text: category.pageStatus
+            color: category.bodyColor
+            font.pixelSize: 12
         }
 
-        Button {
-            text: "关闭"
-            onClicked: category.closeRequested()
+        GridView {
+            id: resultGrid
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            model: resultModel
+            cellWidth: 176
+            cellHeight: 268
+
+            delegate: ComicGridCard {
+                width: 160
+                title: model.title
+                aid: model.aid
+                titleColor: category.titleColor
+                authorColor: category.bodyColor
+                onClicked: category.comicClicked(model.aid)
+            }
         }
     }
 
     Connections {
         target: backend
-
-        // 分类筛选结果（第 52 轮接通；界面列表下一步再画，先保证数据到位且有日志证据）
-        function onCategoryReady(titles, ids) {
-            category.resultCount = titles.length
-            resultModel.clear()
-            for (var k = 0; k < titles.length; ++k)
-                resultModel.append({ "title": titles[k], "aid": ids[k], "coverUrl": "" })
-            backend.loadCovers(20)
-            console.log("QML 分类筛选已收到：" + titles.length + " 条（标签：" + category.activeTag + "）"
-                        + (titles.length > 0 ? "，首条：" + titles[0].split("\n")[0] : ""))
-        }
-
         function onHotTagsReady(tags) {
             tagModel.clear()
             for (var i = 0; i < tags.length; ++i)
                 tagModel.append({ "name": tags[i] })
-            console.log("QML 分类标签已填充：" + tagModel.count + " 个")
+            category.pageStatus = "热门标签 " + tagModel.count + " 个"
+        }
+        function onCategoryReady(titles, ids) {
+            resultModel.clear()
+            for (var j = 0; j < titles.length; ++j)
+                resultModel.append({ "title": titles[j], "aid": ids[j] })
+            category.pageStatus = "筛选结果 " + resultModel.count + " 条"
         }
     }
 
-    // 可见时才加载：启动即发请求会占满单线程 worker（并让命令行探测排不上队）
     onVisibleChanged: if (visible) backend.loadHotTags()
 }
