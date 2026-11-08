@@ -30,23 +30,13 @@ ColumnLayout {
     /// 打开"更多"屏（第 58 轮）
     signal moreRequested()
 
-    // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
+    // 导航行：四个入口单独一行。原来它们和搜索框挤在同一行，左栏只有 380px，
+    // 结果「更多」被裁成「更」——拆成两行后每行都不溢出。
     RowLayout {
         Layout.fillWidth: true
         Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.topMargin: 8
         spacing: 6
 
-        TextField {
-            id: searchField
-            Layout.fillWidth: true
-            placeholderText: "搜索作品…"
-            text: typeof initialSearch !== "undefined" ? initialSearch : ""
-            onAccepted: search.searchRequested(text)
-        }
-        Button {
-            text: "搜索"
-            onClicked: search.searchRequested(searchField.text)
-        }
         Button {
             text: "关于"
             onClicked: search.aboutRequested()
@@ -62,6 +52,26 @@ ColumnLayout {
         Button {
             text: "更多"
             onClicked: search.moreRequested()
+        }
+        Item { Layout.fillWidth: true }
+    }
+
+    // 搜索行：输入关键词后回车或点按钮，结果直接进同一个列表（后端 search -> listReady）
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.leftMargin: 8; Layout.rightMargin: 8
+        spacing: 6
+
+        TextField {
+            id: searchField
+            Layout.fillWidth: true
+            placeholderText: "搜索作品…"
+            text: typeof initialSearch !== "undefined" ? initialSearch : ""
+            onAccepted: search.searchRequested(text)
+        }
+        Button {
+            text: "搜索"
+            onClicked: search.searchRequested(searchField.text)
         }
     }
 

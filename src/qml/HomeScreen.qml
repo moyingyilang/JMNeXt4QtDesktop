@@ -152,6 +152,16 @@ ColumnLayout {
         strokeColor: home.secondaryColor
         Button {
             text: "随机"
+            // 去掉默认按钮底色，让底层的玻璃可见（原来是一块白底，把玻璃完全盖住了）
+            background: null
+            padding: 14
+            contentItem: Text {
+                text: parent.text
+                color: home.textColor
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
             onClicked: {
                 console.log("QML 首页：随机 FAB")
                 home.randomClicked()
