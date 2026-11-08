@@ -17,9 +17,11 @@ ApplicationWindow {
 
     // 环境背景（对应 Kotlin 的 AmbientBackdrop）：铺满窗口，内容画在其上
     AmbientBackdrop {
+        id: ambientBg
         anchors.fill: parent
         baseColor: root.cBg
         glowColor: root.cAccent
+        Component.onCompleted: AppBackdrop.item = ambientBg
     }
 
     RowLayout {

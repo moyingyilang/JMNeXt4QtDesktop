@@ -132,6 +132,21 @@ endif()
 # 注意：容器里是 Qt 6.4.2，MultiEffect（6.5+）不存在；模糊/颗粒将来走 Qt5Compat 或自写 ShaderEffect。
 # ---------------------------------------------------------------------------
 find_package(Qt6 REQUIRED COMPONENTS Quick Qml QuickControls2)
+
+# 玻璃效果需要 Qt 6.5+ 的 QtQuick.Effects（MultiEffect）。容器里是 6.4.2，
+# 因此这里按版本分支：6.5+ 才编译 GlassBlur.qml 并链接 QuickEffects，
+# 否则保持"半透明 + 描边"的回退实现（行为不变，构建不失败）。
+set(JMNEXT_HAS_MULTIEFFECT OFF)
+if (Qt6_VERSION VERSION_GREATER_EQUAL 6.5)
+    find_package(Qt6 QUIET COMPONENTS QuickEffects)
+    if (TARGET Qt6::QuickEffects)
+        set(JMNEXT_HAS_MULTIEFFECT ON)
+        message(STATUS "玻璃：Qt ${Qt6_VERSION}，启用 MultiEffect 背景模糊")
+    endif()
+endif()
+if (NOT JMNEXT_HAS_MULTIEFFECT)
+    message(STATUS "玻璃：Qt ${Qt6_VERSION}，无 QuickEffects，使用半透明回退")
+endif()
 qt_add_executable(jmnext4qml
     src/qml/JmImageProvider.cpp
     src/qml/JmBackend.cpp
@@ -141,30 +156,48 @@ qt_add_executable(jmnext4qml
 )
 target_include_directories(jmnext4qml PRIVATE src)
 target_link_libraries(jmnext4qml PRIVATE jmnext_qtlayer Qt6::Quick Qt6::Qml Qt6::Gui Qt6::QuickControls2)
+if (JMNEXT_HAS_MULTIEFFECT)
+    target_link_libraries(jmnext4qml PRIVATE Qt6::QuickEffects)
+    target_compile_definitions(jmnext4qml PRIVATE JMNEXT_HAS_MULTIEFFECT=1)
+endif()
+# QML 文件列表先放进变量：GlassBlur.qml 只在 Qt 6.5+ 参与编译。
+# 不能用生成器表达式（Qt 6.4 的 Qt6QmlMacros 不接受 genex，会报
+# "Error evaluating generator expression"）。
+# AppBackdrop 是单例（pragma Singleton）。这一行必须在 qt_add_qml_module 之前执行，
+# 否则生成的 qmldir 会把它登记成普通类型，QML 侧取 .item 得到 undefined。
+set_source_files_properties(src/qml/AppBackdrop.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
+set(JMNEXT_QML_FILES
+    src/qml/Main.qml
+    src/qml/ComicCard.qml
+    src/qml/StateBox.qml
+    src/qml/LoadMoreFooter.qml
+    src/qml/HomeScreen.qml
+    src/qml/SearchScreen.qml
+    src/qml/ReaderScreen.qml
+    src/qml/DetailScreen.qml
+    src/qml/AboutScreen.qml
+    src/qml/SettingsScreen.qml
+    src/qml/CategoryScreen.qml
+    src/qml/MoreScreen.qml
+    src/qml/ComicListScreen.qml
+    src/qml/LoginScreen.qml
+    src/qml/WeekScreen.qml
+    src/qml/CommentScreen.qml
+    src/qml/ProfileScreen.qml
+    src/qml/Glass.qml
+    src/qml/AppBackdrop.qml
+    src/qml/GlassTopBar.qml
+    src/qml/FloatingBottomBar.qml
+    src/qml/ItemMotion.qml
+    src/qml/AmbientBackdrop.qml
+)
+if (JMNEXT_HAS_MULTIEFFECT)
+    list(APPEND JMNEXT_QML_FILES src/qml/GlassBlur.qml)
+endif()
+
 qt_add_qml_module(jmnext4qml
     URI JMNeXt
     VERSION 1.0
-    QML_FILES
-        src/qml/Main.qml
-        src/qml/ComicCard.qml
-        src/qml/StateBox.qml
-        src/qml/LoadMoreFooter.qml
-        src/qml/HomeScreen.qml
-        src/qml/SearchScreen.qml
-        src/qml/ReaderScreen.qml
-        src/qml/DetailScreen.qml
-        src/qml/AboutScreen.qml
-        src/qml/SettingsScreen.qml
-        src/qml/CategoryScreen.qml
-        src/qml/MoreScreen.qml
-        src/qml/ComicListScreen.qml
-        src/qml/LoginScreen.qml
-        src/qml/WeekScreen.qml
-        src/qml/CommentScreen.qml
-        src/qml/ProfileScreen.qml
-        src/qml/Glass.qml
-        src/qml/GlassTopBar.qml
-        src/qml/FloatingBottomBar.qml
-        src/qml/ItemMotion.qml
-        src/qml/AmbientBackdrop.qml
+    QML_FILES ${JMNEXT_QML_FILES}
 )

@@ -63,6 +63,13 @@ int main(int argc, char** argv) {
 
     engine.rootContext()->setContextProperty(QStringLiteral("renderBackend"),
                                              QString::fromLatin1(qgetenv("QT_QUICK_BACKEND")));
+    // 玻璃能力：Qt 6.5+ 才有 QtQuick.Effects（MultiEffect）。QML 侧据此决定
+    // 加载 GlassBlur.qml（真背景模糊）还是半透明回退；6.4 上恒为 false。
+#ifdef JMNEXT_HAS_MULTIEFFECT
+    engine.rootContext()->setContextProperty(QStringLiteral("hasMultiEffect"), true);
+#else
+    engine.rootContext()->setContextProperty(QStringLiteral("hasMultiEffect"), false);
+#endif
     // Qt 6.4 没有 loadFromModule()；资源里 QML 文件保留源码路径作为别名，
     // 实测真实 URL 是 qrc:/JMNeXt/src/qml/Main.qml（见 build/.rcc/*_raw_qml_0.qrc）
     // 主题 token 传入 QML（必须在 engine.load 之前，见下面的顺序说明）。

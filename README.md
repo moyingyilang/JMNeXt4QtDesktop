@@ -173,7 +173,7 @@ QML 侧阅读器的渲染路径已通过**离线通道**验证（`--page <本地
 | 按下反馈 | 支持（QSS `:pressed` 与 QML 侧按压弹性；Widgets 侧无弹性缩放） |
 | 投影（多级 shadows） | Widgets 侧仅为封面与阅读区各挂一层（取保守值，未按主项目校准） |
 | 颗粒 / Acrylic noise | **不支持**（需自绘噪声纹理） |
-| 高斯模糊 / 背景透明（flatBlur、translucent 的关键效果） | Widgets 侧**不支持**（无 backdrop blur）；QML 侧容器为 Qt 6.4，缺少 `MultiEffect`，需 compat 或自写 shader |
+| 高斯模糊 / 背景透明（flatBlur、translucent 的关键效果） | QML 侧已接入：Qt 6.5+ 用 `MultiEffect` 抓 `AppBackdrop` 做真背景模糊（`GlassBlur.qml`），Qt 6.4 自动回退为半透明 + 描边；Widgets 侧仍**不支持** |
 | 行高（lineHeightFactor） | **不支持**（QSS 无 line-height） |
 | 壁纸压暗 / 背光 | **不支持**（本实现也没有壁纸功能） |
 | Material You 3（第五套风格） | **未接入** |
