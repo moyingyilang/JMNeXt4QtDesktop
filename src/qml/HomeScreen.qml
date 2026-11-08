@@ -142,30 +142,4 @@ ColumnLayout {
     }
     }
 
-    // 随机 FAB（对应 Kotlin 版 home/RandomFab.kt）：悬浮在列表右下角
-    FloatingBottomBar {
-        Layout.alignment: Qt.AlignRight
-        Layout.rightMargin: 12
-        Layout.bottomMargin: 6
-        visible: home.listModel.count > 0
-        tint: home.hoverColor
-        strokeColor: home.secondaryColor
-        Button {
-            text: "随机"
-            // 去掉默认按钮底色，让底层的玻璃可见（原来是一块白底，把玻璃完全盖住了）
-            background: null
-            padding: 14
-            contentItem: Text {
-                text: parent.text
-                color: home.textColor
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            onClicked: {
-                console.log("QML 首页：随机 FAB")
-                home.randomClicked()
-            }
-        }
-    }
 }

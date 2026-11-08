@@ -134,6 +134,34 @@ ApplicationWindow {
         }
     }
 
+    // 随机 FAB：对应主项目 home/RandomFab.kt —— 悬挂在窗口右下角。
+    // 之前它放在左栏 ColumnLayout 内，会与「加载更多」抢位置；移到窗口层后与主项目一致。
+    FloatingBottomBar {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 16
+        anchors.bottomMargin: 16
+        visible: listModel.count > 0
+        tint: root.cSurface2
+        strokeColor: root.cStroke
+        Button {
+            text: "随机"
+            background: null
+            padding: 14
+            contentItem: Text {
+                text: parent.text
+                color: root.cText
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            onClicked: {
+                console.log("QML 随机 FAB")
+                homeScreen.randomClicked()
+            }
+        }
+    }
+
     // 状态行（后端 status 信号）
     // 主题 token（由 C++ 在 load 之前以 QVariantMap 传入，onCompleted 里复制过来）
     property string cBg: "#1e1f22"
@@ -192,6 +220,18 @@ ApplicationWindow {
         target: backend
 
         function onCurrentAidChanged() { root.albumAid = backend.currentAid }
+
+        // 成功时要清掉上次失败的提示：onFailed 写进 pageStatus 的文字不会自己消失，
+        // 否则界面上会一直挂着"失败：列表失败：网络请求失败"。
+        function onListReady(titles, ids) {
+            if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+        }
+        function onAlbumReady(name, author, tags) {
+            if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+        }
+        function onChaptersReady(names, ids) {
+            if (root.pageStatus.indexOf("失败") >= 0) root.pageStatus = ""
+        }
 
         function onStatus(text) { root.pageStatus = text }
         function onFailed(text) { root.pageStatus = "失败：" + text }
