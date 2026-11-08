@@ -21,6 +21,12 @@ Rectangle {
     property color bodyColor: "#b9bcc2"
     property color accentColor: "#5b8def"
     property bool twoPage: false
+    /** 深浅色是否跟随系统（对应主项目第三种模式） */
+    property bool followSystem: false
+    /** 当前实际是否深色（跟随系统时由 styleHints 决定） */
+    readonly property bool darkNow: (typeof themeController !== "undefined" && themeController)
+                                    ? themeController.dark
+                                    : (Qt.styleHints.colorScheme === Qt.Dark)
     property string noticeText: ""
 
     signal closeRequested()
@@ -71,13 +77,19 @@ Rectangle {
             titleColor: settings.titleColor
             valueColor: settings.bodyColor
             accentColor: settings.accentColor
-            current: (typeof themeController !== "undefined" && themeController) ? themeController.dark : true
+            current: settings.followSystem ? "system" : (settings.darkNow ? "dark" : "light")
+            iconModes: ({ "light": "light", "dark": "dark", "system": "system" })
             options: [
-                { value: true, label: "深色" },
-                { value: false, label: "浅色" }
+                { value: "light", label: "浅色" },
+                { value: "dark", label: "深色" },
+                { value: "system", label: "跟随系统" }
             ]
             onSelected: function (v) {
-                themeController.apply(themeController.style, v)
+                settings.followSystem = (v === "system")
+                const dark = settings.followSystem
+                        ? (Qt.styleHints.colorScheme === Qt.Dark)
+                        : (v === "dark")
+                themeController.apply(themeController.style, dark)
                 themeController.savePreference()
             }
         }

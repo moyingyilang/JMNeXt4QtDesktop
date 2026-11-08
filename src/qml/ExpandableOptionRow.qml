@@ -21,12 +21,19 @@ Item {
     property color accentColor: "#5b8def"
     property color borderColor: "#3a3d43"
 
+    /** value -> 图标模式（"light" / "dark" / "system"），可为空 */
+    property var iconModes: ({})
+
     signal selected(var value)
 
     implicitWidth: parent ? parent.width : 0
     implicitHeight: column.implicitHeight
 
     property bool expanded: false
+
+    function modeFor(value) {
+        return row.iconModes ? (row.iconModes[value] || "") : ""
+    }
 
     function currentLabel() {
         for (var i = 0; i < row.options.length; ++i)
@@ -61,7 +68,18 @@ Item {
                 font.pixelSize: 14
             }
 
+            ThemeModeIcon {
+                id: headerIcon
+                anchors.right: headerValue.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                visible: modeFor(row.current) !== ""
+                mode: modeFor(row.current)
+                tint: row.valueColor
+            }
+
             Text {
+                id: headerValue
                 anchors.right: arrow.left
                 anchors.rightMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
@@ -116,9 +134,18 @@ Item {
                             }
                         }
 
-                        Text {
+                        ThemeModeIcon {
                             anchors.left: parent.left
                             anchors.leftMargin: 16
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: row.modeFor(modelData.value) !== ""
+                            mode: row.modeFor(modelData.value)
+                            tint: modelData.value === row.current ? row.accentColor : row.textColor
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: row.modeFor(modelData.value) !== "" ? 40 : 16
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.label
                             // 选中态只用颜色与字重，不加圆点或对勾（与主项目一致）

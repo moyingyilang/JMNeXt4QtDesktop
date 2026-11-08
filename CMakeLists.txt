@@ -169,6 +169,7 @@ set(JMNEXT_QML_FILES
     src/qml/Main.qml
     src/qml/ComicCard.qml
     src/qml/ExpandableOptionRow.qml
+    src/qml/ThemeModeIcon.qml
     src/qml/StateBox.qml
     src/qml/LoadMoreFooter.qml
     src/qml/HomeScreen.qml
