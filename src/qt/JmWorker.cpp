@@ -126,7 +126,10 @@ void JmWorker::loadAlbum(const QString& aid) {
     emit albumReady(QString::fromStdString(al->name), QString::fromStdString(al->author), tags);
     QStringList names, ids;
     for (const auto& se : al->series) {
-        names << (se.name.empty() ? QStringLiteral("(未命名)") : QString::fromStdString(se.name));
+        // 与主项目一致：章节名为空时用「第 N 话」兜底（Kotlin: chapter.name ?: "第 $number 话"），
+        // 而不是显示「(未命名)」——后者看起来像解析失败。
+        names << (se.name.empty() ? QStringLiteral("第 %1 话").arg(names.size() + 1)
+                                  : QString::fromStdString(se.name));
         ids << QString::fromStdString(se.id);
     }
     emit chaptersReady(names, ids);
@@ -216,7 +219,10 @@ void JmWorker::openChapter(const QString& aid, int page) {
     {
         QStringList names, ids;
         for (const auto& se : al->series) {
-            names << (se.name.empty() ? QStringLiteral("(未命名)") : QString::fromStdString(se.name));
+            // 与主项目一致：章节名为空时用「第 N 话」兜底（Kotlin: chapter.name ?: "第 $number 话"），
+        // 而不是显示「(未命名)」——后者看起来像解析失败。
+        names << (se.name.empty() ? QStringLiteral("第 %1 话").arg(names.size() + 1)
+                                  : QString::fromStdString(se.name));
             ids << QString::fromStdString(se.id);
         }
         emit chaptersReady(names, ids);
