@@ -210,6 +210,11 @@ if (JMNEXT_HAS_MULTIEFFECT)
     list(APPEND JMNEXT_QML_FILES src/qml/GlassBlur.qml)
 endif()
 
+# I18n 必须是 QML 单例；属性需在 qt_add_qml_module 之前设置，
+# 否则 QML 侧拿到的是类型对象，调用 I18n.t() 会报 "is not a function"。
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/qml/I18n.qml
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
 qt_add_qml_module(jmnext4qml
     URI JMNeXt
     VERSION 1.0
@@ -223,3 +228,15 @@ if (TARGET Qt6::Core)
     target_include_directories(jmnext4store-tests PRIVATE src)
     target_link_libraries(jmnext4store-tests PRIVATE Qt6::Core)
 endif()
+
+# ── 国际化资源 ────────────────────────────────────────────────────
+# 上游字典（zh-CN/zh-TW，从主项目发布包抽出）+ 本地覆盖层（六种语言）。
+file(GLOB I18N_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/i18n/upstream/*.json
+    ${CMAKE_CURRENT_SOURCE_DIR}/i18n/qt/*.json
+)
+qt_add_resources(jmnext4qml "i18n"
+    PREFIX "/i18n"
+    BASE "i18n"
+    FILES ${I18N_FILES}
+)

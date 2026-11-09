@@ -5,6 +5,7 @@
 #include <QQmlContext>
 #include <QDir>
 #include <QVariantMap>
+#include <QLocale>
 #include <QTimer>
 #include <QDebug>
 #include <QQuickWindow>
@@ -107,6 +108,21 @@ int main(int argc, char** argv) {
             engine.rootContext()->setContextProperty(QStringLiteral("startupPanel"),
                                                      QString::fromUtf8(argv[i + 1]));
     }
+    // 界面语言：--lang zh-CN / zh-TW 覆盖；否则按系统区域猜（只认简中/繁中，其余回落简中）
+    {
+        QString lang;
+        for (int i = 1; i + 1 < argc; ++i) {
+            if (std::string(argv[i]) == "--lang") lang = QString::fromUtf8(argv[i + 1]);
+        }
+        if (lang.isEmpty()) {
+            const QString sys = QLocale::system().name().replace('_', '-');
+            lang = sys.startsWith(QStringLiteral("zh-TW")) ? QStringLiteral("zh-TW")
+                   : sys.startsWith(QStringLiteral("zh-HK")) ? QStringLiteral("zh-TW")
+                                                              : QStringLiteral("zh-CN");
+        }
+        engine.rootContext()->setContextProperty(QStringLiteral("startupLang"), lang);
+    }
+
     // 玻璃调试：JMNEXT_GLASS_DEBUG=1 时由 Glass.qml 打印材质判定结果
     engine.rootContext()->setContextProperty(
         QStringLiteral("glassDebug"),
@@ -160,6 +176,8 @@ int main(int argc, char** argv) {
     // 用途：离线验证"阅读器能不能把图画出来、尺寸对不对"，不受 CDN 波动影响。
     for (int i = 1; i + 1 < argc; ++i) {
         if (std::string(argv[i]) == "--two-page") {
+            // 只设后端不够：QML 的 root.twoPage 决定右页是否渲染，必须一起设。
+            engine.rootContext()->setContextProperty(QStringLiteral("startupTwoPage"), true);
             QTimer::singleShot(600, &backend, [&backend] { backend.setTwoPage(true); });
             // 预览页只在翻页时生成，所以再补一次 step 以便无头验证
             QTimer::singleShot(9000, &backend, [&backend] { backend.step(1); });

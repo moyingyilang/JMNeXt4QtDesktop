@@ -1,4 +1,5 @@
 import QtQuick
+import JMNeXt 1.0
 import QtQuick.Controls
 import QtQuick.Layouts
 
@@ -389,6 +390,7 @@ ApplicationWindow {
 
         // 双页右页：与 pageUrl 同一套（读 backend 属性，不在绑定里直接读 context property）
         function onPreviewChanged() {
+            console.log("QML 预览图：seq=" + backend.previewSeq + " path=" + backend.previewPath)
             root.previewUrl = backend.previewSeq > 0
                     ? "file://" + backend.previewPath + "?v=" + backend.previewSeq
                     : ""
@@ -403,6 +405,12 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // 界面语言：C++ 侧按 --lang 或系统区域给出（zh-CN / zh-TW）
+        I18n.setLanguage(typeof startupLang !== "undefined" ? startupLang : "zh-CN")
+
+        // --two-page：把双页模式同步到界面（此前只设后端，右页永远不显示）
+        if (typeof startupTwoPage !== "undefined" && startupTwoPage) root.twoPage = true
+
         // --panel：启动即打开指定面板（favorites/notifications/history/settings/about/week）
         if (typeof startupPanel !== "undefined" && startupPanel) {
             if (startupPanel === "favorites") root.showFavorites = true

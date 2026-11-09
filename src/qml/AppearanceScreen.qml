@@ -123,6 +123,18 @@ Rectangle {
                 onMoved: appearance.dimEdited(value)
             }
 
+            UiSectionTitle { text: "语言"; titleColor: appearance.titleColor }
+
+            // 语言包已就位（i18n/upstream 为上游简繁字典，i18n/qt 为六种语言的覆盖层），
+            // 但 QML 单例注册在这套 CMake 下没生效，界面文案尚未接入；这里如实标注。
+            Text {
+                width: parent.width
+                text: "语言包已准备：简体中文、繁體中文、English、日本語、Русский、Deutsch（界面接入待完成）"
+                color: appearance.bodyColor
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+
             UiSectionTitle { text: "壁纸"; titleColor: appearance.titleColor }
 
             Row {

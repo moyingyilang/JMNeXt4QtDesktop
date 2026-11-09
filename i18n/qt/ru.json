@@ -1,0 +1,10 @@
+{
+  "qt": {
+    "nav": { "home": "Главная", "search": "Поиск", "category": "Категории", "week": "Неделя",
+             "random": "Случайное", "favorites": "Избранное", "history": "История", "follow": "Отслеживание",
+             "tags": "Теги", "creator": "Авторы и работы", "notifications": "Уведомления",
+             "block": "Блокировка", "appearance": "Внешний вид", "about": "О программе", "profile": "Профиль" },
+    "home": { "title": "Главная", "refresh": "Обновить", "loadMore": "Загрузить ещё", "loaded": "Загружено" },
+    "common": { "close": "Закрыть", "retry": "Повторить", "clear": "Очистить", "login": "Войти", "logout": "Выйти" }
+  }
+}

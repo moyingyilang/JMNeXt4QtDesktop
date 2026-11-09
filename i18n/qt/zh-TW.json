@@ -1,0 +1,34 @@
+{
+  "qt": {
+    "nav": {
+      "home": "首頁",
+      "search": "搜尋",
+      "category": "分類",
+      "week": "週刊",
+      "random": "隨機本子",
+      "favorites": "收藏",
+      "history": "歷史",
+      "follow": "追更",
+      "tags": "標籤",
+      "creator": "畫師與作品庫",
+      "notifications": "通知",
+      "block": "屏蔽設定",
+      "appearance": "外觀",
+      "about": "關於",
+      "profile": "我的"
+    },
+    "home": {
+      "title": "首頁",
+      "refresh": "重新整理",
+      "loadMore": "載入更多",
+      "loaded": "已載入"
+    },
+    "common": {
+      "close": "關閉",
+      "retry": "重試",
+      "clear": "清空",
+      "login": "登入",
+      "logout": "登出"
+    }
+  }
+}

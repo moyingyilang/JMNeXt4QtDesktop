@@ -1,0 +1,10 @@
+{
+  "qt": {
+    "nav": { "home": "ホーム", "search": "検索", "category": "カテゴリ", "week": "週刊",
+             "random": "ランダム", "favorites": "お気に入り", "history": "履歴", "follow": "フォロー",
+             "tags": "タグ", "creator": "作家・作品", "notifications": "通知",
+             "block": "ブロック設定", "appearance": "外観", "about": "このアプリについて", "profile": "マイページ" },
+    "home": { "title": "ホーム", "refresh": "更新", "loadMore": "もっと読み込む", "loaded": "読み込み済み" },
+    "common": { "close": "閉じる", "retry": "再試行", "clear": "クリア", "login": "ログイン", "logout": "ログアウト" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "qt": {
+    "nav": { "home": "Start", "search": "Suche", "category": "Kategorien", "week": "Woche",
+             "random": "Zufall", "favorites": "Favoriten", "history": "Verlauf", "follow": "Folgen",
+             "tags": "Tags", "creator": "Künstler & Werke", "notifications": "Mitteilungen",
+             "block": "Blockieren", "appearance": "Aussehen", "about": "Über", "profile": "Profil" },
+    "home": { "title": "Start", "refresh": "Aktualisieren", "loadMore": "Mehr laden", "loaded": "Geladen" },
+    "common": { "close": "Schließen", "retry": "Erneut", "clear": "Leeren", "login": "Anmelden", "logout": "Abmelden" }
+  }
+}

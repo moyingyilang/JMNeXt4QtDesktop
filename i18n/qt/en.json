@@ -1,0 +1,10 @@
+{
+  "qt": {
+    "nav": { "home": "Home", "search": "Search", "category": "Categories", "week": "Weekly",
+             "random": "Random", "favorites": "Favorites", "history": "History", "follow": "Following",
+             "tags": "Tags", "creator": "Artists & Works", "notifications": "Notifications",
+             "block": "Blocking", "appearance": "Appearance", "about": "About", "profile": "Profile" },
+    "home": { "title": "Home", "refresh": "Refresh", "loadMore": "Load more", "loaded": "Loaded" },
+    "common": { "close": "Close", "retry": "Retry", "clear": "Clear", "login": "Log in", "logout": "Log out" }
+  }
+}
