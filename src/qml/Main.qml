@@ -69,8 +69,9 @@ ApplicationWindow {
         // 左栏：作品列表
         ColumnLayout {
             id: leftColumn
-            // 首页时左栏铺满（对齐 Kotlin 桌面版的整宽内容区）；
-            // 打开作品后收窄成列表栏，右侧给详情与阅读器。
+            // 首页时左栏铺满整宽；一旦打开作品就整栏隐藏，
+            // 内容区交给详情/阅读器（Kotlin 桌面版是单内容区切换，不是三栏）。
+            visible: root.albumAid === ""
             Layout.preferredWidth: root.albumAid === "" ? -1 : 380
             Layout.minimumWidth: root.albumAid === "" ? 0 : 380
             Layout.maximumWidth: root.albumAid === "" ? 16777215 : 380
@@ -190,6 +191,10 @@ ApplicationWindow {
             albumAid: root.albumAid
             pageStatus: root.pageStatus
             surfaceColor: root.cSurface1
+            titleColor: root.cText
+            authorColor: root.cTextSecondary
+            tagColor: root.cTextSecondary
+            statusColor: root.cTextSecondary
             strokeColor: root.cStroke
             onChapterClicked: (cid) => {
                 // 空 cid 表示「无章节列表，直接读」：走按 aid 打开首页的通路

@@ -49,9 +49,10 @@ Rectangle {
     /// 查看评论（依据 JmRepository.comments：GET forum，mode=all&page=1&aid=）
     signal commentsRequested(string aid)
 
-    color: detail.surfaceColor
-    border.color: detail.strokeColor
-    border.width: 1
+    // 详情是整块内容区：底色必须不透明，否则文字压在壁纸上几乎看不清
+    // （surfaceColor 在浅色主题下只有 58% 白）。
+    color: Qt.rgba(detail.surfaceColor.r, detail.surfaceColor.g, detail.surfaceColor.b, 1.0)
+    radius: 12
 
     ColumnLayout {
         anchors.fill: parent
