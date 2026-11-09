@@ -186,7 +186,14 @@ std::optional<QImage> JmClient::pageImage(const std::string& url, int aid, int s
     if (!needsUnscrambleFor(aid, scrambleId, url)) {
         result = toQImage(img->pixels, img->width, img->height);
     } else {
-        const auto out = unscramblePage(img->pixels, img->width, img->height, aid, "1");
+        // 页码必须用图片文件名（如 "00001"），不能写死成 "1"：
+        // sliceCount 按 md5(aid + page) 取份数，"1" 与 "00001" 会得到不同结果，
+        // 算错就直接表现为「还原后仍是错位的竖条」。
+        std::string pageKey = url;
+        if (const auto q = pageKey.find('?'); q != std::string::npos) pageKey.resize(q);
+        if (const auto slash = pageKey.rfind('/'); slash != std::string::npos) pageKey = pageKey.substr(slash + 1);
+        if (const auto dot = pageKey.rfind('.'); dot != std::string::npos) pageKey.resize(dot);
+        const auto out = unscramblePage(img->pixels, img->width, img->height, aid, pageKey);
         if (out.empty()) { lastError_ = "切片还原失败"; return std::nullopt; }
         result = toQImage(out, img->width, img->height);
     }
