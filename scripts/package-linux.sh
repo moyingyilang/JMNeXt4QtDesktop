@@ -86,6 +86,20 @@ mkdir -p "$OUT_DIR"
 say "打 tar.gz"
 tar -C "$STAGE" -czf "$OUT_DIR/$NAME-$VERSION-linux-$ARCH.tar.gz" "$NAME"
 
+
+say "图标与 .desktop"
+mkdir -p "$S/share/icons/hicolor/192x192/apps" "$S/share/applications"
+cp "$J/assets/icons/jmnext-icon-192.png" "$S/share/icons/hicolor/192x192/apps/jmnext4qtdesktop.png"
+cat > "$S/share/applications/jmnext4qtdesktop.desktop" <<'DESK'
+[Desktop Entry]
+Type=Application
+Name=JMNeXt
+Comment=JMNeXt 桌面客户端（Qt）
+Exec=jmnext4qtdesktop
+Icon=jmnext4qtdesktop
+Categories=Network;Graphics;
+Terminal=false
+DESK
 say "打 deb"
 DEB="$STAGE/deb"
 mkdir -p "$DEB/DEBIAN" "$DEB/usr/lib/$NAME"
@@ -103,6 +117,10 @@ Description: JMNeXt 的 Qt 桌面客户端（自带 Qt 运行时）
 CTRL
 mkdir -p "$DEB/usr/bin"
 ln -sf "/usr/lib/$NAME/run.sh" "$DEB/usr/bin/jmnext4qtdesktop"
+# 图标与桌面入口装到系统路径（否则应用菜单里没有图标）
+mkdir -p "$DEB/usr/share/icons/hicolor/192x192/apps" "$DEB/usr/share/applications"
+cp "$J/assets/icons/jmnext-icon-192.png" "$DEB/usr/share/icons/hicolor/192x192/apps/jmnext4qtdesktop.png"
+cp "$S/share/applications/jmnext4qtdesktop.desktop" "$DEB/usr/share/applications/"
 dpkg-deb --build --root-owner-group "$DEB" "$OUT_DIR/$NAME-$VERSION-linux-$ARCH.deb" >/dev/null
 
 say "完成"

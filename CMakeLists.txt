@@ -240,3 +240,14 @@ qt_add_resources(jmnext4qml "i18n"
     BASE "i18n"
     FILES ${I18N_FILES}
 )
+
+# ── 应用图标 ──────────────────────────────────────────────────────────
+file(GLOB ICON_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/*.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/*.svg
+)
+qt_add_resources(jmnext4qml "appicons"
+    PREFIX "/icons"
+    BASE "assets/icons"
+    FILES ${ICON_FILES}
+)

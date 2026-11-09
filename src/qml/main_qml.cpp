@@ -1,6 +1,7 @@
 // QML 前端的入口（P0）。刻意做得很小：只把版本、风格、渲染后端这些"能核对的字符串"
 // 传给 QML，用来验证"Qt Quick 在这个容器里真的能起窗口"。
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QDir>
@@ -19,6 +20,16 @@
 
 int main(int argc, char** argv) {
     QGuiApplication app(argc, argv);
+
+    // 应用图标：新 logo（JM 字标 + 加号，深底橙加号）。
+    // 取 192 与 512 两个尺寸；窗口管理器会按需缩放。
+    {
+        QIcon icon;
+        icon.addFile(QStringLiteral(":/icons/jmnext-icon-192.png"), QSize(192, 192));
+        icon.addFile(QStringLiteral(":/icons/jmnext-icon-512.png"), QSize(512, 512));
+        QGuiApplication::setWindowIcon(icon);
+        qInfo().noquote() << QStringLiteral("窗口图标：%1 个尺寸").arg(icon.availableSizes().size());
+    }
 
     // 与 widget 版共用同一份偏好（style.txt / dark.txt），这样两个前端看起来一致
     const jmnext::qt::Style style = jmnext::qt::loadSavedStyle();
